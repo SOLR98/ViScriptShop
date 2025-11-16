@@ -8,7 +8,7 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.util.ShopHelper;
-import com.viscriptshop.util.ViScriptShopUtil;
+import com.viscriptshop.util.ViScriptShopServerUtil;
 import lombok.SneakyThrows;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
@@ -75,7 +75,7 @@ public class ShopCommand implements ICommand {
         CommandSourceStack source = context.getSource();
         ServerPlayer player = source.getPlayer();
         if (player != null) {
-            ViScriptShopUtil.serverOpenShopEditor(player);
+            ViScriptShopServerUtil.serverOpenShopEditor(player);
             return 1;
         } else {
             throw playerOnlyException();
@@ -88,7 +88,7 @@ public class ShopCommand implements ICommand {
         ServerPlayer player = source.getPlayer();
         if (player != null) {
             ResourceLocation shop = ResourceLocationArgument.getId(context, "shop");
-            ViScriptShopUtil.serverOpenShop(player, shop, title);
+            ViScriptShopServerUtil.serverOpenShop(player, shop, title);
             return 1;
         } else {
             throw playerOnlyException();
@@ -98,7 +98,7 @@ public class ShopCommand implements ICommand {
     @SneakyThrows
     private int reloadShop(CommandContext<CommandSourceStack> context) {
         ResourceLocation shop = ResourceLocationArgument.getId(context, "shop");
-        ViScriptShopUtil.reloadOpenShop(shop);
+        ViScriptShopServerUtil.reloadOpenShop(shop);
         context.getSource().sendSuccess(() -> Component.translatable("command.viscript_shop.reload.shop"), true);
         return 1;
     }
@@ -107,7 +107,7 @@ public class ShopCommand implements ICommand {
     private int setStageShop(CommandContext<CommandSourceStack> context) {
         ResourceLocation shop = ResourceLocationArgument.getId(context, "shop");
         int stage = IntegerArgumentType.getInteger(context, "stage");
-        ViScriptShopUtil.setStageShop(shop, stage);
+        ViScriptShopServerUtil.setStageShop(shop, stage);
         return 1;
     }
 

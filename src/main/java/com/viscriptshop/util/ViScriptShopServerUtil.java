@@ -1,10 +1,6 @@
 package com.viscriptshop.util;
 
-import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
-import com.lowdragmc.lowdraglib2.gui.ui.ModularUIScreen;
 import com.viscriptshop.ViscriptShop;
-import com.viscriptshop.gui.ShopEditor;
-import com.viscriptshop.gui.ShopUI;
 import com.viscriptshop.gui.data.MerchantInfo;
 import com.viscriptshop.gui.data.Shop;
 import com.viscriptshop.gui.data.ShopInfo;
@@ -13,25 +9,17 @@ import com.viscriptshop.network.s2c.OpenShopEditorPayload;
 import com.viscriptshop.network.s2c.OpenShopUIPayload;
 import dev.latvian.mods.kubejs.typings.Info;
 import dev.latvian.mods.rhino.util.HideFromJS;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
-public class ViScriptShopUtil {
+public class ViScriptShopServerUtil {
 
     @Info("服务端打开商店编辑器")
     public static void serverOpenShopEditor(ServerPlayer player) {
         player.connection.send(new OpenShopEditorPayload());
-    }
-
-    @Info("客户端打开商店编辑器")
-    public static void clientOpenNpcEditor() {
-        Minecraft minecraft = Minecraft.getInstance();
-        ModularUI ui = UIElementUtil.createUI(new ShopEditor()).shouldCloseOnEsc(false);
-        minecraft.setScreen(new ModularUIScreen(ui, Component.empty()));
     }
 
     @Info("服务端打开商店")
@@ -52,13 +40,6 @@ public class ViScriptShopUtil {
         player.connection.send(new OpenShopUIPayload(shopInfo, title.getString()));
     }
 
-    @Info("客户端打开商店")
-    public static void clientOpenShop(ShopInfo shopInfo, String title) {
-        Minecraft minecraft = Minecraft.getInstance();
-        ModularUI ui = UIElementUtil.createUI(new ShopUI(shopInfo, title));
-        minecraft.setScreen(new ModularUIScreen(ui, Component.empty()));
-    }
-
     @Info("重置商店信息")
     public static void reloadOpenShop(ResourceLocation res) {
         String shop = toPath(res);
@@ -73,7 +54,7 @@ public class ViScriptShopUtil {
     }
 
     @Info("添加商店商品")
-    public static void addShopMerchant(ResourceLocation res, MerchantInfo merchantInfo){
+    public static void addShopMerchant(ResourceLocation res, MerchantInfo merchantInfo) {
         String shop = toPath(res);
         ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
         shopSavedData.addShopMerchant(shop, merchantInfo);

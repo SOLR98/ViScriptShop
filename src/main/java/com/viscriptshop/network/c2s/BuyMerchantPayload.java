@@ -4,7 +4,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.data.MerchantInfo;
 import com.viscriptshop.network.s2c.ReloadShopUIPayload;
-import com.viscriptshop.util.ViScriptShopUtil;
+import com.viscriptshop.util.ViScriptShopServerUtil;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.FriendlyByteBuf;
@@ -33,8 +33,8 @@ public record BuyMerchantPayload(MerchantInfo merchantInfo) implements CustomPac
         if (merchantInfo != null) {
             ItemStack itemA = merchantInfo.getItemA();
             ItemStack itemB = merchantInfo.getItemB();
-            ViScriptShopUtil.removeItem(player, itemA, itemA.getCount());
-            ViScriptShopUtil.removeItem(player, itemB, itemB.getCount());
+            ViScriptShopServerUtil.removeItem(player, itemA, itemA.getCount());
+            ViScriptShopServerUtil.removeItem(player, itemB, itemB.getCount());
             ItemHandlerHelper.giveItemToPlayer(player, merchantInfo.getItemResult());
             if (merchantInfo.getXp() != 0) player.giveExperiencePoints(merchantInfo.getXp());
             if (!merchantInfo.getCommand().isEmpty())

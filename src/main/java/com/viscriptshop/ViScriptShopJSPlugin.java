@@ -1,19 +1,21 @@
 package com.viscriptshop;
 
+import com.lowdragmc.lowdraglib2.Platform;
 import com.viscriptshop.event.CommonEventsPostJS;
 import com.viscriptshop.event.ViScriptShopEventsJS;
-import com.viscriptshop.util.ViScriptShopUtil;
+import com.viscriptshop.util.ViScriptShopClientUtil;
+import com.viscriptshop.util.ViScriptShopServerUtil;
 import dev.latvian.mods.kubejs.event.EventGroupRegistry;
 import dev.latvian.mods.kubejs.plugin.KubeJSPlugin;
 import dev.latvian.mods.kubejs.script.BindingRegistry;
-import net.neoforged.fml.loading.FMLEnvironment;
+import dev.latvian.mods.kubejs.script.ScriptType;
 import net.neoforged.neoforge.common.NeoForge;
 
 public class ViScriptShopJSPlugin implements KubeJSPlugin {
 
     @Override
     public void init() {
-        if (FMLEnvironment.dist.isClient()) {
+        if (Platform.isClient()) {
             NeoForge.EVENT_BUS.register(CommonEventsPostJS.class);
         }
     }
@@ -25,6 +27,11 @@ public class ViScriptShopJSPlugin implements KubeJSPlugin {
 
     @Override
     public void registerBindings(BindingRegistry bindings) {
-        bindings.add("ViScriptShopUtil", ViScriptShopUtil.class);
+        ScriptType type = bindings.type();
+        if (type.equals(ScriptType.CLIENT)) {
+            bindings.add("ViScriptShopUtil", ViScriptShopClientUtil.class);
+        } else if (type.equals(ScriptType.SERVER)) {
+            bindings.add("ViScriptShopUtil", ViScriptShopServerUtil.class);
+        }
     }
 }

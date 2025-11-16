@@ -1,7 +1,7 @@
 package com.viscriptshop.network.s2c;
 
 import com.viscriptshop.ViscriptShop;
-import com.viscriptshop.util.ViScriptShopUtil;
+import com.viscriptshop.util.ViScriptShopClientUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -24,7 +24,7 @@ public record OpenShopEditorPayload() implements CustomPacketPayload {
 
 
     public static void execute(OpenShopEditorPayload payload, IPayloadContext context) {
-        ViScriptShopUtil.clientOpenNpcEditor();
+        ViScriptShopClientUtil.clientOpenNpcEditor();
     }
 
     @Override

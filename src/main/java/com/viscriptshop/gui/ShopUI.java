@@ -18,7 +18,7 @@ import com.viscriptshop.gui.data.MerchantInfo;
 import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.network.c2s.BuyMerchantPayload;
 import com.viscriptshop.util.UIElementUtil;
-import com.viscriptshop.util.ViScriptShopUtil;
+import com.viscriptshop.util.ViScriptShopServerUtil;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.Minecraft;
@@ -219,7 +219,7 @@ public class ShopUI extends UIElement {
         int count = 0;
         if (player != null) {
             //背包该物品数量
-            count += ViScriptShopUtil.removeItem(player, item, 0);
+            count += ViScriptShopServerUtil.removeItem(player, item, 0);
         }
         return count;
     }

@@ -2,7 +2,7 @@ package com.viscriptshop.network.s2c;
 
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.data.ShopInfo;
-import com.viscriptshop.util.ViScriptShopUtil;
+import com.viscriptshop.util.ViScriptShopClientUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -22,7 +22,7 @@ public record OpenShopUIPayload(ShopInfo shopInfo, String title) implements Cust
 
 
     public static void execute(OpenShopUIPayload payload, IPayloadContext context) {
-        ViScriptShopUtil.clientOpenShop(payload.shopInfo(), payload.title());
+        ViScriptShopClientUtil.clientOpenShop(payload.shopInfo(), payload.title());
     }
 
     @Override
