@@ -22,6 +22,12 @@ public class ShopSavedData extends SavedData {
         this.world = world;
     }
 
+    public void addShopMerchant(String shop, MerchantInfo merchantInfo) {
+        ShopInfo shopInfo = shopInfoMap.get(shop);
+        shopInfo.getMerchants().add(merchantInfo);
+        setDirty();
+    }
+
     public ShopInfo getShopInfo(String shop) {
         setDirty();
         return shopInfoMap.get(shop);

@@ -11,6 +11,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.SearchComponent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
+import com.viscriptshop.event.neoforge.ShopEvent;
 import com.viscriptshop.gui.components.Message;
 import com.viscriptshop.gui.components.PlayerHeadElement;
 import com.viscriptshop.gui.data.MerchantInfo;
@@ -28,6 +29,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.neoforged.neoforge.common.NeoForge;
 import org.appliedenergistics.yoga.*;
 
 import java.util.List;
@@ -46,7 +48,7 @@ public class ShopUI extends UIElement {
             layout.setHeightPercent(100);
             layout.setJustifyContent(YogaJustify.CENTER);
             layout.setAlignItems(YogaAlign.CENTER);
-        });
+        }).addEventListener(UIEvents.TICK, event -> NeoForge.EVENT_BUS.post(new ShopEvent.Tick(this)));
         UIElement root = new UIElement();
         root.layout((layout) -> {
             layout.setWidthPercent(75);
@@ -120,18 +122,22 @@ public class ShopUI extends UIElement {
             //购买
             LocalPlayer player = Minecraft.getInstance().player;
             if (player != null) {
+                if (NeoForge.EVENT_BUS.post(new ShopEvent.BuyPre(this)).isCanceled()) return;
                 ItemStack itemStackA = merchantInfo.getItemA();
                 if (!itemStackA.isEmpty() && getItemForPlayerCount(itemStackA) < itemStackA.getCount()) {
                     Message.error(Component.translatable("viscript_shop.message.notEnoughItem", itemStackA.getItem().getDescription().getString()).getString(), this);
+                    NeoForge.EVENT_BUS.post(new ShopEvent.BuyFail(this));
                     return;
                 }
                 ItemStack itemStackB = merchantInfo.getItemB();
                 if (!itemStackB.isEmpty() && getItemForPlayerCount(itemStackB) < itemStackB.getCount()) {
                     Message.error(Component.translatable("viscript_shop.message.notEnoughItem", itemStackB.getItem().getDescription().getString()).getString(), this);
+                    NeoForge.EVENT_BUS.post(new ShopEvent.BuyFail(this));
                     return;
                 }
                 player.connection.send(new BuyMerchantPayload(merchantInfo));
                 Message.success(Component.translatable("viscript_shop.message.buySuccess", merchantInfo.getItemResult().getItem().getDescription().getString()).getString(), this);
+                NeoForge.EVENT_BUS.post(new ShopEvent.BuySuccess(this));
             }
         });
 

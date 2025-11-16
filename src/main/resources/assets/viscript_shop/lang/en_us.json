@@ -30,5 +30,6 @@
   "viscript_shop.message.itemResult.empty": "返回物品不能为空",
   "viscript_shop.message.saveSuccess": "Save Success",
   "viscript_shop.message.notEnoughItem": "%s Save Success",
-  "viscript_shop.message.buySuccess": ""
+  "viscript_shop.message.buySuccess": "",
+  "viscript_shop.message.noMerchant": ""
 }

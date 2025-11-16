@@ -5,6 +5,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.ModularUIScreen;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.ShopEditor;
 import com.viscriptshop.gui.ShopUI;
+import com.viscriptshop.gui.data.MerchantInfo;
 import com.viscriptshop.gui.data.Shop;
 import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.gui.data.ShopSavedData;
@@ -63,13 +64,19 @@ public class ViScriptShopUtil {
         String shop = toPath(res);
         ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
         shopSavedData.resetShopInfo(shop);
-        ShopHelper.removeCache(shop);
     }
 
     @Info("获取商店的信息")
     public static ShopInfo getShopInfo(ResourceLocation res) {
         String shop = toPath(res);
         return ViscriptShop.getShopSavedData().getShopInfo(shop);
+    }
+
+    @Info("添加商店商品")
+    public static void addShopMerchant(ResourceLocation res, MerchantInfo merchantInfo){
+        String shop = toPath(res);
+        ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
+        shopSavedData.addShopMerchant(shop, merchantInfo);
     }
 
     @Info("设置当前商店的阶段值")

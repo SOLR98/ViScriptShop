@@ -251,6 +251,8 @@ public class ShopEditor extends UIElement {
                     }
                 }
             }).show(this);
+        }else{
+            Message.warn("viscript_shop.message.noMerchant", this);
         }
     }
 }

@@ -12,35 +12,16 @@ import net.minecraft.nbt.NbtIo;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 @ParametersAreNonnullByDefault
 public class ShopHelper {
-    private final static Map<String, Shop> CACHE = new HashMap<>();
     public static final String SHOP_PATH = "%s/shop/".formatted(ViscriptShop.MOD_ID);
     public static File cacheShopFile;
 
-    public static int clearCache() {
-        var count = CACHE.size();
-        CACHE.clear();
-        return count;
-    }
-
-    public static void removeCache(String path){
-        CACHE.remove(path);
-    }
-
     @Nullable
     public static Shop getShop(String path) {
-        return getShop(path, true);
-    }
-
-
-    @Nullable
-    public static Shop getShop(String path, boolean useCache) {
-        return useCache ? CACHE.computeIfAbsent(path, location -> loadShop(path)) : loadShop(path);
+        return loadShop(path);
     }
 
     public static Set<String> scanShopFiles() {
