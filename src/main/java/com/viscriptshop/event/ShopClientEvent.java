@@ -2,7 +2,6 @@ package com.viscriptshop.event;
 
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUIScreen;
 import com.viscriptshop.ViscriptShop;
-import com.viscriptshop.event.neoforge.ShopEvent;
 import com.viscriptshop.gui.ShopUI;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -15,14 +14,14 @@ public class ShopClientEvent {
     @SubscribeEvent
     public static void shopUiOpening(ScreenEvent.Opening event) {
         if (event.getScreen() instanceof ModularUIScreen screen && screen.modularUI.ui.rootElement instanceof ShopUI shopUI) {
-            NeoForge.EVENT_BUS.post(new ShopEvent.Opening(shopUI));
+            NeoForge.EVENT_BUS.post(new com.viscriptshop.event.neoforge.ShopClientEvent.Opening(shopUI));
         }
     }
 
     @SubscribeEvent
     public static void shopUiClosing(ScreenEvent.Closing event) {
         if (event.getScreen() instanceof ModularUIScreen screen && screen.modularUI.ui.rootElement instanceof ShopUI shopUI) {
-            NeoForge.EVENT_BUS.post(new ShopEvent.Closing(shopUI));
+            NeoForge.EVENT_BUS.post(new com.viscriptshop.event.neoforge.ShopClientEvent.Closing(shopUI));
         }
     }
 }

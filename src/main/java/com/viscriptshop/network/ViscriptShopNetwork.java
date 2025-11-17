@@ -2,9 +2,8 @@ package com.viscriptshop.network;
 
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.network.c2s.BuyMerchantPayload;
-import com.viscriptshop.network.s2c.OpenShopEditorPayload;
-import com.viscriptshop.network.s2c.OpenShopUIPayload;
-import com.viscriptshop.network.s2c.ReloadShopUIPayload;
+import com.viscriptshop.network.c2s.GetItemCountC2SPayload;
+import com.viscriptshop.network.s2c.*;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
@@ -20,8 +19,11 @@ public class ViscriptShopNetwork {
         registrar.commonToClient(OpenShopEditorPayload.TYPE, OpenShopEditorPayload.CODEC, OpenShopEditorPayload::execute);
         registrar.commonToClient(OpenShopUIPayload.TYPE, OpenShopUIPayload.CODEC, OpenShopUIPayload::execute);
         registrar.commonToClient(ReloadShopUIPayload.TYPE, ReloadShopUIPayload.CODEC, ReloadShopUIPayload::execute);
+        registrar.commonToClient(GetItemCountS2CPayload.TYPE, GetItemCountS2CPayload.CODEC, GetItemCountS2CPayload::execute);
+        registrar.commonToClient(SendMessagePayload.TYPE, SendMessagePayload.CODEC, SendMessagePayload::execute);
 
         //c2s
         registrar.commonToServer(BuyMerchantPayload.TYPE, BuyMerchantPayload.CODEC, BuyMerchantPayload::execute);
+        registrar.commonToServer(GetItemCountC2SPayload.TYPE, GetItemCountC2SPayload.CODEC, GetItemCountC2SPayload::execute);
     }
 }

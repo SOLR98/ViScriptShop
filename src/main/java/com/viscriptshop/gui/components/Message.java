@@ -8,6 +8,8 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
 import com.viscriptshop.ViscriptShop;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import org.appliedenergistics.yoga.*;
 import org.appliedenergistics.yoga.style.StyleSizeLength;
 
@@ -82,6 +84,15 @@ public class Message extends UIElement {
         message.show();
     }
 
+    public static void send(Type type, String content, UIElement parent) {
+        switch (type) {
+            case ERROR -> error(content, parent);
+            case INFO -> info(content, parent);
+            case SUCCESS -> success(content, parent);
+            case WARN -> warn(content, parent);
+        }
+    }
+
     private void show() {
         parent.addChild(this);
         AtomicInteger time = new AtomicInteger(DEFAULT_TIME);
@@ -93,6 +104,18 @@ public class Message extends UIElement {
 
     private void setIcon(SpriteTexture icon) {
         this.icon.getStyle().backgroundTexture(icon);
+    }
+
+    public enum Type {
+        ERROR,
+        INFO,
+        SUCCESS,
+        WARN;
+
+        public static final StreamCodec<FriendlyByteBuf, Type> STREAM_CODEC = StreamCodec.of(
+                (buf, type) -> buf.writeVarInt(type.ordinal()),
+                buf -> Type.values()[buf.readVarInt()]
+        );
     }
 }
 

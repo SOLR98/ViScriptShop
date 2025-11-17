@@ -5,15 +5,15 @@ import com.lowdragmc.lowdraglib2.syncdata.AccessorRegistries;
 import com.lowdragmc.lowdraglib2.syncdata.accessor.direct.CustomDirectAccessor;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.Dynamic;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.ItemStack;
 
 public class SyncAccessor {
-    private static final Codec<ItemStack> ITEM_STACK_CODEC = Codec.PASSTHROUGH.xmap(
+    public static final Codec<ItemStack> ITEM_STACK_CODEC = Codec.PASSTHROUGH.xmap(
             dynamic -> {
                 CompoundTag tag = (CompoundTag) dynamic.getValue();
                 return ItemStack.parseOptional(Platform.getFrozenRegistry(), tag);
@@ -26,7 +26,7 @@ public class SyncAccessor {
             }
     );
 
-    private static final StreamCodec<RegistryFriendlyByteBuf, ItemStack> ITEM_STACK_STREAM_CODEC = ByteBufCodecs.fromCodecWithRegistries(ITEM_STACK_CODEC);
+    public static final StreamCodec<ByteBuf, ItemStack> ITEM_STACK_STREAM_CODEC = ByteBufCodecs.fromCodec(ITEM_STACK_CODEC);
 
     public static void init() {
         AccessorRegistries.registerAccessor(CustomDirectAccessor.builder(ItemStack.class)

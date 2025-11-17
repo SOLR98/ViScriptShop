@@ -1,37 +1,39 @@
 package com.viscriptshop.event;
 
-import com.viscriptshop.event.kubejs.ShopEventJS;
-import com.viscriptshop.event.neoforge.ShopEvent;
+import com.viscriptshop.event.kubejs.ShopClientEventJS;
+import com.viscriptshop.event.kubejs.ShopServerEventJS;
+import com.viscriptshop.event.neoforge.ShopClientEvent;
+import com.viscriptshop.event.neoforge.ShopServerEvent;
 import dev.latvian.mods.kubejs.event.EventResult;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 
 public class CommonEventsPostJS {
     @SubscribeEvent(priority = EventPriority.LOW)
-    public static void shopOpening(ShopEvent.Opening event) {
+    public static void shopOpening(ShopClientEvent.Opening event) {
         if (ViScriptShopEventsJS.OPENING.hasListeners()) {
-            ViScriptShopEventsJS.OPENING.post(new ShopEventJS.Opening(event));
+            ViScriptShopEventsJS.OPENING.post(new ShopClientEventJS.Opening(event));
         }
     }
 
     @SubscribeEvent(priority = EventPriority.LOW)
-    public static void shopClosing(ShopEvent.Closing event) {
+    public static void shopClosing(ShopClientEvent.Closing event) {
         if (ViScriptShopEventsJS.CLOSING.hasListeners()) {
-            ViScriptShopEventsJS.CLOSING.post(new ShopEventJS.Closing(event));
+            ViScriptShopEventsJS.CLOSING.post(new ShopClientEventJS.Closing(event));
         }
     }
 
     @SubscribeEvent(priority = EventPriority.LOW)
-    public static void shopTick(ShopEvent.Tick event) {
+    public static void shopTick(ShopClientEvent.Tick event) {
         if (ViScriptShopEventsJS.TICK.hasListeners()) {
-            ViScriptShopEventsJS.TICK.post(new ShopEventJS.Tick(event));
+            ViScriptShopEventsJS.TICK.post(new ShopClientEventJS.Tick(event));
         }
     }
 
     @SubscribeEvent(priority = EventPriority.LOW)
-    public static void shopBuyPre(ShopEvent.BuyPre event) {
+    public static void shopBuyPre(ShopServerEvent.BuyPre event) {
         if (ViScriptShopEventsJS.BUY_PRE.hasListeners()) {
-            EventResult result = ViScriptShopEventsJS.BUY_PRE.post(new ShopEventJS.BuyPre(event));
+            EventResult result = ViScriptShopEventsJS.BUY_PRE.post(new ShopServerEventJS.BuyPre(event));
             if (result.interruptFalse()) {
                 event.setCanceled(true);
             }
@@ -39,16 +41,16 @@ public class CommonEventsPostJS {
     }
 
     @SubscribeEvent(priority = EventPriority.LOW)
-    public static void shopBuyFail(ShopEvent.BuyFail event) {
+    public static void shopBuyFail(ShopServerEvent.BuyFail event) {
         if (ViScriptShopEventsJS.BUY_FAIL.hasListeners()) {
-            ViScriptShopEventsJS.BUY_FAIL.post(new ShopEventJS.BuyFail(event));
+            ViScriptShopEventsJS.BUY_FAIL.post(new ShopServerEventJS.BuyFail(event));
         }
     }
 
     @SubscribeEvent(priority = EventPriority.LOW)
-    public static void shopBuyFail(ShopEvent.BuySuccess event) {
+    public static void shopBuyFail(ShopServerEvent.BuySuccess event) {
         if (ViScriptShopEventsJS.BUY_SUCCESS.hasListeners()) {
-            ViScriptShopEventsJS.BUY_SUCCESS.post(new ShopEventJS.BuySuccess(event));
+            ViScriptShopEventsJS.BUY_SUCCESS.post(new ShopServerEventJS.BuySuccess(event));
         }
     }
 }

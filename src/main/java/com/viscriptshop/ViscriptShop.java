@@ -48,6 +48,16 @@ public class ViscriptShop {
         return ("%s:" + path).formatted(MOD_ID);
     }
 
+    //精妙背包
+    public static boolean isSophisticatedBackpacksLoaded() {
+        return isModLoaded("sophisticatedbackpacks");
+    }
+
+    //超越维度
+    public static boolean isBeyondDimensionsLoaded() {
+        return isModLoaded("beyonddimensions");
+    }
+
     private static boolean isModLoaded(String modId) {
         return ModList.get().isLoaded(modId);
     }

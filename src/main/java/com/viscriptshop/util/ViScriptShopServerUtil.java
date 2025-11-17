@@ -8,12 +8,9 @@ import com.viscriptshop.gui.data.ShopSavedData;
 import com.viscriptshop.network.s2c.OpenShopEditorPayload;
 import com.viscriptshop.network.s2c.OpenShopUIPayload;
 import dev.latvian.mods.kubejs.typings.Info;
-import dev.latvian.mods.rhino.util.HideFromJS;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 
 public class ViScriptShopServerUtil {
 
@@ -67,11 +64,6 @@ public class ViScriptShopServerUtil {
         ShopInfo shopInfo = shopSavedData.getShopInfo(shop);
         shopInfo.setStage(stage);
         shopSavedData.setShopInfo(shop, shopInfo);
-    }
-
-    @HideFromJS
-    public static int removeItem(Player player, ItemStack item, int count) {
-        return player.getInventory().clearOrCountMatchingItems(itemStack -> ItemStack.isSameItemSameComponents(itemStack, item), count, player.inventoryMenu.getCraftSlots());
     }
 
     private static String toPath(ResourceLocation location) {
