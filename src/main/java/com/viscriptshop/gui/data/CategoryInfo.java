@@ -1,0 +1,142 @@
+package com.viscriptshop.gui.data;
+
+import com.lowdragmc.lowdraglib2.configurator.IConfigurable;
+import com.lowdragmc.lowdraglib2.configurator.annotation.ConfigSelector;
+import com.lowdragmc.lowdraglib2.configurator.annotation.Configurable;
+import com.lowdragmc.lowdraglib2.configurator.ui.ArrayConfiguratorGroup;
+import com.lowdragmc.lowdraglib2.configurator.ui.Configurator;
+import com.lowdragmc.lowdraglib2.configurator.ui.ConfiguratorGroup;
+import com.lowdragmc.lowdraglib2.configurator.ui.StringConfigurator;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
+import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.ReadOnlyManaged;
+import com.lowdragmc.lowdraglib2.utils.PersistedParser;
+import com.mojang.serialization.Codec;
+import com.viscriptshop.gui.configurator.configurator.ItemStackConfigurator;
+import io.netty.buffer.ByteBuf;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import net.minecraft.nbt.IntTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.List;
+
+//分类信息
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class CategoryInfo implements IConfigurable, IPersistedSerializable {
+    public static final StreamCodec<ByteBuf, CategoryInfo> STREAM_CODEC;
+    public static final Codec<CategoryInfo> CODEC;
+
+    @Configurable(name = "viscript_shop.data.category.shopType")
+    private ShopType shopType = ShopType.ITEM_FOR_ITEM;
+    @Configurable(name = "viscript_shop.data.category.iconType")
+    @ConfigSelector(subConfiguratorBuilder = "iconTypeSubConfiguratorBuilder")
+    private IconType iconType = IconType.ITEM;
+    @Persisted
+    private ItemStack iconItem = ItemStack.EMPTY;
+    @Persisted
+    private String iconTexture = "";
+    @Configurable(name = "viscript_shop.data.category.name")
+    private String name = "";
+    @Persisted
+    @ReadOnlyManaged(serializeMethod = "writeMerchantInfo", deserializeMethod = "readMerchantInfo")
+    private List<MerchantInfo> merchants = new ArrayList<>();
+
+    static {
+        CODEC = PersistedParser.createCodec(CategoryInfo::new);
+        STREAM_CODEC = ByteBufCodecs.fromCodec(CODEC);
+    }
+
+    @Override
+    public void buildConfigurator(ConfiguratorGroup father) {
+        IConfigurable.super.buildConfigurator(father);
+        ArrayConfiguratorGroup<MerchantInfo> merchantInfoArrayConfiguratorGroup = new ArrayConfiguratorGroup<>("viscript_shop.data.category.merchants", true,
+                () -> new ArrayList<>(this.getMerchants()),
+                (getter, setter) -> {
+                    MerchantInfo instance = getter.get();
+                    final ShopType[] currentShopType = {this.shopType};
+                    ConfiguratorGroup configuratorGroup = new ConfiguratorGroup();
+                    configuratorGroup.addConfigurators(instance.createConfigurator(this.shopType));
+                    configuratorGroup.setCollapse(false);
+                    configuratorGroup.addEventListener(UIEvents.TICK, event -> {
+                        ShopType shopTypeHolder = this.shopType;
+                        if (shopTypeHolder != currentShopType[0]) {
+                            configuratorGroup.removeAllConfigurators();
+                            configuratorGroup.addConfigurators(instance.createConfigurator(shopTypeHolder));
+                            currentShopType[0] = shopTypeHolder;
+                        }
+                    });
+                    return configuratorGroup;
+                }, true);
+        merchantInfoArrayConfiguratorGroup.setAddDefault(MerchantInfo::new);
+        merchantInfoArrayConfiguratorGroup.setOnUpdate(list -> {
+            List<MerchantInfo> origin = this.getMerchants();
+            origin.clear();
+            origin.addAll(list);
+        });
+        father.addConfigurators(merchantInfoArrayConfiguratorGroup);
+    }
+
+    private void iconTypeSubConfiguratorBuilder(IconType value, ConfiguratorGroup group) {
+        switch (value) {
+            case ITEM -> {
+                group.addConfigurator(new ItemStackConfigurator("viscript_shop.data.category.iconItem", this::getIconItem, this::setIconItem, iconItem, true));
+            }
+            case TEXTURE -> {
+                group.addConfigurator(new StringConfigurator("viscript_shop.data.category.iconTexture", this::getIconTexture, this::setIconTexture, iconTexture, true).setResourceLocation(true));
+            }
+        }
+    }
+
+    private Tag writeMerchantInfo(List<MerchantInfo> value) {
+        return IntTag.valueOf(value.size());
+    }
+
+    private List<MerchantInfo> readMerchantInfo(IntTag tag) {
+        List<MerchantInfo> list = new ArrayList<>();
+        for (int i = 0; i < tag.getAsInt(); i++) {
+            list.add(new MerchantInfo());
+        }
+        return list;
+    }
+
+    @Getter
+    @AllArgsConstructor
+    public enum IconType implements StringRepresentable {
+        ITEM(Component.translatable("viscript_shop.data.category.iconType.item").getString()),
+        TEXTURE(Component.translatable("viscript_shop.data.category.iconType.texture").getString());
+
+        private final String name;
+
+        @Override
+        public @NotNull String getSerializedName() {
+            return name;
+        }
+    }
+
+    @Getter
+    @AllArgsConstructor
+    public enum ShopType implements StringRepresentable {
+        ITEM_FOR_ITEM(Component.translatable("viscript_shop.data.category.shopType.item_for_item").getString()),
+        CURRENCY(Component.translatable("viscript_shop.data.category.shopType.currency").getString());
+
+        private final String name;
+
+        @Override
+        public @NotNull String getSerializedName() {
+            return name;
+        }
+    }
+}

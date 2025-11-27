@@ -6,7 +6,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.ResourceLocation;
-import org.appliedenergistics.yoga.YogaEdge;
 
 public class PlayerHeadElement extends UIElement {
     public PlayerHeadElement() {
@@ -14,8 +13,6 @@ public class PlayerHeadElement extends UIElement {
         layout(layout -> {
             layout.setWidth(16);
             layout.setHeight(16);
-            layout.setMargin(YogaEdge.TOP, 5);
-            layout.setMargin(YogaEdge.RIGHT, 5);
         });
     }
 

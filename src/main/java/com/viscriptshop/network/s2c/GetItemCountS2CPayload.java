@@ -13,13 +13,13 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
-public record GetItemCountS2CPayload(List<ItemStack> itemStacks) implements CustomPacketPayload {
+public record GetItemCountS2CPayload(Map<ItemStack, Integer> itemStacks) implements CustomPacketPayload {
     public static final Type<GetItemCountS2CPayload> TYPE = new Type<>(ViscriptShop.id("get_item_count_s2c"));
     public static final StreamCodec<FriendlyByteBuf, GetItemCountS2CPayload> CODEC = StreamCodec.composite(
-            ByteBufCodecs.collection(ArrayList::new, SyncAccessor.ITEM_STACK_STREAM_CODEC),
+            ByteBufCodecs.map(HashMap::new, SyncAccessor.ITEM_STACK_STREAM_CODEC, ByteBufCodecs.VAR_INT),
             GetItemCountS2CPayload::itemStacks,
             GetItemCountS2CPayload::new
     );
@@ -27,7 +27,9 @@ public record GetItemCountS2CPayload(List<ItemStack> itemStacks) implements Cust
 
     public static void execute(GetItemCountS2CPayload payload, IPayloadContext context) {
         if (Minecraft.getInstance().screen instanceof ModularUIScreen screen && screen.modularUI.ui.rootElement instanceof ShopUI shopUI) {
-            shopUI.items = payload.itemStacks();
+            payload.itemStacks().forEach(shopUI::setItemCount);
+            shopUI.reloadInventoryItem();
+            shopUI.reloadShoppingItem();
         }
     }
 

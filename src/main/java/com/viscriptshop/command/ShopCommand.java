@@ -65,6 +65,7 @@ public class ShopCommand implements ICommand {
         shopFilesPath.clear();
         for (String path : ShopHelper.scanShopFiles()) {
             shopFilesPath.add(ViscriptShop.id(path));
+            ViScriptShopServerUtil.reloadOpenShop(ViscriptShop.id(path));
         }
         context.getSource().sendSuccess(() -> Component.translatable("command.viscript_shop.reload"), true);
         return 1;
@@ -108,6 +109,7 @@ public class ShopCommand implements ICommand {
         ResourceLocation shop = ResourceLocationArgument.getId(context, "shop");
         int stage = IntegerArgumentType.getInteger(context, "stage");
         ViScriptShopServerUtil.setStageShop(shop, stage);
+        context.getSource().sendSuccess(() -> Component.translatable("command.viscript_shop.setStage.shop", stage), true);
         return 1;
     }
 

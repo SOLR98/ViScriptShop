@@ -1,6 +1,10 @@
 package com.viscriptshop.gui.data;
 
 import com.lowdragmc.lowdraglib2.configurator.IConfigurable;
+import com.lowdragmc.lowdraglib2.configurator.annotation.Configurable;
+import com.lowdragmc.lowdraglib2.configurator.ui.ArrayConfiguratorGroup;
+import com.lowdragmc.lowdraglib2.configurator.ui.Configurator;
+import com.lowdragmc.lowdraglib2.configurator.ui.ConfiguratorGroup;
 import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.ReadOnlyManaged;
@@ -22,26 +26,44 @@ public class ShopInfo implements IConfigurable, IPersistedSerializable {
     public static final StreamCodec<ByteBuf, ShopInfo> STREAM_CODEC;
     public static final Codec<ShopInfo> CODEC;
 
-    @Persisted
-    @ReadOnlyManaged(serializeMethod = "writeMerchantInfo", deserializeMethod = "readMerchantInfo")
-    private List<MerchantInfo> merchants = new ArrayList<>();
-    @Persisted
+    @Configurable(name = "viscript_shop.data.shop.stage", tips = "viscript_shop.data.shop.stage.tip")
     private int stage = 0;
+    @Persisted
+    @ReadOnlyManaged(serializeMethod = "writeCategoryInfo", deserializeMethod = "readCategoryInfo")
+    private List<CategoryInfo> categoryInfos = new ArrayList<>();
 
     static {
         CODEC = PersistedParser.createCodec(ShopInfo::new);
         STREAM_CODEC = ByteBufCodecs.fromCodec(CODEC);
     }
 
-    private Tag writeMerchantInfo(List<MerchantInfo> value) {
+    @Override
+    public void buildConfigurator(ConfiguratorGroup father) {
+        IConfigurable.super.buildConfigurator(father);
+        ArrayConfiguratorGroup<CategoryInfo> categoryConfigArrayConfiguratorGroup = new ArrayConfiguratorGroup<>("viscript_shop.data.shop.categoryInfos", false,
+                () -> new ArrayList<>(this.getCategoryInfos()),
+                (getter, setter) -> {
+                    CategoryInfo instance = getter.get();
+                    return instance != null ? instance.createDirectConfigurator() : new Configurator();
+                }, true);
+        categoryConfigArrayConfiguratorGroup.setAddDefault(CategoryInfo::new);
+        categoryConfigArrayConfiguratorGroup.setOnUpdate(list -> {
+            List<CategoryInfo> origin = this.getCategoryInfos();
+            origin.clear();
+            origin.addAll(list);
+        });
+        father.addConfigurators(categoryConfigArrayConfiguratorGroup);
+    }
+
+    private Tag writeCategoryInfo(List<CategoryInfo> value) {
         return IntTag.valueOf(value.size());
     }
 
-    private List<MerchantInfo> readMerchantInfo(IntTag tag) {
-        var groups = new ArrayList<MerchantInfo>();
+    private List<CategoryInfo> readCategoryInfo(IntTag tag) {
+        List<CategoryInfo> list = new ArrayList<>();
         for (int i = 0; i < tag.getAsInt(); i++) {
-            groups.add(new MerchantInfo());
+            list.add(new CategoryInfo());
         }
-        return groups;
+        return list;
     }
 }

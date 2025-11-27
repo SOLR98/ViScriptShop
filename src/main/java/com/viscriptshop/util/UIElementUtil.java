@@ -1,23 +1,23 @@
 package com.viscriptshop.util;
 
-import com.lowdragmc.lowdraglib2.configurator.annotation.ConfigNumber;
-import com.lowdragmc.lowdraglib2.configurator.ui.NumberConfigurator;
 import com.lowdragmc.lowdraglib2.configurator.ui.SearchComponentConfigurator;
 import com.lowdragmc.lowdraglib2.gui.ColorPattern;
 import com.lowdragmc.lowdraglib2.gui.texture.ColorRectTexture;
-import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
-import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
-import com.lowdragmc.lowdraglib2.gui.ui.UI;
+import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.*;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Menu;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.utils.UIElementProvider;
 import com.lowdragmc.lowdraglib2.gui.util.TreeBuilder;
 import com.lowdragmc.lowdraglib2.gui.util.TreeNode;
-import com.lowdragmc.lowdraglib2.math.Size;
 import com.lowdragmc.lowdraglib2.utils.search.IResultHandler;
+import com.viscriptshop.ViscriptShop;
+import com.viscriptshop.gui.data.CategoryInfo;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -25,16 +25,17 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import org.appliedenergistics.yoga.YogaAlign;
 import org.appliedenergistics.yoga.YogaEdge;
+import org.appliedenergistics.yoga.YogaFlexDirection;
+import org.appliedenergistics.yoga.YogaGutter;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class UIElementUtil {
-
     public static SearchComponentConfigurator<Item> createItemSearchComponentConfigurator(String name, Supplier<String> getter, Consumer<String> setter, TagKey<Item> tag) {
         SearchComponentConfigurator<Item> itemSearchComponentConfigurator = new SearchComponentConfigurator<>(name,
                 () -> {
@@ -74,80 +75,77 @@ public class UIElementUtil {
         return createItemSearchComponentConfigurator(name, getter, setter, null);
     }
 
-    public static ItemSlot createItemSlot(ItemStack item, boolean isRenderBackgroundTexture) {
+    public static ItemSlot createItemSlot(ItemStack item, int size, boolean isRenderBackgroundTexture, boolean showItemTooltips) {
         return (ItemSlot) new ItemSlot().setItem(item)
                 .slotStyle(slotStyle -> {
                     if (!isRenderBackgroundTexture) slotStyle.hoverOverlay(new ColorRectTexture(0));
+                    slotStyle.showItemTooltips(showItemTooltips);
                 })
                 .layout(layout -> {
-                    layout.setWidth(18);
-                    layout.setHeight(18);
+                    layout.setWidth(size);
+                    layout.setHeight(size);
                 })
                 .style(style -> {
                     if (!isRenderBackgroundTexture) style.backgroundTexture(null);
                 });
     }
 
-    public static ModularUI createUI(UIElement root) {
-        return new ModularUI(UI.of(root, size -> {
-            int width = size.width;
-            int height = size.height;
+    public static ItemSlot createItemSlot(ItemStack item, boolean isRenderBackgroundTexture, boolean showItemTooltips) {
+        return createItemSlot(item, 16, isRenderBackgroundTexture, showItemTooltips);
+    }
 
-            float fontSize = Math.max(12, height * 0.04f);
-            for (UIElement child : root.getChildren()) {
-                if (child instanceof Label label) label.getTextStyle().fontSize(fontSize);
+    public static UIElement createCategoryUI(CategoryInfo categoryInfo, boolean isSelected, Consumer<CategoryInfo> onSelectCallback, ColorRectTexture defaultBg, ColorRectTexture selectedBg) {
+        UIElement category = new UIElement().layout(layout -> {
+            layout.setWidthPercent(100);
+            layout.setHeight(18);
+            layout.setGap(YogaGutter.ALL, 5);
+            layout.setFlexDirection(YogaFlexDirection.ROW);
+            layout.setAlignItems(YogaAlign.CENTER);
+            layout.setMargin(YogaEdge.BOTTOM, 5);
+        }).addEventListener(UIEvents.MOUSE_DOWN, event -> {
+            if (event.button == 0) {
+                onSelectCallback.accept(categoryInfo);
             }
-            return Size.of(width, height);
-        }));
-    }
-
-    public static Dialog numberEditorDialog(String title, Number initial,
-                                            Number min, Number max, Consumer<Number> result) {
-        AtomicReference<Number> value = new AtomicReference<>(initial);
-        var dialog = new Dialog();
-        var numberConfigurator = new NumberConfigurator(
-                "",
-                value::get,
-                value::set,
-                initial,
-                false
-        );
-
-        // 设置范围
-        numberConfigurator.setRange(min, max);
-
-        // 根据初始值类型设置数字类型
-        if (initial instanceof Integer) {
-            numberConfigurator.setType(ConfigNumber.Type.INTEGER);
-        } else if (initial instanceof Float) {
-            numberConfigurator.setType(ConfigNumber.Type.FLOAT);
-        } else if (initial instanceof Double) {
-            numberConfigurator.setType(ConfigNumber.Type.DOUBLE);
-        } else if (initial instanceof Long) {
-            numberConfigurator.setType(ConfigNumber.Type.LONG);
-        }
-
-        dialog.setTitle(title);
-        dialog.addContent(numberConfigurator.layout(layout -> layout.setWidth(120)));
-
-        dialog.addButton(new Button()
-                .setOnClick(e -> {
-                    dialog.close();
-                    result.accept(value.get());
+        });
+        UIElement icon = new UIElement().layout(layout -> {
+            layout.setMinWidth(16);
+            layout.setMinHeight(16);
+            layout.setWidth(16);
+            layout.setHeight(16);
+            layout.setMaxWidth(16);
+            layout.setMaxHeight(16);
+        });
+        Label label = (Label) new Label().setText(categoryInfo.getName())
+                .textStyle(textStyle -> {
+                    textStyle.textAlignHorizontal(Horizontal.LEFT).textAlignVertical(Vertical.CENTER).adaptiveWidth(true);
+                    if (isSelected) {
+                        textStyle.textColor(ColorPattern.WHITE.color);
+                    }
+                }).layout(layout -> {
+                    layout.setHeightPercent(100);
+                });
+        UIElement name = new UIElement().layout(layout -> {
+                    layout.setFlex(8);
+                    layout.setHeightPercent(100);
+                    layout.setPadding(YogaEdge.ALL, 3);
+                }).style(style -> {
+                    style.backgroundTexture(isSelected ? selectedBg : defaultBg);
                 })
-                .setText("ldlib.gui.tips.confirm"));
-
-        return dialog;
+                .addChild(label);
+        switch (categoryInfo.getIconType()) {
+            case ITEM -> icon = createItemSlot(categoryInfo.getIconItem(), false, false);
+            case TEXTURE -> {
+                String iconTexture = categoryInfo.getIconTexture();
+                if (!iconTexture.isEmpty() && ViscriptShop.isPresentResource(ResourceLocation.parse(iconTexture))) {
+                    icon.style(style -> style.backgroundTexture(SpriteTexture.of(iconTexture)));
+                }
+            }
+        }
+        category.addChildren(icon, name);
+        return category;
     }
 
-    public static UIElement createMenuTab(TreeBuilder.Menu menu, @NotNull UIElement parent, String text) {
-        return (new TextElement()).textStyle((textStyle) -> textStyle.adaptiveWidth(true).textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER)).setText(text).layout((layout) -> {
-            layout.setHeightPercent(100.0F);
-            layout.setPadding(YogaEdge.HORIZONTAL, 2.0F);
-        }).style((style) -> style.backgroundTexture(IGuiTexture.EMPTY)).addEventListener("mouseEnter", (e) -> e.currentElement.style((style) -> style.backgroundTexture(ColorPattern.T_WHITE.rectTexture())), true).addEventListener("mouseLeave", (e) -> e.currentElement.style((style) -> style.backgroundTexture(IGuiTexture.EMPTY)), true).addEventListener("mouseDown", (e) -> openMenu(e.currentElement.getPositionX(), e.currentElement.getPositionY() + e.currentElement.getSizeHeight(), menu, parent));
-    }
-
-    private static void openMenu(float posX, float posY, @Nullable TreeBuilder.Menu menuBuilder, @NotNull UIElement parent) {
+    public static void openMenu(float posX, float posY, @Nullable TreeBuilder.Menu menuBuilder, @NotNull UIElement parent) {
         if (menuBuilder != null && !menuBuilder.isEmpty()) {
             openMenu(posX, posY, menuBuilder.build(), TreeBuilder.Menu::uiProvider, parent).setHoverTextureProvider(TreeBuilder.Menu::hoverTextureProvider).setOnNodeClicked(TreeBuilder.Menu::handle);
         }

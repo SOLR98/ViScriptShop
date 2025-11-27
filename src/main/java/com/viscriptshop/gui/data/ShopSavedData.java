@@ -22,9 +22,9 @@ public class ShopSavedData extends SavedData {
         this.world = world;
     }
 
-    public void addShopMerchant(String shop, MerchantInfo merchantInfo) {
+    public void addShopMerchant(String shop, int categoryIndex, MerchantInfo merchantInfo) {
         ShopInfo shopInfo = shopInfoMap.get(shop);
-        shopInfo.getMerchants().add(merchantInfo);
+        shopInfo.getCategoryInfos().get(categoryIndex).getMerchants().add(merchantInfo);
         setDirty();
     }
 
@@ -34,6 +34,8 @@ public class ShopSavedData extends SavedData {
     }
 
     public void setShopInfo(String shop, ShopInfo shopInfo) {
+        System.out.println(shop);
+        System.out.println(shopInfo);
         shopInfoMap.put(shop, shopInfo);
         setDirty();
     }

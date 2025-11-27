@@ -1,7 +1,7 @@
 package com.viscriptshop.network.c2s;
 
 import com.viscriptshop.ViscriptShop;
-import com.viscriptshop.gui.data.ShopInfo;
+import com.viscriptshop.gui.data.CategoryInfo;
 import com.viscriptshop.network.s2c.GetItemCountS2CPayload;
 import com.viscriptshop.util.ItemUtil;
 import net.minecraft.network.FriendlyByteBuf;
@@ -12,38 +12,42 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
-public record GetItemCountC2SPayload(ShopInfo shopInfo) implements CustomPacketPayload {
+public record GetItemCountC2SPayload(CategoryInfo categoryInfo) implements CustomPacketPayload {
     public static final Type<GetItemCountC2SPayload> TYPE = new Type<>(ViscriptShop.id("get_item_count_c2s"));
     public static final StreamCodec<FriendlyByteBuf, GetItemCountC2SPayload> CODEC = StreamCodec.composite(
-            ShopInfo.STREAM_CODEC,
-            GetItemCountC2SPayload::shopInfo,
+            CategoryInfo.STREAM_CODEC,
+            GetItemCountC2SPayload::categoryInfo,
             GetItemCountC2SPayload::new
     );
 
 
     public static void execute(GetItemCountC2SPayload payload, IPayloadContext context) {
         ServerPlayer player = (ServerPlayer) context.player();
-        List<ItemStack> itemStacks = new ArrayList<>();
-        payload.shopInfo().getMerchants().forEach(merchantInfo -> {
-            ItemStack[] items = {merchantInfo.getItemA(), merchantInfo.getItemB()};
+        Map<ItemStack, Integer> itemStacks = new HashMap<>();
+        payload.categoryInfo().getMerchants().forEach(merchantInfo -> {
+            ItemStack[] items = payload.categoryInfo().getShopType().equals(CategoryInfo.ShopType.ITEM_FOR_ITEM) ? new ItemStack[]{merchantInfo.getItemA(), merchantInfo.getItemB()} : new ItemStack[]{merchantInfo.getItemResult()};
             for (ItemStack stack : items) {
                 if (stack == null || stack.isEmpty()) {
                     continue;
                 }
                 boolean exists = false;
-                for (ItemStack existing : itemStacks) {
+                for (ItemStack existing : itemStacks.keySet()) {
                     if (ItemStack.isSameItemSameComponents(existing, stack)) {
                         exists = true;
                         break;
                     }
                 }
-                if (!exists) itemStacks.add(stack.copy());
+                if (!exists) {
+                    ItemStack copy = stack.copy();
+                    copy.setCount(1);
+                    itemStacks.put(copy, 0);
+                }
             }
         });
-        itemStacks.forEach(stack -> stack.setCount(ItemUtil.getItemForPlayerCount(player, stack)));
+        itemStacks.forEach((stack, count) -> itemStacks.put(stack, ItemUtil.getItemForPlayerCount(player, stack)));
         player.connection.send(new GetItemCountS2CPayload(itemStacks));
     }
 

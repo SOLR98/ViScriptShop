@@ -1,15 +1,15 @@
 package com.viscriptshop.network.c2s;
 
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.viscriptshop.ShopRegistries;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.event.neoforge.ShopServerEvent;
 import com.viscriptshop.gui.components.Message;
-import com.viscriptshop.gui.data.MerchantInfo;
+import com.viscriptshop.gui.data.AggregatedResources;
+import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.network.s2c.ReloadShopUIPayload;
 import com.viscriptshop.network.s2c.SendMessagePayload;
 import com.viscriptshop.util.ItemUtil;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
+import com.viscriptshop.util.ViScriptShopServerUtil;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
@@ -21,61 +21,63 @@ import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
+import java.util.Map;
 
-public record BuyMerchantPayload(MerchantInfo merchantInfo) implements CustomPacketPayload {
+public record BuyMerchantPayload(ShopInfo shopInfo, AggregatedResources cost,
+                                 AggregatedResources gain) implements CustomPacketPayload {
     public static final Type<BuyMerchantPayload> TYPE = new Type<>(ViscriptShop.id("buy_merchant"));
     public static final StreamCodec<FriendlyByteBuf, BuyMerchantPayload> CODEC = StreamCodec.composite(
-            MerchantInfo.STREAM_CODEC,
-            BuyMerchantPayload::merchantInfo,
+            ShopInfo.STREAM_CODEC,
+            BuyMerchantPayload::shopInfo,
+            AggregatedResources.STREAM_CODEC,
+            BuyMerchantPayload::cost,
+            AggregatedResources.STREAM_CODEC,
+            BuyMerchantPayload::gain,
             BuyMerchantPayload::new
     );
 
 
     public static void execute(BuyMerchantPayload payload, IPayloadContext context) {
-        MerchantInfo merchantInfo = payload.merchantInfo();
+        ShopInfo shopInfo = payload.shopInfo();
+        AggregatedResources cost = payload.cost();
+        AggregatedResources gain = payload.gain();
         ServerPlayer player = (ServerPlayer) context.player();
-        if (merchantInfo != null) {
-            if (NeoForge.EVENT_BUS.post(new ShopServerEvent.BuyPre(player, merchantInfo)).isCanceled()) return;
-            //判断数量是否足够
-            ItemStack itemA = merchantInfo.getItemA();
-            if (canBuy(merchantInfo, player, itemA)) return;
-            ItemStack itemB = merchantInfo.getItemB();
-            if (canBuy(merchantInfo, player, itemB)) return;
-            player.connection.send(new SendMessagePayload(Message.Type.SUCCESS, Component.translatable("viscript_shop.message.buySuccess", merchantInfo.getItemResult().getItem().getDescription().getString()).getString()));
-            NeoForge.EVENT_BUS.post(new ShopServerEvent.BuyPre(player, merchantInfo));
-            //删除物品
-            ItemUtil.removeItemForPlayer(player, itemA, itemA.getCount());
-            ItemUtil.removeItemForPlayer(player, itemB, itemB.getCount());
-            //给予玩家物品
-            ItemHandlerHelper.giveItemToPlayer(player, merchantInfo.getItemResult());
-            //给予玩家经验
-            if (merchantInfo.getXp() != 0) player.giveExperiencePoints(merchantInfo.getXp());
-            //执行指令
-            if (!merchantInfo.getCommand().isEmpty())
-                Arrays.stream(merchantInfo.getCommand().split(";")).forEach(command -> runCommand(player, command));
-            player.connection.send(new ReloadShopUIPayload(itemA, itemB));
+        if (NeoForge.EVENT_BUS.post(new ShopServerEvent.BuyPre(player, shopInfo, cost, gain)).isCanceled()) return;
+        //判断数量是否足够
+        Map<ItemStack, Integer> costItems = cost.getItems();
+        for (ItemStack itemStack : costItems.keySet()) {
+            if (!itemStack.isEmpty() && ItemUtil.getItemForPlayerCount(player, itemStack) < costItems.get(itemStack)) {
+                //物品数量不够
+                player.connection.send(new SendMessagePayload(Message.Type.ERROR, Component.translatable("viscript_shop.message.notEnoughItem", itemStack.getItem().getDescription().getString()).getString()));
+                NeoForge.EVENT_BUS.post(new ShopServerEvent.BuyPre(player, shopInfo, cost, gain));
+                return;
+            }
         }
-    }
-
-    private static boolean canBuy(MerchantInfo merchantInfo, ServerPlayer player, ItemStack itemStackA) {
-        if (!itemStackA.isEmpty() && ItemUtil.getItemForPlayerCount(player, itemStackA) < itemStackA.getCount()) {
-            player.connection.send(new SendMessagePayload(Message.Type.ERROR, Component.translatable("viscript_shop.message.notEnoughItem", itemStackA.getItem().getDescription().getString()).getString()));
-            NeoForge.EVENT_BUS.post(new ShopServerEvent.BuyPre(player, merchantInfo));
-            return true;
+        if (cost.getTotalMoney() > player.getData(ShopRegistries.MONEY).getMoney()) {
+            //钱不够
+            player.connection.send(new SendMessagePayload(Message.Type.ERROR, Component.translatable("viscript_shop.message.noEnoughMoney", cost.getTotalMoney() - player.getData(ShopRegistries.MONEY).getMoney()).getString()));
+            NeoForge.EVENT_BUS.post(new ShopServerEvent.BuyPre(player, shopInfo, cost, gain));
+            return;
         }
-        return false;
-    }
-
-    private static void runCommand(ServerPlayer player, String command) {
-        CommandSourceStack commandSource = player.createCommandSourceStack();
-        commandSource = commandSource.withPermission(Commands.LEVEL_GAMEMASTERS).withSuppressedOutput();
-        var dispatcher = player.server.getCommands().getDispatcher();
-        try {
-            dispatcher.execute(dispatcher.parse(command, commandSource));
-        } catch (CommandSyntaxException e) {
-            ViscriptShop.LOGGER.error("Error executing command on server: {}", command, e);
+        player.connection.send(new SendMessagePayload(Message.Type.SUCCESS, Component.translatable("viscript_shop.message.buySuccess").getString()));
+        NeoForge.EVENT_BUS.post(new ShopServerEvent.BuyPre(player, shopInfo, cost, gain));
+        //删除物品
+        for (ItemStack itemStack : costItems.keySet()) {
+            ItemUtil.removeItemForPlayer(player, itemStack, costItems.get(itemStack));
         }
+        //扣除钱
+        if (cost.getTotalMoney() > 0) ViScriptShopServerUtil.removeMoney(player, cost.getTotalMoney());
+        //给予玩家物品
+        gain.getItems().forEach((itemStack, count) -> {
+            ItemStack copy = itemStack.copy();
+            copy.setCount(count);
+            ItemHandlerHelper.giveItemToPlayer(player, copy);
+        });
+        //给予玩家钱
+        if (gain.getTotalMoney() > 0) ViScriptShopServerUtil.addMoney(player, gain.getTotalMoney());
+        //给予玩家经验
+        if (gain.getTotalXp() > 0) player.giveExperiencePoints(gain.getTotalXp());
+        player.connection.send(new ReloadShopUIPayload(costItems));
     }
 
     @Override

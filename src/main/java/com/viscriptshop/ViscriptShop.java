@@ -8,6 +8,7 @@ import com.viscriptshop.gui.configurator.SyncAccessor;
 import com.viscriptshop.gui.data.ShopSavedData;
 import lombok.Getter;
 import lombok.Setter;
+import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -30,6 +31,7 @@ public class ViscriptShop {
 
     public ViscriptShop(IEventBus modEventBus, ModContainer modContainer, Dist dist) {
         NeoForge.EVENT_BUS.addListener(this::onRegisterCommands);
+        ShopRegistries.ATTACHMENT_TYPES.register(modEventBus);
         SyncAccessor.init();
     }
 
@@ -46,6 +48,10 @@ public class ViscriptShop {
 
     public static String formattedMod(String path) {
         return ("%s:" + path).formatted(MOD_ID);
+    }
+
+    public static boolean isPresentResource(ResourceLocation resourceLocation) {
+        return Minecraft.getInstance().getResourceManager().getResource(resourceLocation).isPresent();
     }
 
     //精妙背包

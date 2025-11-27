@@ -1,6 +1,7 @@
 package com.viscriptshop.event.neoforge;
 
-import com.viscriptshop.gui.data.MerchantInfo;
+import com.viscriptshop.gui.data.AggregatedResources;
+import com.viscriptshop.gui.data.ShopInfo;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.minecraft.server.level.ServerPlayer;
@@ -11,23 +12,25 @@ import net.neoforged.bus.api.ICancellableEvent;
 @AllArgsConstructor
 public class ShopServerEvent extends Event {
     private final ServerPlayer player;
-    private final MerchantInfo merchantInfo;
+    private final ShopInfo shopInfo;
+    private final AggregatedResources costSummary;
+    private final AggregatedResources gainSummary;
 
     public static class BuyPre extends ShopServerEvent implements ICancellableEvent {
-        public BuyPre(ServerPlayer player, MerchantInfo merchantInfo) {
-            super(player, merchantInfo);
+        public BuyPre(ServerPlayer player, ShopInfo shopInfo, AggregatedResources costSummary, AggregatedResources gainSummary) {
+            super(player, shopInfo, costSummary, gainSummary);
         }
     }
 
     public static class BuyFail extends ShopServerEvent {
-        public BuyFail(ServerPlayer player, MerchantInfo merchantInfo) {
-            super(player, merchantInfo);
+        public BuyFail(ServerPlayer player, ShopInfo shopInfo, AggregatedResources costSummary, AggregatedResources gainSummary) {
+            super(player, shopInfo, costSummary, gainSummary);
         }
     }
 
     public static class BuySuccess extends ShopServerEvent {
-        public BuySuccess(ServerPlayer player, MerchantInfo merchantInfo) {
-            super(player, merchantInfo);
+        public BuySuccess(ServerPlayer player, ShopInfo shopInfo, AggregatedResources costSummary, AggregatedResources gainSummary) {
+            super(player, shopInfo, costSummary, gainSummary);
         }
     }
 }

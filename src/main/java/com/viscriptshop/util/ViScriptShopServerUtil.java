@@ -1,5 +1,6 @@
 package com.viscriptshop.util;
 
+import com.viscriptshop.ShopRegistries;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.data.MerchantInfo;
 import com.viscriptshop.gui.data.Shop;
@@ -25,7 +26,7 @@ public class ViScriptShopServerUtil {
         ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
         ShopInfo shopInfo = shopSavedData.getShopInfo(shopPath);
         if (shopInfo == null) {
-            Shop shop = ShopHelper.getShop(shopPath);
+            Shop shop = ShopHelper.loadShop(shopPath);
             if (shop != null) {
                 shopInfo = shop.getShopInfo();
                 shopSavedData.setShopInfo(shopPath, shopInfo);
@@ -51,10 +52,10 @@ public class ViScriptShopServerUtil {
     }
 
     @Info("添加商店商品")
-    public static void addShopMerchant(ResourceLocation res, MerchantInfo merchantInfo) {
+    public static void addShopMerchant(ResourceLocation res, int categoryIndex, MerchantInfo merchantInfo) {
         String shop = toPath(res);
         ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
-        shopSavedData.addShopMerchant(shop, merchantInfo);
+        shopSavedData.addShopMerchant(shop, categoryIndex, merchantInfo);
     }
 
     @Info("设置当前商店的阶段值")
@@ -64,6 +65,20 @@ public class ViScriptShopServerUtil {
         ShopInfo shopInfo = shopSavedData.getShopInfo(shop);
         shopInfo.setStage(stage);
         shopSavedData.setShopInfo(shop, shopInfo);
+    }
+
+    @Info("给玩家钱")
+    public static void addMoney(ServerPlayer player, int money) {
+        ShopRegistries.Money m = new ShopRegistries.Money();
+        m.setMoney(player.getData(ShopRegistries.MONEY).getMoney() + money);
+        player.setData(ShopRegistries.MONEY, m);
+    }
+
+    @Info("扣除玩家钱")
+    public static void removeMoney(ServerPlayer player, int money) {
+        ShopRegistries.Money m = new ShopRegistries.Money();
+        m.setMoney(player.getData(ShopRegistries.MONEY).getMoney() - money);
+        player.setData(ShopRegistries.MONEY, m);
     }
 
     private static String toPath(ResourceLocation location) {
