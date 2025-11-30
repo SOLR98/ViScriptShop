@@ -118,6 +118,7 @@ public class UIElementUtil {
         Label label = (Label) new Label().setText(categoryInfo.getName())
                 .textStyle(textStyle -> {
                     textStyle.textAlignHorizontal(Horizontal.LEFT).textAlignVertical(Vertical.CENTER).adaptiveWidth(true);
+                    textStyle.fontSize(8);
                     if (isSelected) {
                         textStyle.textColor(ColorPattern.WHITE.color);
                     }

@@ -67,18 +67,33 @@ public class ViScriptShopServerUtil {
         shopSavedData.setShopInfo(shop, shopInfo);
     }
 
-    @Info("给玩家钱")
-    public static void addMoney(ServerPlayer player, int money) {
+    @Info("获取玩家钱")
+    public static int getMoney(ServerPlayer player) {
+        return player.getData(ShopRegistries.MONEY).getMoney();
+    }
+
+    @Info("设置玩家钱")
+    public static void setMoney(ServerPlayer player, int money) {
         ShopRegistries.Money m = new ShopRegistries.Money();
-        m.setMoney(player.getData(ShopRegistries.MONEY).getMoney() + money);
+        m.setMoney(money);
         player.setData(ShopRegistries.MONEY, m);
     }
 
+    @Info("给玩家钱")
+    public static void addMoney(ServerPlayer player, int money) {
+        setMoney(player, getMoney(player) + money);
+    }
+
     @Info("扣除玩家钱")
-    public static void removeMoney(ServerPlayer player, int money) {
-        ShopRegistries.Money m = new ShopRegistries.Money();
-        m.setMoney(player.getData(ShopRegistries.MONEY).getMoney() - money);
-        player.setData(ShopRegistries.MONEY, m);
+    public static int removeMoney(ServerPlayer player, int money) {
+        int playerMoney = getMoney(player);
+        if (money > playerMoney) {
+            setMoney(player, 0);
+            return playerMoney;
+        } else {
+            setMoney(player, playerMoney - money);
+            return money;
+        }
     }
 
     private static String toPath(ResourceLocation location) {

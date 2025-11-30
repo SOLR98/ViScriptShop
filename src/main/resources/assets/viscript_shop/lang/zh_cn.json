@@ -4,6 +4,10 @@
   "command.viscript_shop.reload": "全部商店重载完毕",
   "command.viscript_shop.reload.shop": "已重置该商店的信息",
   "command.viscript_shop.setStage.shop": "已将该商店的阶段值设置为%s",
+  "command.viscript_shop.money.add": "已为%s添加%s◎，该玩家余额有%s◎",
+  "command.viscript_shop.money.remove": "已扣除%s%s◎，该玩家余额有%s◎",
+  "command.viscript_shop.money.get": "该玩家余额有%s◎",
+  "command.viscript_shop.money.pay": "已扣除%s%s◎给%s",
 
   "viscript_shop.data.shop.stage": "阶段值",
   "viscript_shop.data.shop.stage.tip": "编辑器中会显示阶段值相等的商品，商店界面会显示所有≤该值的商品",

@@ -1,6 +1,8 @@
 package com.viscriptshop.gui.configurator;
 
 import com.lowdragmc.lowdraglib2.Platform;
+import com.lowdragmc.lowdraglib2.plugin.ILDLibPlugin;
+import com.lowdragmc.lowdraglib2.plugin.LDLibPlugin;
 import com.lowdragmc.lowdraglib2.syncdata.AccessorRegistries;
 import com.lowdragmc.lowdraglib2.syncdata.accessor.direct.CustomDirectAccessor;
 import com.mojang.serialization.Codec;
@@ -12,7 +14,8 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.ItemStack;
 
-public class SyncAccessor {
+@LDLibPlugin
+public class SyncAccessor implements ILDLibPlugin {
     public static final Codec<ItemStack> ITEM_STACK_CODEC = Codec.PASSTHROUGH.xmap(
             dynamic -> {
                 CompoundTag tag = (CompoundTag) dynamic.getValue();
@@ -28,7 +31,8 @@ public class SyncAccessor {
 
     public static final StreamCodec<ByteBuf, ItemStack> ITEM_STACK_STREAM_CODEC = ByteBufCodecs.fromCodec(ITEM_STACK_CODEC);
 
-    public static void init() {
+    @Override
+    public void onLoad() {
         AccessorRegistries.registerAccessor(CustomDirectAccessor.builder(ItemStack.class)
                         .codec(ITEM_STACK_CODEC).streamCodec(ITEM_STACK_STREAM_CODEC)
                         .customMark(ItemStack::copy, ItemStack::matches)

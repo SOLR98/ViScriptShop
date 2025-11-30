@@ -12,6 +12,9 @@ import com.lowdragmc.lowdraglib2.editor.ui.menu.FileMenu;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Dialog;
 import com.lowdragmc.lowdraglib2.syncdata.ISubscription;
+import com.viscriptshop.gui.components.Message;
+import com.viscriptshop.gui.data.CategoryInfo;
+import com.viscriptshop.gui.data.MerchantInfo;
 import com.viscriptshop.gui.data.Shop;
 import com.viscriptshop.util.ShopHelper;
 import lombok.Getter;
@@ -88,7 +91,28 @@ public class ShopProject implements IProject {
         exportMenuSubscription = editor.fileMenu.registerMenuCreator((tab, menu) ->
                 menu.branch("viscript_shop.editor.shop.export", m ->
                         m.leaf("viscript_shop.editor.shop.export", () -> {
-                            //TODO 添加校验包括itemA和itemB不能都为空 itemResult不能为空
+                            for (CategoryInfo categoryInfo : shop.shopInfo.getCategoryInfos()) {
+                                for (MerchantInfo merchant : categoryInfo.getMerchants()) {
+                                    switch (categoryInfo.getShopType()) {
+                                        case ITEM_FOR_ITEM -> {
+                                            if (merchant.getItemA().isEmpty() && merchant.getItemB().isEmpty()) {
+                                                Message.warn("viscript_shop.message.item.empty", editor);
+                                                return;
+                                            } else if (merchant.getItemResult().isEmpty()) {
+                                                Message.warn("viscript_shop.message.itemResult.empty", editor);
+                                                return;
+                                            }
+                                        }
+                                        case CURRENCY -> {
+                                            if (merchant.getItemResult().isEmpty()) {
+                                                Message.warn("viscript_shop.message.itemResult.empty", editor);
+                                                return;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            shop.shopInfo.setStage(0);
                             Dialog.showFileDialog("viscript_shop.editor.saveAs", new File(LDLib2.getAssetsDir(), ShopHelper.SHOP_PATH), false,
                                     Dialog.suffixFilter(Shop.SUFFIX), file -> {
                                         if (file != null && !file.isDirectory()) {

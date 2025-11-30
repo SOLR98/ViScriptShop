@@ -7,6 +7,7 @@ import com.viscriptshop.gui.project.ShopProject;
 import com.viscriptshop.gui.view.CategoryView;
 import com.viscriptshop.gui.view.ShopPreviewView;
 import com.viscriptshop.util.ShopHelper;
+import org.appliedenergistics.yoga.YogaDisplay;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -22,6 +23,7 @@ public class ShopEditor extends Editor {
     public IProject project;
 
     public ShopEditor() {
+        super();
         fileMenu.addProjectProvider(ShopProject.PROVIDER);
 //        this.icon.style(style -> style.backgroundTexture(ICON));
         this.leftWindow.getLeftTop().addView(categoryView);

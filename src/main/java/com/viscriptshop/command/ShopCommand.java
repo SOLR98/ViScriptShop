@@ -15,6 +15,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.ComponentArgument;
+import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -55,6 +56,61 @@ public class ShopCommand implements ICommand {
                                 .suggests(this::shopFileSuggestions)
                                 .then(Commands.argument("stage", IntegerArgumentType.integer())
                                         .executes(this::setStageShop)
+                                )
+                        )
+                )
+                .then(Commands.literal("money")
+                        .then(Commands.literal("add")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .then(Commands.argument("money", IntegerArgumentType.integer())
+                                                .executes(ctx -> {
+                                                    ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+                                                    int money = IntegerArgumentType.getInteger(ctx, "money");
+                                                    ViScriptShopServerUtil.addMoney(player, money);
+                                                    ctx.getSource().sendSuccess(() -> Component.translatable("command.viscript_shop.money.add", player.getDisplayName(), money, ViScriptShopServerUtil.getMoney(player)), true);
+                                                    return money;
+                                                })
+                                        )
+                                )
+                        )
+                        .then(Commands.literal("remove")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .then(Commands.argument("money", IntegerArgumentType.integer())
+                                                .executes(ctx -> {
+                                                    ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+                                                    int money = IntegerArgumentType.getInteger(ctx, "money");
+                                                    int removeMoney = ViScriptShopServerUtil.removeMoney(player, money);
+                                                    ctx.getSource().sendSuccess(() -> Component.translatable("command.viscript_shop.money.remove", player.getDisplayName(), removeMoney, ViScriptShopServerUtil.getMoney(player)), true);
+                                                    return removeMoney;
+                                                })
+                                        )
+                                )
+                        )
+                        .then(Commands.literal("get")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .executes(ctx -> {
+                                            ServerPlayer player = EntityArgument.getPlayer(ctx, "player");
+                                            int money = ViScriptShopServerUtil.getMoney(player);
+                                            ctx.getSource().sendSuccess(() -> Component.translatable("command.viscript_shop.money.get", player.getDisplayName(), money), true);
+                                            return money;
+                                        })
+                                )
+                        )
+                        .then(Commands.literal("pay")
+                                .then(Commands.argument("player1", EntityArgument.player())
+                                        .then(Commands.argument("player2", EntityArgument.player())
+                                                .then(Commands.argument("money", IntegerArgumentType.integer())
+                                                        .executes(ctx -> {
+                                                            ServerPlayer player1 = EntityArgument.getPlayer(ctx, "player1");
+                                                            ServerPlayer player2 = EntityArgument.getPlayer(ctx, "player2");
+                                                            int money = IntegerArgumentType.getInteger(ctx, "money");
+                                                            int removeMoney = ViScriptShopServerUtil.removeMoney(player1, money);
+                                                            ViScriptShopServerUtil.addMoney(player2, removeMoney);
+                                                            ctx.getSource().sendSuccess(() -> Component.translatable("command.viscript_shop.money.pay", player1.getDisplayName(), removeMoney, player2.getDisplayName()), true);
+                                                            return removeMoney;
+                                                        })
+                                                )
+                                        )
                                 )
                         )
                 )

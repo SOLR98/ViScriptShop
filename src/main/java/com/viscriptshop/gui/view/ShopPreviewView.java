@@ -5,6 +5,7 @@ import com.lowdragmc.lowdraglib2.gui.texture.Icons;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.*;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
 import com.lowdragmc.lowdraglib2.gui.util.TreeBuilder;
@@ -82,31 +83,16 @@ public class ShopPreviewView extends View {
                 MerchantInfo merchantInfo = selectedCategory.getMerchants().get(i);
                 if (merchantInfo.getStage() != shopProject.shop.shopInfo.getStage()) continue;
                 int finalI = i;
-                scrollerView.addScrollViewChild(createMerchant(merchantInfo)
+                scrollerView.addScrollViewChild(createMerchant(merchantInfo, i)
                         .addEventListener(UIEvents.MOUSE_DOWN, event -> {
-                            if (event.button == 1) {
-                                UIElement clickedElement = event.currentElement;
-                                float posX = clickedElement.getPositionX();
-                                float posY = clickedElement.getPositionY() + clickedElement.getSizeHeight();
-
-                                TreeBuilder.Menu merchantMenu = TreeBuilder.Menu.start().leaf("viscript_shop.button.update", () -> {
-                                    merchantFloatView.showEdit(merchantInfo, selectedCategory.getShopType());
-                                }).leaf("viscript_shop.button.delete", () -> {
-                                    Dialog.showCheckBox("viscript_shop.button.delete", "viscript_shop.dialog.delete_merchant.info", (result) -> {
-                                        if (result) removeMerchant(finalI);
-                                    }).show(editor);
-                                });
-
-                                UIElementUtil.openMenu(posX, posY, merchantMenu, this);
-                                event.stopPropagation();
-                            }
+                            showMerchantMenuTab(event, merchantInfo, finalI);
                         })
                 );
             }
         }
     }
 
-    public UIElement createMerchant(MerchantInfo merchantInfo) {
+    public UIElement createMerchant(MerchantInfo merchantInfo, int i) {
         switch (selectedCategory.getShopType()) {
             case ITEM_FOR_ITEM -> {
                 UIElement merchant = new UIElement().layout(layout -> {
@@ -117,9 +103,9 @@ public class ShopPreviewView extends View {
                     layout.setFlexDirection(YogaFlexDirection.ROW);
                     layout.setAlignItems(YogaAlign.CENTER);
                 });
-                ItemSlot itemASlot = UIElementUtil.createItemSlot(merchantInfo.getItemA(), false, true);
-                ItemSlot itemBSlot = UIElementUtil.createItemSlot(merchantInfo.getItemB(), false, true);
-                ItemSlot resultItemSlot = UIElementUtil.createItemSlot(merchantInfo.getItemResult(), true, true);
+                ItemSlot itemASlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemA(), false, true).addEventListener(UIEvents.MOUSE_DOWN, event -> showMerchantMenuTab(event, merchantInfo, i));
+                ItemSlot itemBSlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemB(), false, true).addEventListener(UIEvents.MOUSE_DOWN, event -> showMerchantMenuTab(event, merchantInfo, i));
+                ItemSlot resultItemSlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemResult(), true, true).addEventListener(UIEvents.MOUSE_DOWN, event -> showMerchantMenuTab(event, merchantInfo, i));
                 merchant.addChildren(itemASlot, itemBSlot,
                         new UIElement().style(style -> style.backgroundTexture(Icons.RIGHT_ARROW_NO_BAR_S_LIGHT)).layout(layout -> {
                             layout.setWidth(6);
@@ -181,5 +167,24 @@ public class ShopPreviewView extends View {
 
     public void removeMerchant(int index) {
         selectedCategory.getMerchants().remove(index);
+    }
+
+    private void showMerchantMenuTab(UIEvent event, MerchantInfo merchantInfo, int index) {
+        if (event.button == 1) {
+            UIElement clickedElement = event.currentElement;
+            float posX = clickedElement.getPositionX();
+            float posY = clickedElement.getPositionY() + clickedElement.getSizeHeight();
+
+            TreeBuilder.Menu merchantMenu = TreeBuilder.Menu.start().leaf("viscript_shop.button.update", () -> {
+                merchantFloatView.showEdit(merchantInfo, selectedCategory.getShopType());
+            }).leaf("viscript_shop.button.delete", () -> {
+                Dialog.showCheckBox("viscript_shop.button.delete", "viscript_shop.dialog.delete_merchant.info", (result) -> {
+                    if (result) removeMerchant(index);
+                }).show(editor);
+            });
+
+            UIElementUtil.openMenu(posX, posY, merchantMenu, this);
+            event.stopPropagation();
+        }
     }
 }

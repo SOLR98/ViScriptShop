@@ -18,6 +18,7 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.ItemStack;
+import org.appliedenergistics.yoga.YogaDisplay;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -60,6 +61,9 @@ public class MerchantInfo implements IConfigurable, IPersistedSerializable {
 
     public Configurator createConfigurator(CategoryInfo.ShopType shopType) {
         ConfiguratorGroup group = new ConfiguratorGroup();
+        group.setCanCollapse(false);
+        group.setCollapse(false);
+        group.lineContainer.setDisplay(YogaDisplay.NONE);
         buildConfigurator(group);
         List<Configurator> configurators = new ArrayList<>(group.getConfigurators());
         group.removeAllConfigurators();
