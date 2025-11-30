@@ -1,8 +1,8 @@
 package com.viscriptshop.util;
 
 import com.viscriptshop.ViscriptShop;
-import com.viscriptshop.mod.BeyondDimensionsHelper;
-import com.viscriptshop.mod.SophisticatedBackpacksHelper;
+import com.viscriptshop.compat.BeyondDimensionsHelper;
+import com.viscriptshop.compat.SophisticatedBackpacksHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 

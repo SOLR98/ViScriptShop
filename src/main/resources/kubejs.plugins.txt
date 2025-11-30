@@ -1,1 +1,1 @@
-com.viscriptshop.ViScriptShopJSPlugin
+com.viscriptshop.compat.ViScriptShopJSPlugin

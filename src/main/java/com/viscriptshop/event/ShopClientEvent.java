@@ -6,7 +6,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
 import com.mojang.blaze3d.platform.Window;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.ShopUI;
-import com.viscriptshop.mod.JeiHelper;
+import com.viscriptshop.compat.JeiHelper;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;

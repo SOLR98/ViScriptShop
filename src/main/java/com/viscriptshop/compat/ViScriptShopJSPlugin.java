@@ -1,4 +1,4 @@
-package com.viscriptshop;
+package com.viscriptshop.compat;
 
 import com.lowdragmc.lowdraglib2.Platform;
 import com.viscriptshop.event.CommonEventsPostJS;

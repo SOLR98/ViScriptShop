@@ -1,4 +1,4 @@
-package com.viscriptshop.mod;
+package com.viscriptshop.compat;
 
 import com.viscriptshop.ViscriptShop;
 import mezz.jei.api.IModPlugin;

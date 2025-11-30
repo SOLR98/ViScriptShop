@@ -1,4 +1,4 @@
-package com.viscriptshop.mod;
+package com.viscriptshop.compat;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;

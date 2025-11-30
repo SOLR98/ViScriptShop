@@ -1,4 +1,4 @@
-package com.viscriptshop.mod;
+package com.viscriptshop.compat;
 
 import com.wintercogs.beyonddimensions.Api.DataBase.DimensionsNet;
 import com.wintercogs.beyonddimensions.Api.DataBase.Stack.IStackKey;
