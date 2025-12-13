@@ -3,12 +3,12 @@ package com.viscriptshop.gui.project;
 import com.lowdragmc.lowdraglib2.LDLib2;
 import com.lowdragmc.lowdraglib2.Platform;
 import com.lowdragmc.lowdraglib2.editor.project.IProject;
+import com.lowdragmc.lowdraglib2.editor.project.ProjectType;
 import com.lowdragmc.lowdraglib2.editor.resource.ColorsResource;
 import com.lowdragmc.lowdraglib2.editor.resource.IRendererResource;
 import com.lowdragmc.lowdraglib2.editor.resource.Resources;
 import com.lowdragmc.lowdraglib2.editor.resource.TexturesResource;
 import com.lowdragmc.lowdraglib2.editor.ui.Editor;
-import com.lowdragmc.lowdraglib2.editor.ui.menu.FileMenu;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Dialog;
 import com.lowdragmc.lowdraglib2.syncdata.ISubscription;
@@ -29,7 +29,7 @@ import java.io.File;
 
 public class ShopProject implements IProject {
     public static int VERSION = 1;
-    public static final FileMenu.ProjectProvider PROVIDER = FileMenu.ProjectProvider.of(IGuiTexture.EMPTY, Component.translatable("viscript_shop.editor.shop.add").getString(), ".shopproj", ShopProject::new);
+    public static final ProjectType PROVIDER = ProjectType.of(IGuiTexture.EMPTY, Component.translatable("viscript_shop.editor.shop.add").getString(), ".shopproj", ShopProject::new);
 
     @Getter
     private final Resources resources;
@@ -54,13 +54,8 @@ public class ShopProject implements IProject {
     }
 
     @Override
-    public String getSuffix() {
-        return PROVIDER.suffix;
-    }
-
-    @Override
-    public String getName() {
-        return PROVIDER.name;
+    public ProjectType getProjectType() {
+        return PROVIDER;
     }
 
     @Override

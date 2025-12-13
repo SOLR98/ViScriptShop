@@ -63,6 +63,14 @@ neoForge {
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
 
+        clinet2 {
+            client()
+
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            programArgument '--username'
+            programArgument 'zhenshiz'
+        }
+
         server {
             server()
             programArgument '--nogui'
@@ -82,6 +90,9 @@ neoForge {
 
         configureEach {
             systemProperty 'forge.logging.markers', 'REGISTRIES'
+
+            jvmArguments.add '-XX:+AllowEnhancedClassRedefinition'
+            jvmArguments.add '-XX:HotswapAgent=fatjar'
 
             logLevel = org.slf4j.event.Level.DEBUG
         }

@@ -1,6 +1,6 @@
 package com.viscriptshop.network.s2c;
 
-import com.lowdragmc.lowdraglib2.gui.ui.ModularUIScreen;
+import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.ShopUI;
 import com.viscriptshop.gui.components.Message;

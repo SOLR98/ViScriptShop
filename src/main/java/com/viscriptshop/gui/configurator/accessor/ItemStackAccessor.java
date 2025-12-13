@@ -13,7 +13,7 @@ import java.lang.reflect.Field;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-@LDLRegisterClient(name = "item", registry = "ldlib2:configurator_accessor")
+@LDLRegisterClient(name = "itemstack", registry = "ldlib2:configurator_accessor")
 public class ItemStackAccessor extends TypesAccessor<ItemStack> {
 
     public ItemStackAccessor() {

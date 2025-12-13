@@ -73,7 +73,7 @@ public class CategoryView extends View {
             int finalI = i;
             UIElement updateButton = new UIElement().style(style -> {
                 style.backgroundTexture(Icons.EDIT_ON.copy().setColor(ColorPattern.LIGHT_BLUE.color));
-                style.setTooltips("viscript_shop.button.update");
+                style.tooltips("viscript_shop.button.update");
             }).layout(layout -> {
                 layout.setMargin(YogaEdge.TOP, 5);
                 layout.setFlex(1);
@@ -86,7 +86,7 @@ public class CategoryView extends View {
             });
             UIElement deleteButton = new UIElement().style(style -> {
                 style.backgroundTexture(Icons.DELETE.copy().setColor(ColorPattern.RED.color));
-                style.setTooltips("viscript_shop.button.delete");
+                style.tooltips("viscript_shop.button.delete");
             }).layout(layout -> {
                 layout.setMargin(YogaEdge.TOP, 5);
                 layout.setFlex(1);

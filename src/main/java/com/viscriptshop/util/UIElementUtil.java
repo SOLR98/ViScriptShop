@@ -3,6 +3,7 @@ package com.viscriptshop.util;
 import com.lowdragmc.lowdraglib2.configurator.ui.SearchComponentConfigurator;
 import com.lowdragmc.lowdraglib2.gui.ColorPattern;
 import com.lowdragmc.lowdraglib2.gui.texture.ColorRectTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
@@ -37,7 +38,7 @@ import java.util.function.Supplier;
 
 public class UIElementUtil {
     public static SearchComponentConfigurator<Item> createItemSearchComponentConfigurator(String name, Supplier<String> getter, Consumer<String> setter, TagKey<Item> tag) {
-        SearchComponentConfigurator<Item> itemSearchComponentConfigurator = new SearchComponentConfigurator<>(name,
+        return new SearchComponentConfigurator<>(name,
                 () -> {
                     String id = getter.get();
                     return id != null ? BuiltInRegistries.ITEM.get(ResourceLocation.parse(id)) : Items.AIR;
@@ -62,13 +63,14 @@ public class UIElementUtil {
                     }
                 },
                 value -> BuiltInRegistries.ITEM.getKey(value).toString(),
-                value -> ""
+                value -> {
+                    UIElementProvider<Item> itemUIProvider = UIElementProvider.iconText(
+                            ItemStackTexture::new,
+                            item -> Component.translatable(item.getDescriptionId())
+                    );
+                    return itemUIProvider.createUI(value);
+                }
         );
-        itemSearchComponentConfigurator.searchComponent.setCandidateUIProvider(UIElementProvider.iconText(
-                ItemStackTexture::new,
-                item -> Component.translatable(item.getDescriptionId())
-        ));
-        return itemSearchComponentConfigurator;
     }
 
     public static SearchComponentConfigurator<Item> createItemSearchComponentConfigurator(String name, Supplier<String> getter, Consumer<String> setter) {
@@ -94,7 +96,7 @@ public class UIElementUtil {
         return createItemSlot(item, 16, isRenderBackgroundTexture, showItemTooltips);
     }
 
-    public static UIElement createCategoryUI(CategoryInfo categoryInfo, boolean isSelected, Consumer<CategoryInfo> onSelectCallback, ColorRectTexture defaultBg, ColorRectTexture selectedBg) {
+    public static UIElement createCategoryUI(CategoryInfo categoryInfo, boolean isSelected, Consumer<CategoryInfo> onSelectCallback, IGuiTexture defaultBg, IGuiTexture selectedBg) {
         UIElement category = new UIElement().layout(layout -> {
             layout.setWidthPercent(100);
             layout.setHeight(18);

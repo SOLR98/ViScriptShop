@@ -1,7 +1,7 @@
 package com.viscriptshop;
 
 import com.lowdragmc.lowdraglib2.registry.AutoRegistry;
-import com.lowdragmc.lowdraglib2.registry.annotation.LDLRegisterClient;
+import com.lowdragmc.lowdraglib2.registry.annotation.LDLRegister;
 import com.mojang.logging.LogUtils;
 import com.viscriptshop.command.ICommand;
 import com.viscriptshop.gui.data.ShopSavedData;
@@ -35,7 +35,7 @@ public class ViscriptShop {
 
     //注册指令
     private void onRegisterCommands(RegisterCommandsEvent event) {
-        for (AutoRegistry.Holder<LDLRegisterClient, ICommand, Supplier<ICommand>> command : ViScriptShopRegistries.COMMANDS) {
+        for (AutoRegistry.Holder<LDLRegister, ICommand, Supplier<ICommand>> command : ViScriptShopRegistries.COMMANDS) {
             command.value().get().register(event.getDispatcher(), event.getBuildContext(), event.getCommandSelection());
         }
     }

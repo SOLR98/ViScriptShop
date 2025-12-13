@@ -1,6 +1,6 @@
 package com.viscriptshop.event;
 
-import com.lowdragmc.lowdraglib2.gui.ui.ModularUIScreen;
+import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
 import com.mojang.blaze3d.platform.Window;

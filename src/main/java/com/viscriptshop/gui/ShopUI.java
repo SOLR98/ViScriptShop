@@ -3,6 +3,7 @@ package com.viscriptshop.gui;
 import com.lowdragmc.lowdraglib2.configurator.ui.NumberConfigurator;
 import com.lowdragmc.lowdraglib2.gui.ColorPattern;
 import com.lowdragmc.lowdraglib2.gui.texture.ColorRectTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
@@ -14,6 +15,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
 import com.viscriptshop.ShopRegistries;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.event.neoforge.ShopClientEvent;
+import com.viscriptshop.gui.components.Message;
 import com.viscriptshop.gui.components.PlayerHeadElement;
 import com.viscriptshop.gui.data.AggregatedResources;
 import com.viscriptshop.gui.data.CategoryInfo;
@@ -47,8 +49,8 @@ public class ShopUI extends UIElement {
     public ScrollerView shoppingCarView = new ScrollerView();
     public ScrollerView inventoryView = new ScrollerView();
 
-    private final SpriteTexture DARK_BACKGROUND_RECT = Sprites.BORDER_RT0;
-    private final SpriteTexture LIGHT_BACKGROUND_RECT = Sprites.RECT_RD_SOLID;
+    private final IGuiTexture DARK_BACKGROUND_RECT = Sprites.BORDER_RT0;
+    private final IGuiTexture LIGHT_BACKGROUND_RECT = Sprites.RECT_RD_SOLID;
     private final SpriteTexture RIGHT_ARROW = SpriteTexture.of(ViscriptShop.formattedMod("textures/right_arrow.png"));
     private final SpriteTexture LOCK = SpriteTexture.of(ViscriptShop.formattedMod("textures/lock.png"));
 
@@ -263,7 +265,13 @@ public class ShopUI extends UIElement {
         reloadInventoryItem();
 
         Button buyButton = (Button) new Button().setText("viscript_shop.button.buy").setOnClick(event -> {
-            minecraft.player.connection.send(new BuyMerchantPayload(this.currentShopInfo, AggregatedResources.getCostSummary(this.currentShopInfo), AggregatedResources.getGainSummary(this.currentShopInfo)));
+            AggregatedResources costSummary = AggregatedResources.getCostSummary(this.currentShopInfo);
+            AggregatedResources gainSummary = AggregatedResources.getGainSummary(this.currentShopInfo);
+            if (costSummary.isEmpty() || gainSummary.isEmpty()) {
+                Message.warn("viscript_shop.message.empty", this);
+                return;
+            }
+            minecraft.player.connection.send(new BuyMerchantPayload(this.currentShopInfo, costSummary, gainSummary));
         }).layout(layout -> {
             layout.setWidthPercent(40);
         });

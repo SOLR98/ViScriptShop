@@ -1,6 +1,5 @@
 package com.viscriptshop.compat;
 
-import com.lowdragmc.lowdraglib2.Platform;
 import com.viscriptshop.event.CommonEventsPostJS;
 import com.viscriptshop.event.ViScriptShopEventsJS;
 import com.viscriptshop.util.ViScriptShopClientUtil;
@@ -15,9 +14,7 @@ public class ViScriptShopJSPlugin implements KubeJSPlugin {
 
     @Override
     public void init() {
-        if (Platform.isClient()) {
-            NeoForge.EVENT_BUS.register(CommonEventsPostJS.class);
-        }
+        NeoForge.EVENT_BUS.register(CommonEventsPostJS.class);
     }
 
     @Override

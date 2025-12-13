@@ -16,14 +16,14 @@ public class ViscriptShopNetwork {
     public static void register(final RegisterPayloadHandlersEvent event) {
         final PayloadRegistrar registrar = event.registrar(ViscriptShop.MOD_ID);
         //s2c
-        registrar.commonToClient(OpenShopEditorPayload.TYPE, OpenShopEditorPayload.CODEC, OpenShopEditorPayload::execute);
-        registrar.commonToClient(OpenShopUIPayload.TYPE, OpenShopUIPayload.CODEC, OpenShopUIPayload::execute);
-        registrar.commonToClient(ReloadShopUIPayload.TYPE, ReloadShopUIPayload.CODEC, ReloadShopUIPayload::execute);
-        registrar.commonToClient(GetItemCountS2CPayload.TYPE, GetItemCountS2CPayload.CODEC, GetItemCountS2CPayload::execute);
-        registrar.commonToClient(SendMessagePayload.TYPE, SendMessagePayload.CODEC, SendMessagePayload::execute);
+        registrar.playToClient(OpenShopEditorPayload.TYPE, OpenShopEditorPayload.CODEC, OpenShopEditorPayload::execute);
+        registrar.playToClient(OpenShopUIPayload.TYPE, OpenShopUIPayload.CODEC, OpenShopUIPayload::execute);
+        registrar.playToClient(ReloadShopUIPayload.TYPE, ReloadShopUIPayload.CODEC, ReloadShopUIPayload::execute);
+        registrar.playToClient(GetItemCountS2CPayload.TYPE, GetItemCountS2CPayload.CODEC, GetItemCountS2CPayload::execute);
+        registrar.playToClient(SendMessagePayload.TYPE, SendMessagePayload.CODEC, SendMessagePayload::execute);
 
         //c2s
-        registrar.commonToServer(BuyMerchantPayload.TYPE, BuyMerchantPayload.CODEC, BuyMerchantPayload::execute);
-        registrar.commonToServer(GetItemCountC2SPayload.TYPE, GetItemCountC2SPayload.CODEC, GetItemCountC2SPayload::execute);
+        registrar.playToServer(BuyMerchantPayload.TYPE, BuyMerchantPayload.CODEC, BuyMerchantPayload::execute);
+        registrar.playToServer(GetItemCountC2SPayload.TYPE, GetItemCountC2SPayload.CODEC, GetItemCountC2SPayload::execute);
     }
 }

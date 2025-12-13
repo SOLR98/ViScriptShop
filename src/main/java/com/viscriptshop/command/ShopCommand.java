@@ -1,6 +1,6 @@
 package com.viscriptshop.command;
 
-import com.lowdragmc.lowdraglib2.registry.annotation.LDLRegisterClient;
+import com.lowdragmc.lowdraglib2.registry.annotation.LDLRegister;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -25,7 +25,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-@LDLRegisterClient(name = "npc", registry = "viscript_shop:command")
+@LDLRegister(name = "npc", registry = "viscript_shop:command")
 public class ShopCommand implements ICommand {
     public static final Set<ResourceLocation> shopFilesPath = new HashSet<>();
 

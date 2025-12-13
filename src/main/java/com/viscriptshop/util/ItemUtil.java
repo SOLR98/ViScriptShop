@@ -1,12 +1,35 @@
 package com.viscriptshop.util;
 
+import com.lowdragmc.lowdraglib2.Platform;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.Dynamic;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.compat.BeyondDimensionsHelper;
 import com.viscriptshop.compat.SophisticatedBackpacksHelper;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 
 public class ItemUtil {
+    public static final Codec<ItemStack> ITEM_STACK_CODEC = Codec.PASSTHROUGH.xmap(
+            dynamic -> {
+                CompoundTag tag = (CompoundTag) dynamic.getValue();
+                return ItemStack.parseOptional(Platform.getFrozenRegistry(), tag);
+            },
+            itemStack -> {
+                if (itemStack == null || itemStack.isEmpty()) {
+                    return new Dynamic<>(NbtOps.INSTANCE, new CompoundTag());
+                }
+                return new Dynamic<>(NbtOps.INSTANCE, itemStack.saveOptional(Platform.getFrozenRegistry()));
+            }
+    );
+
+    public static final StreamCodec<ByteBuf, ItemStack> ITEM_STACK_STREAM_CODEC = ByteBufCodecs.fromCodec(ITEM_STACK_CODEC);
+
     //删除玩家物品，兼容背包，精妙背包，超越维度
     public static void removeItemForPlayer(ServerPlayer player, ItemStack itemStack, int count) {
         //TODO:删除付出的物品，用于联动库存模组

@@ -1,10 +1,10 @@
 package com.viscriptshop.gui.data;
 
-import com.viscriptshop.gui.configurator.SyncAccessor;
+import com.viscriptshop.util.ItemUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.ItemStack;
@@ -19,8 +19,8 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AggregatedResources {
-    public static final StreamCodec<FriendlyByteBuf, AggregatedResources> STREAM_CODEC = StreamCodec.composite(
-            ByteBufCodecs.map(HashMap::new, SyncAccessor.ITEM_STACK_STREAM_CODEC, ByteBufCodecs.VAR_INT),
+    public static final StreamCodec<RegistryFriendlyByteBuf, AggregatedResources> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.map(HashMap::new, ItemUtil.ITEM_STACK_STREAM_CODEC, ByteBufCodecs.VAR_INT),
             AggregatedResources::getItems,
             ByteBufCodecs.INT,
             AggregatedResources::getTotalMoney,
@@ -32,6 +32,10 @@ public class AggregatedResources {
     private Map<ItemStack, Integer> items = new HashMap<>();
     private int totalMoney = 0;
     private int totalXp = 0;
+
+    public boolean isEmpty() {
+        return items.isEmpty() && totalMoney == 0 && totalXp == 0;
+    }
 
     /**
      * 将一个 ItemStack 合并到汇总中。

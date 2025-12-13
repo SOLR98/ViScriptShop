@@ -6,10 +6,10 @@ import com.viscriptshop.command.ICommand;
 import java.util.function.Supplier;
 
 public class ViScriptShopRegistries {
-    public static AutoRegistry.LDLibRegisterClient<ICommand, Supplier<ICommand>> COMMANDS;
+    public static AutoRegistry.LDLibRegister<ICommand, Supplier<ICommand>> COMMANDS;
 
     static {
-        COMMANDS = AutoRegistry.LDLibRegisterClient
+        COMMANDS = AutoRegistry.LDLibRegister
                 .create(ViscriptShop.id("command"), ICommand.class, AutoRegistry::noArgsCreator);
     }
 }

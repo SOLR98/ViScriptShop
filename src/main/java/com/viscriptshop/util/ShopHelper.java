@@ -4,20 +4,16 @@ import com.lowdragmc.lowdraglib2.LDLib2;
 import com.lowdragmc.lowdraglib2.Platform;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.command.ShopCommand;
-import com.viscriptshop.gui.data.MerchantInfo;
 import com.viscriptshop.gui.data.Shop;
 import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.gui.project.ShopProject;
-import lombok.SneakyThrows;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
 
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.List;
 import java.util.Set;
 
 @ParametersAreNonnullByDefault
@@ -33,8 +29,6 @@ public class ShopHelper {
         return FileScanner.scanFilesWithSuffix(new File(LDLib2.getAssetsDir(), SHOP_PATH), Shop.SUFFIX);
     }
 
-    @Nullable
-    @SneakyThrows
     public static Shop loadShop(String path) {
         File file = new File(LDLib2.getAssetsDir(), SHOP_PATH + path + Shop.SUFFIX);
         if (!file.exists()) {

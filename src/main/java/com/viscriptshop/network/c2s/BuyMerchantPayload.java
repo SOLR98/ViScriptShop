@@ -11,6 +11,7 @@ import com.viscriptshop.network.s2c.SendMessagePayload;
 import com.viscriptshop.util.ItemUtil;
 import com.viscriptshop.util.ViScriptShopServerUtil;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -26,7 +27,7 @@ import java.util.Map;
 public record BuyMerchantPayload(ShopInfo shopInfo, AggregatedResources cost,
                                  AggregatedResources gain) implements CustomPacketPayload {
     public static final Type<BuyMerchantPayload> TYPE = new Type<>(ViscriptShop.id("buy_merchant"));
-    public static final StreamCodec<FriendlyByteBuf, BuyMerchantPayload> CODEC = StreamCodec.composite(
+    public static final StreamCodec<RegistryFriendlyByteBuf, BuyMerchantPayload> CODEC = StreamCodec.composite(
             ShopInfo.STREAM_CODEC,
             BuyMerchantPayload::shopInfo,
             AggregatedResources.STREAM_CODEC,
