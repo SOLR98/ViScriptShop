@@ -1,13 +1,14 @@
 package com.viscriptshop.util;
 
+import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
 import com.viscriptshop.ShopRegistries;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.data.MerchantInfo;
 import com.viscriptshop.gui.data.Shop;
 import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.gui.data.ShopSavedData;
-import com.viscriptshop.network.s2c.OpenShopEditorPayload;
 import com.viscriptshop.network.s2c.OpenShopUIPayload;
+import com.viscriptshop.network.s2c.S2CPayload;
 import dev.latvian.mods.kubejs.typings.Info;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -17,21 +18,20 @@ public class ViScriptShopServerUtil {
 
     @Info("服务端打开商店编辑器")
     public static void serverOpenShopEditor(ServerPlayer player) {
-        player.connection.send(new OpenShopEditorPayload());
+        RPCPacketDistributor.rpcToPlayer(player, S2CPayload.OPEN_SHOP_EDITOR);
     }
 
     @Info("服务端打开商店")
-    public static void serverOpenShop(ServerPlayer player, ResourceLocation res, Component title) {
-        String shopPath = toPath(res);
+    public static void serverOpenShop(ServerPlayer player, ResourceLocation shopLocation, Component title) {
         ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
-        ShopInfo shopInfo = shopSavedData.getShopInfo(shopPath);
+        ShopInfo shopInfo = shopSavedData.getShopInfo(shopLocation);
         if (shopInfo == null) {
-            Shop shop = ShopHelper.loadShop(shopPath);
+            Shop shop = ShopHelper.getShop(shopLocation);
             if (shop != null) {
                 shopInfo = shop.getShopInfo();
-                shopSavedData.setShopInfo(shopPath, shopInfo);
+                shopSavedData.setShopInfo(shopLocation, shopInfo);
             } else {
-                ViscriptShop.LOGGER.error("shop file {} not found", shopPath);
+                ViscriptShop.LOGGER.error("shop location {} not found", shopLocation);
                 return;
             }
         }
@@ -39,28 +39,24 @@ public class ViScriptShopServerUtil {
     }
 
     @Info("重置商店信息")
-    public static void reloadOpenShop(ResourceLocation res) {
-        String shop = toPath(res);
+    public static void reloadOpenShop(ResourceLocation shop) {
         ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
         shopSavedData.resetShopInfo(shop);
     }
 
     @Info("获取商店的信息")
-    public static ShopInfo getShopInfo(ResourceLocation res) {
-        String shop = toPath(res);
+    public static ShopInfo getShopInfo(ResourceLocation shop) {
         return ViscriptShop.getShopSavedData().getShopInfo(shop);
     }
 
     @Info("添加商店商品")
-    public static void addShopMerchant(ResourceLocation res, int categoryIndex, MerchantInfo merchantInfo) {
-        String shop = toPath(res);
+    public static void addShopMerchant(ResourceLocation shop, int categoryIndex, MerchantInfo merchantInfo) {
         ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
         shopSavedData.addShopMerchant(shop, categoryIndex, merchantInfo);
     }
 
     @Info("设置当前商店的阶段值")
-    public static void setStageShop(ResourceLocation res, int stage) {
-        String shop = toPath(res);
+    public static void setStageShop(ResourceLocation shop, int stage) {
         ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
         ShopInfo shopInfo = shopSavedData.getShopInfo(shop);
         shopInfo.setStage(stage);
@@ -94,9 +90,5 @@ public class ViScriptShopServerUtil {
             setMoney(player, playerMoney - money);
             return money;
         }
-    }
-
-    private static String toPath(ResourceLocation location) {
-        return location.toString().replaceAll(ViscriptShop.MOD_ID + ":", "");
     }
 }

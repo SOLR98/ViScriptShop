@@ -4,6 +4,7 @@ import com.lowdragmc.lowdraglib2.registry.AutoRegistry;
 import com.lowdragmc.lowdraglib2.registry.annotation.LDLRegister;
 import com.mojang.logging.LogUtils;
 import com.viscriptshop.command.ICommand;
+import com.viscriptshop.command.argument.ArgumentRegister;
 import com.viscriptshop.gui.data.ShopSavedData;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,6 +31,7 @@ public class ViscriptShop {
 
     public ViscriptShop(IEventBus modEventBus, ModContainer modContainer, Dist dist) {
         NeoForge.EVENT_BUS.addListener(this::onRegisterCommands);
+        ArgumentRegister.ARGUMENT_TYPE.register(modEventBus);
         ShopRegistries.ATTACHMENT_TYPES.register(modEventBus);
     }
 

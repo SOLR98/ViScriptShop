@@ -12,6 +12,7 @@ import com.lowdragmc.lowdraglib2.editor.ui.Editor;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Dialog;
 import com.lowdragmc.lowdraglib2.syncdata.ISubscription;
+import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.components.Message;
 import com.viscriptshop.gui.data.CategoryInfo;
 import com.viscriptshop.gui.data.MerchantInfo;
@@ -108,7 +109,7 @@ public class ShopProject implements IProject {
                                 }
                             }
                             shop.shopInfo.setStage(0);
-                            Dialog.showFileDialog("viscript_shop.editor.saveAs", new File(LDLib2.getAssetsDir(), ShopHelper.SHOP_PATH), false,
+                            Dialog.showFileDialog("viscript_shop.editor.saveAs", new File(LDLib2.getAssetsDir(), "%s/shop/".formatted(ViscriptShop.MOD_ID)), false,
                                     Dialog.suffixFilter(Shop.SUFFIX), file -> {
                                         if (file != null && !file.isDirectory()) {
                                             if (!file.getName().endsWith(Shop.SUFFIX)) {
@@ -117,6 +118,7 @@ public class ShopProject implements IProject {
                                             try {
                                                 var fileData = shop.serializeNBT(Platform.getFrozenRegistry());
                                                 NbtIo.writeCompressed(fileData, file.toPath());
+                                                ShopHelper.clearCache();
                                             } catch (Exception ignored) {
                                             }
                                         }

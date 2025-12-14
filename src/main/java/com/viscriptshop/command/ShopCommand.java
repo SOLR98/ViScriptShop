@@ -4,31 +4,22 @@ import com.lowdragmc.lowdraglib2.registry.annotation.LDLRegister;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.suggestion.Suggestions;
-import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.viscriptshop.ViscriptShop;
-import com.viscriptshop.util.ShopHelper;
+import com.viscriptshop.command.argument.ShopLocationArgument;
+import com.viscriptshop.gui.data.ShopSavedData;
 import com.viscriptshop.util.ViScriptShopServerUtil;
 import lombok.SneakyThrows;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.ComponentArgument;
 import net.minecraft.commands.arguments.EntityArgument;
-import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-
-@LDLRegister(name = "npc", registry = "viscript_shop:command")
+@LDLRegister(name = "shop", registry = "viscript_shop:command")
 public class ShopCommand implements ICommand {
-    public static final Set<ResourceLocation> shopFilesPath = new HashSet<>();
-
     @Override
     public void register(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext buildContext, Commands.CommandSelection commandSelection) {
         dispatcher.register(Commands.literal(ViscriptShop.MOD_ID).requires(commandSourceStack -> commandSourceStack.hasPermission(Commands.LEVEL_OWNERS))
@@ -36,8 +27,7 @@ public class ShopCommand implements ICommand {
                         .executes(this::openEditor)
                 )
                 .then(Commands.literal("open")
-                        .then(Commands.argument("shop", ResourceLocationArgument.id())
-                                .suggests(this::shopFileSuggestions)
+                        .then(Commands.argument("shop", ShopLocationArgument.shop())
                                 .executes(context -> openShop(context, Component.translatable("viscript_shop.ui.title")))
                                 .then(Commands.argument("title", ComponentArgument.textComponent(buildContext))
                                         .executes(context -> openShop(context, ComponentArgument.getComponent(context, "title")))
@@ -46,14 +36,12 @@ public class ShopCommand implements ICommand {
                 )
                 .then(Commands.literal("reload")
                         .executes(this::reload)
-                        .then(Commands.argument("shop", ResourceLocationArgument.id())
-                                .suggests(this::shopFileSuggestions)
+                        .then(Commands.argument("shop", ShopLocationArgument.shop())
                                 .executes(this::reloadShop)
                         )
                 )
                 .then(Commands.literal("setStage")
-                        .then(Commands.argument("shop", ResourceLocationArgument.id())
-                                .suggests(this::shopFileSuggestions)
+                        .then(Commands.argument("shop", ShopLocationArgument.shop())
                                 .then(Commands.argument("stage", IntegerArgumentType.integer())
                                         .executes(this::setStageShop)
                                 )
@@ -118,11 +106,8 @@ public class ShopCommand implements ICommand {
     }
 
     private int reload(CommandContext<CommandSourceStack> context) {
-        shopFilesPath.clear();
-        for (String path : ShopHelper.scanShopFiles()) {
-            shopFilesPath.add(ViscriptShop.id(path));
-            ViScriptShopServerUtil.reloadOpenShop(ViscriptShop.id(path));
-        }
+        ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
+        shopSavedData.reset();
         context.getSource().sendSuccess(() -> Component.translatable("command.viscript_shop.reload"), true);
         return 1;
     }
@@ -144,7 +129,7 @@ public class ShopCommand implements ICommand {
         CommandSourceStack source = context.getSource();
         ServerPlayer player = source.getPlayer();
         if (player != null) {
-            ResourceLocation shop = ResourceLocationArgument.getId(context, "shop");
+            ResourceLocation shop = ShopLocationArgument.getId(context, "shop");
             ViScriptShopServerUtil.serverOpenShop(player, shop, title);
             return 1;
         } else {
@@ -154,7 +139,7 @@ public class ShopCommand implements ICommand {
 
     @SneakyThrows
     private int reloadShop(CommandContext<CommandSourceStack> context) {
-        ResourceLocation shop = ResourceLocationArgument.getId(context, "shop");
+        ResourceLocation shop = ShopLocationArgument.getId(context, "shop");
         ViScriptShopServerUtil.reloadOpenShop(shop);
         context.getSource().sendSuccess(() -> Component.translatable("command.viscript_shop.reload.shop"), true);
         return 1;
@@ -162,15 +147,10 @@ public class ShopCommand implements ICommand {
 
     @SneakyThrows
     private int setStageShop(CommandContext<CommandSourceStack> context) {
-        ResourceLocation shop = ResourceLocationArgument.getId(context, "shop");
+        ResourceLocation shop = ShopLocationArgument.getId(context, "shop");
         int stage = IntegerArgumentType.getInteger(context, "stage");
         ViScriptShopServerUtil.setStageShop(shop, stage);
         context.getSource().sendSuccess(() -> Component.translatable("command.viscript_shop.setStage.shop", stage), true);
         return 1;
-    }
-
-    private CompletableFuture<Suggestions> shopFileSuggestions(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
-        SharedSuggestionProvider.suggestResource(shopFilesPath, builder);
-        return builder.buildFuture();
     }
 }

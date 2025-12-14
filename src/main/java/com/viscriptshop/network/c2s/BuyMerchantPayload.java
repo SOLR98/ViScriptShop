@@ -1,5 +1,6 @@
 package com.viscriptshop.network.c2s;
 
+import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
 import com.viscriptshop.ShopRegistries;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.event.neoforge.ShopServerEvent;
@@ -7,10 +8,9 @@ import com.viscriptshop.gui.components.Message;
 import com.viscriptshop.gui.data.AggregatedResources;
 import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.network.s2c.ReloadShopUIPayload;
-import com.viscriptshop.network.s2c.SendMessagePayload;
+import com.viscriptshop.network.s2c.S2CPayload;
 import com.viscriptshop.util.ItemUtil;
 import com.viscriptshop.util.ViScriptShopServerUtil;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
@@ -49,18 +49,18 @@ public record BuyMerchantPayload(ShopInfo shopInfo, AggregatedResources cost,
         for (ItemStack itemStack : costItems.keySet()) {
             if (!itemStack.isEmpty() && ItemUtil.getItemForPlayerCount(player, itemStack) < costItems.get(itemStack)) {
                 //物品数量不够
-                player.connection.send(new SendMessagePayload(Message.Type.ERROR, Component.translatable("viscript_shop.message.notEnoughItem", itemStack.getItem().getDescription().getString()).getString()));
+                RPCPacketDistributor.rpcToPlayer(player, S2CPayload.SEND_MESSAGE, Message.Type.ERROR, Component.translatable("viscript_shop.message.notEnoughItem", itemStack.getItem().getDescription().getString()).getString());
                 NeoForge.EVENT_BUS.post(new ShopServerEvent.BuyPre(player, shopInfo, cost, gain));
                 return;
             }
         }
         if (cost.getTotalMoney() > player.getData(ShopRegistries.MONEY).getMoney()) {
             //钱不够
-            player.connection.send(new SendMessagePayload(Message.Type.ERROR, Component.translatable("viscript_shop.message.noEnoughMoney", cost.getTotalMoney() - player.getData(ShopRegistries.MONEY).getMoney()).getString()));
+            RPCPacketDistributor.rpcToPlayer(player, S2CPayload.SEND_MESSAGE, Message.Type.ERROR, Component.translatable("viscript_shop.message.noEnoughMoney", cost.getTotalMoney() - player.getData(ShopRegistries.MONEY).getMoney()).getString());
             NeoForge.EVENT_BUS.post(new ShopServerEvent.BuyPre(player, shopInfo, cost, gain));
             return;
         }
-        player.connection.send(new SendMessagePayload(Message.Type.SUCCESS, Component.translatable("viscript_shop.message.buySuccess").getString()));
+        RPCPacketDistributor.rpcToPlayer(player, S2CPayload.SEND_MESSAGE, Message.Type.SUCCESS, Component.translatable("viscript_shop.message.buySuccess").getString());
         NeoForge.EVENT_BUS.post(new ShopServerEvent.BuyPre(player, shopInfo, cost, gain));
         //删除物品
         for (ItemStack itemStack : costItems.keySet()) {
