@@ -1,6 +1,7 @@
 package com.viscriptshop.gui.data;
 
 import com.lowdragmc.lowdraglib2.configurator.IConfigurable;
+import com.lowdragmc.lowdraglib2.configurator.accessors.ItemStackAccessor;
 import com.lowdragmc.lowdraglib2.configurator.annotation.ConfigSelector;
 import com.lowdragmc.lowdraglib2.configurator.annotation.Configurable;
 import com.lowdragmc.lowdraglib2.configurator.ui.ArrayConfiguratorGroup;
@@ -12,12 +13,8 @@ import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.ReadOnlyManaged;
 import com.lowdragmc.lowdraglib2.utils.PersistedParser;
 import com.mojang.serialization.Codec;
-import com.viscriptshop.gui.configurator.configurator.ItemStackConfigurator;
 import io.netty.buffer.ByteBuf;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import net.minecraft.nbt.IntTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
@@ -88,10 +85,11 @@ public class CategoryInfo implements IConfigurable, IPersistedSerializable {
         father.addConfigurators(merchantInfoArrayConfiguratorGroup);
     }
 
+    @SneakyThrows
     private void iconTypeSubConfiguratorBuilder(IconType value, ConfiguratorGroup group) {
         switch (value) {
             case ITEM -> {
-                group.addConfigurator(new ItemStackConfigurator("viscript_shop.data.category.iconItem", this::getIconItem, this::setIconItem, iconItem, true));
+                group.addConfigurator(new ItemStackAccessor().create("viscript_shop.data.category.iconItem", this::getIconItem, this::setIconItem, true, this.getClass().getDeclaredField("iconItem"), this));
             }
             case TEXTURE -> {
                 group.addConfigurator(new StringConfigurator("viscript_shop.data.category.iconTexture", this::getIconTexture, this::setIconTexture, iconTexture, true).setResourceLocation(true));

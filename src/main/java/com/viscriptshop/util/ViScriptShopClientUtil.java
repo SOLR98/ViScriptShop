@@ -20,13 +20,10 @@ public class ViScriptShopClientUtil {
     @Info("客户端打开商店编辑器")
     public static void clientOpenNpcEditor() {
         Minecraft minecraft = Minecraft.getInstance();
-        EditorWindow editorWindow = new EditorWindow(ShopEditor::new);
+        EditorWindow editorWindow = EditorWindow.open(ShopEditor.SHOP_ID, ShopEditor::new);
         ModularUI ui = new ModularUI(UI.of(editorWindow));
         if (!Platform.isDevEnv()) ui.shouldCloseOnEsc(false).shouldCloseOnKeyInventory(false);
         minecraft.setScreen(new ModularUIScreen(ui, Component.empty()));
-        if (ShopHelper.cacheShopProject != null && editorWindow.getCurrentEditor() != null) {
-            editorWindow.getCurrentEditor().loadProject(ShopHelper.cacheShopProject, null);
-        }
     }
 
     @Info("客户端打开商店")

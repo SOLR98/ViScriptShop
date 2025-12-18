@@ -74,7 +74,7 @@ public class ShopPreviewView extends View {
 
     public void reloadMerchants() {
         selectedCategory = editor.categoryView.getSelectedCategory();
-        if (selectedCategory != null && editor.project instanceof ShopProject shopProject) {
+        if (selectedCategory != null && editor.getCurrentProject() instanceof ShopProject shopProject) {
             head.setDisplay(YogaDisplay.FLEX);
             scrollerView.clearAllScrollViewChildren();
 

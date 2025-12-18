@@ -44,7 +44,7 @@ public class CategoryView extends View {
     }
 
     public void loadView() {
-        if (editor.project instanceof ShopProject shopProject) {
+        if (editor.getCurrentProject() instanceof ShopProject shopProject) {
             this.shopInfo = shopProject.shop.shopInfo;
             scrollerView.viewContainer.layout(layout -> {
                 layout.setPadding(YogaEdge.ALL, 5);
@@ -124,8 +124,6 @@ public class CategoryView extends View {
     private void setSelectedCategory(CategoryInfo newCategory) {
         if (!newCategory.equals(this.selectedCategory)) {
             this.selectedCategory = newCategory;
-
-            //TODO 通知 ShopEditor 或其他 View 选中状态已改变 (例如，更新中间的商品列表)
         }
     }
 }

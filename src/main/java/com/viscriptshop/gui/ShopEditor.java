@@ -3,10 +3,12 @@ package com.viscriptshop.gui;
 import com.lowdragmc.lowdraglib2.editor.project.IProject;
 import com.lowdragmc.lowdraglib2.editor.ui.Editor;
 import com.mojang.blaze3d.MethodsReturnNonnullByDefault;
+import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.project.ShopProject;
 import com.viscriptshop.gui.view.CategoryView;
 import com.viscriptshop.gui.view.ShopPreviewView;
-import com.viscriptshop.util.ShopHelper;
+import net.minecraft.resources.ResourceLocation;
+import org.appliedenergistics.yoga.YogaDisplay;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -15,18 +17,20 @@ import java.io.File;
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class ShopEditor extends Editor {
+    public final static ResourceLocation SHOP_ID = ViscriptShop.id("editor");
 //    public final static SpriteTexture ICON = SpriteTexture.of(ViscriptShop.formattedMod("textures/icon.png"));
 
     public final CategoryView categoryView = new CategoryView(this);
     public final ShopPreviewView shopPreviewView = new ShopPreviewView(this);
-    public IProject project;
 
     public ShopEditor() {
-        super();
         fileMenu.addProjectProvider(ShopProject.PROVIDER);
 //        this.icon.style(style -> style.backgroundTexture(ICON));
         this.leftWindow.getLeftTop().addView(categoryView);
         this.centerWindow.getLeftTop().addView(shopPreviewView);
+        this.bottomWindow.setDisplay(YogaDisplay.NONE);
+        //TODO 后续版本这样写
+        this.bottomWindow.getParentWindow().removeSplitWindow(this.bottomWindow);
     }
 
     @Override
@@ -38,9 +42,7 @@ public class ShopEditor extends Editor {
     protected void loadNewProject(IProject project, @Nullable File projectFile) {
         if (project instanceof ShopProject shopProject) {
             super.loadNewProject(project, projectFile);
-            ShopHelper.cacheShopProject = shopProject;
             inspectorView.inspect(shopProject.shop.shopInfo);
-            this.project = shopProject;
             categoryView.loadView();
             shopPreviewView.loadView();
         }

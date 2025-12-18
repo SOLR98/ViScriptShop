@@ -1,5 +1,6 @@
 package com.viscriptshop;
 
+import com.lowdragmc.lowdraglib2.Platform;
 import com.lowdragmc.lowdraglib2.registry.AutoRegistry;
 import com.lowdragmc.lowdraglib2.registry.annotation.LDLRegister;
 import com.mojang.logging.LogUtils;
@@ -9,6 +10,7 @@ import com.viscriptshop.gui.data.ShopSavedData;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;

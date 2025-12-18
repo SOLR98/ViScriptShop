@@ -12,14 +12,14 @@ import net.minecraft.resources.ResourceLocation;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 @ParametersAreNonnullByDefault
 public class ShopHelper {
     private final static Map<ResourceLocation, Shop> CACHE = new HashMap<>();
     public static final String SHOP_PATH = "shop/";
-    //缓存的商店项目文件
-    public static ShopProject cacheShopProject;
     //缓存的商店信息
     public static ShopInfo cacheShopInfo;
 

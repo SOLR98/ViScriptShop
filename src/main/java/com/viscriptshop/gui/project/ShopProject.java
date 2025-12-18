@@ -32,8 +32,6 @@ public class ShopProject implements IProject {
     public static int VERSION = 1;
     public static final ProjectType PROVIDER = ProjectType.of(IGuiTexture.EMPTY, Component.translatable("viscript_shop.editor.shop.add").getString(), ".shopproj", ShopProject::new);
 
-    @Getter
-    private final Resources resources;
     public Shop shop = new Shop();
 
     // runtime
@@ -41,17 +39,15 @@ public class ShopProject implements IProject {
     @Nullable
     private ISubscription exportMenuSubscription;
 
-    public ShopProject() {
-        this.resources = Resources.of(
-                ColorsResource.INSTANCE,
-                TexturesResource.INSTANCE,
-                IRendererResource.INSTANCE
-        );
-    }
 
     @Override
     public String getVersion() {
         return "%d.0".formatted(VERSION);
+    }
+
+    @Override
+    public Resources getResources() {
+        return Resources.EMPTY;
     }
 
     @Override
