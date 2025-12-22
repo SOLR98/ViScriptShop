@@ -18,18 +18,15 @@ import java.io.File;
 @MethodsReturnNonnullByDefault
 public class ShopEditor extends Editor {
     public final static ResourceLocation SHOP_ID = ViscriptShop.id("editor");
-//    public final static SpriteTexture ICON = SpriteTexture.of(ViscriptShop.formattedMod("textures/icon.png"));
 
     public final CategoryView categoryView = new CategoryView(this);
     public final ShopPreviewView shopPreviewView = new ShopPreviewView(this);
 
     public ShopEditor() {
         fileMenu.addProjectProvider(ShopProject.PROVIDER);
-//        this.icon.style(style -> style.backgroundTexture(ICON));
         this.leftWindow.getLeftTop().addView(categoryView);
         this.centerWindow.getLeftTop().addView(shopPreviewView);
         this.bottomWindow.setDisplay(YogaDisplay.NONE);
-        //TODO 后续版本这样写
         this.bottomWindow.getParentWindow().removeSplitWindow(this.bottomWindow);
     }
 
