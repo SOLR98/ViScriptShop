@@ -3,7 +3,6 @@ package com.viscriptshop.gui.data;
 import com.lowdragmc.lowdraglib2.Platform;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 import org.jetbrains.annotations.NotNull;
@@ -12,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ShopSavedData extends SavedData {
-    private final Map<ResourceLocation, ShopInfo> shopInfoMap = new HashMap<>();
+    private final Map<String, ShopInfo> shopInfoMap = new HashMap<>();
     private final ServerLevel world;
 
     public static SavedData.Factory<ShopSavedData> factory(ServerLevel world) {
@@ -23,25 +22,25 @@ public class ShopSavedData extends SavedData {
         this.world = world;
     }
 
-    public void addShopMerchant(ResourceLocation shop, int categoryIndex, MerchantInfo merchantInfo) {
+    public void addShopMerchant(String shop, int categoryIndex, MerchantInfo merchantInfo) {
         ShopInfo shopInfo = shopInfoMap.get(shop);
         shopInfo.getCategoryInfos().get(categoryIndex).getMerchants().add(merchantInfo);
         setDirty();
     }
 
-    public ShopInfo getShopInfo(ResourceLocation shop) {
+    public ShopInfo getShopInfo(String shop) {
         setDirty();
         return shopInfoMap.get(shop);
     }
 
-    public void setShopInfo(ResourceLocation shop, ShopInfo shopInfo) {
+    public void setShopInfo(String shop, ShopInfo shopInfo) {
         System.out.println(shop);
         System.out.println(shopInfo);
         shopInfoMap.put(shop, shopInfo);
         setDirty();
     }
 
-    public void resetShopInfo(ResourceLocation shop) {
+    public void resetShopInfo(String shop) {
         shopInfoMap.remove(shop);
         setDirty();
     }
@@ -56,15 +55,15 @@ public class ShopSavedData extends SavedData {
         for (String shop : nbt.getAllKeys()) {
             ShopInfo shopInfo = new ShopInfo();
             shopInfo.deserializeNBT(Platform.getFrozenRegistry(), nbt.getCompound(shop));
-            shopSavedData.shopInfoMap.put(ResourceLocation.parse(shop), shopInfo);
+            shopSavedData.shopInfoMap.put(shop, shopInfo);
         }
         return shopSavedData;
     }
 
     @Override
     public @NotNull CompoundTag save(@NotNull CompoundTag compoundTag, HolderLookup.@NotNull Provider provider) {
-        for (Map.Entry<ResourceLocation, ShopInfo> entry : shopInfoMap.entrySet()) {
-            compoundTag.put(entry.getKey().toString(), entry.getValue().serializeNBT(provider));
+        for (Map.Entry<String, ShopInfo> entry : shopInfoMap.entrySet()) {
+            compoundTag.put(entry.getKey(), entry.getValue().serializeNBT(provider));
         }
         return compoundTag;
     }

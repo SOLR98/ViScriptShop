@@ -311,8 +311,8 @@ public class ShopUI extends UIElement {
                         }
                         reloadMerchants();
                     },
-                    new ColorRectTexture(ColorPattern.T_BLACK.color).setRadius(2),
-                    new ColorRectTexture(ColorPattern.T_WHITE.color).setRadius(2)
+                    new ColorRectTexture(ColorPattern.T_BLACK.color),
+                    new ColorRectTexture(ColorPattern.T_WHITE.color)
             );
             categoryView.viewContainer.addChildren(categoryUI);
         }

@@ -13,7 +13,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.StringRepresentable;
@@ -119,8 +118,8 @@ public class MerchantInfo implements IConfigurable, IPersistedSerializable {
     @Getter
     @AllArgsConstructor
     public enum TradeType implements StringRepresentable {
-        BUY(Component.translatable("viscript_shop.data.merchant.tradeType.buy").getString()),
-        SELL(Component.translatable("viscript_shop.data.merchant.tradeType.sell").getString());
+        BUY("viscript_shop.data.merchant.tradeType.buy"),
+        SELL("viscript_shop.data.merchant.tradeType.sell");
 
         private final String name;
 

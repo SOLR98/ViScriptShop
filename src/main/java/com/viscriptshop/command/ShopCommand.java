@@ -1,12 +1,15 @@
 package com.viscriptshop.command;
 
+import com.lowdragmc.lowdraglib2.LDLib2;
 import com.lowdragmc.lowdraglib2.registry.annotation.LDLRegister;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.viscriptshop.ViscriptShop;
-import com.viscriptshop.command.argument.ShopLocationArgument;
+import com.viscriptshop.gui.data.Shop;
 import com.viscriptshop.gui.data.ShopSavedData;
+import com.viscriptshop.util.ShopHelper;
 import com.viscriptshop.util.ViScriptShopServerUtil;
 import lombok.SneakyThrows;
 import net.minecraft.commands.CommandBuildContext;
@@ -15,8 +18,13 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.ComponentArgument;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 
 @LDLRegister(name = "shop", registry = "viscript_shop:command")
 public class ShopCommand implements ICommand {
@@ -24,10 +32,21 @@ public class ShopCommand implements ICommand {
     public void register(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext buildContext, Commands.CommandSelection commandSelection) {
         dispatcher.register(Commands.literal(ViscriptShop.MOD_ID).requires(commandSourceStack -> commandSourceStack.hasPermission(Commands.LEVEL_OWNERS))
                 .then(Commands.literal("editor")
-                        .executes(this::openEditor)
+                        .executes(context -> openEditor(context, ""))
+                        .then(Commands.argument("shop", StringArgumentType.string())
+                                .suggests((context, builder) -> {
+                                    getServerShopFiles().forEach(builder::suggest);
+                                    return builder.buildFuture();
+                                })
+                                .executes(context -> openEditor(context, StringArgumentType.getString(context, "shop")))
+                        )
                 )
                 .then(Commands.literal("open")
-                        .then(Commands.argument("shop", ShopLocationArgument.shop())
+                        .then(Commands.argument("shop", StringArgumentType.string())
+                                .suggests((context, builder) -> {
+                                    getServerShopFiles().forEach(builder::suggest);
+                                    return builder.buildFuture();
+                                })
                                 .executes(context -> openShop(context, Component.translatable("viscript_shop.ui.title")))
                                 .then(Commands.argument("title", ComponentArgument.textComponent(buildContext))
                                         .executes(context -> openShop(context, ComponentArgument.getComponent(context, "title")))
@@ -36,12 +55,20 @@ public class ShopCommand implements ICommand {
                 )
                 .then(Commands.literal("reload")
                         .executes(this::reload)
-                        .then(Commands.argument("shop", ShopLocationArgument.shop())
+                        .then(Commands.argument("shop", StringArgumentType.string())
+                                .suggests((context, builder) -> {
+                                    getServerShopFiles().forEach(builder::suggest);
+                                    return builder.buildFuture();
+                                })
                                 .executes(this::reloadShop)
                         )
                 )
                 .then(Commands.literal("setStage")
-                        .then(Commands.argument("shop", ShopLocationArgument.shop())
+                        .then(Commands.argument("shop", StringArgumentType.string())
+                                .suggests((context, builder) -> {
+                                    getServerShopFiles().forEach(builder::suggest);
+                                    return builder.buildFuture();
+                                })
                                 .then(Commands.argument("stage", IntegerArgumentType.integer())
                                         .executes(this::setStageShop)
                                 )
@@ -113,11 +140,11 @@ public class ShopCommand implements ICommand {
     }
 
     @SneakyThrows
-    private int openEditor(CommandContext<CommandSourceStack> context) {
+    private int openEditor(CommandContext<CommandSourceStack> context, String shop) {
         CommandSourceStack source = context.getSource();
         ServerPlayer player = source.getPlayer();
         if (player != null) {
-            ViScriptShopServerUtil.serverOpenShopEditor(player);
+            ViScriptShopServerUtil.serverOpenShopEditor(player, shop);
             return 1;
         } else {
             throw playerOnlyException();
@@ -129,7 +156,7 @@ public class ShopCommand implements ICommand {
         CommandSourceStack source = context.getSource();
         ServerPlayer player = source.getPlayer();
         if (player != null) {
-            ResourceLocation shop = ShopLocationArgument.getId(context, "shop");
+            String shop = StringArgumentType.getString(context, "shop");
             ViScriptShopServerUtil.serverOpenShop(player, shop, title);
             return 1;
         } else {
@@ -139,7 +166,7 @@ public class ShopCommand implements ICommand {
 
     @SneakyThrows
     private int reloadShop(CommandContext<CommandSourceStack> context) {
-        ResourceLocation shop = ShopLocationArgument.getId(context, "shop");
+        String shop = StringArgumentType.getString(context, "shop");
         ViScriptShopServerUtil.reloadOpenShop(shop);
         context.getSource().sendSuccess(() -> Component.translatable("command.viscript_shop.reload.shop"), true);
         return 1;
@@ -147,10 +174,31 @@ public class ShopCommand implements ICommand {
 
     @SneakyThrows
     private int setStageShop(CommandContext<CommandSourceStack> context) {
-        ResourceLocation shop = ShopLocationArgument.getId(context, "shop");
+        String shop = StringArgumentType.getString(context, "shop");
         int stage = IntegerArgumentType.getInteger(context, "stage");
         ViScriptShopServerUtil.setStageShop(shop, stage);
         context.getSource().sendSuccess(() -> Component.translatable("command.viscript_shop.setStage.shop", stage), true);
         return 1;
+    }
+
+    private static List<String> getServerShopFiles() {
+        List<String> shopFiles = new ArrayList<>();
+        var assets = new File(LDLib2.getAssetsDir(), ShopHelper.SHOP_PATH);
+        if (assets.exists() && assets.isDirectory()) {
+            try (var stream = Files.walk(assets.toPath())) {
+                stream.filter(Files::isRegularFile).forEach(file -> {
+                    String string = file.toString();
+                    if (string.endsWith(Shop.SUFFIX)) {
+                        if (ViscriptShop.isWin()) {
+                            shopFiles.add("\"" + string.replace(assets.getPath() + "\\", "").replace("\\", "/").replace(Shop.SUFFIX, "") + "\"");
+                        } else {
+                            shopFiles.add("\"" + string.replace(assets.getPath(), "").substring(1).replace("\\", "/").replace(Shop.SUFFIX, "") + "\"");
+                        }
+                    }
+                });
+            } catch (IOException ignored) {
+            }
+        }
+        return shopFiles;
     }
 }

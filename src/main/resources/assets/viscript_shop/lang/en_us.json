@@ -37,6 +37,8 @@
   "viscript_shop.editor.shop.add": "Shop Project",
   "viscript_shop.editor.shop.export": "Export Shop File",
   "viscript_shop.editor.saveAs": "Save As",
+  "viscript_shop.editor.project.upload_shop": "Upload Shop File",
+  "viscript_shop.editor.project.filename": "filename",
   "viscript_shop.editor.add.category": "Add Category",
   "viscript_shop.editor.update.category": "Edit Category",
   "viscript_shop.editor.add.merchant": "Add Item",

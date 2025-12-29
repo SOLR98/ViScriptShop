@@ -64,8 +64,8 @@ public class CategoryView extends View {
                     categoryInfo,
                     categoryInfo.equals(this.selectedCategory),
                     this::setSelectedCategory,
-                    new ColorRectTexture(ColorPattern.T_BLACK.color).setRadius(2),
-                    new ColorRectTexture(ColorPattern.T_WHITE.color).setRadius(2)
+                    new ColorRectTexture(ColorPattern.T_BLACK.color),
+                    new ColorRectTexture(ColorPattern.T_WHITE.color)
             ).layout(layout -> {
                 layout.setFlex(11);
                 layout.setMargin(YogaEdge.RIGHT, 10);

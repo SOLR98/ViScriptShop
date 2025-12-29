@@ -4,21 +4,19 @@ import com.lowdragmc.lowdraglib2.LDLib2;
 import com.lowdragmc.lowdraglib2.Platform;
 import com.lowdragmc.lowdraglib2.editor.project.IProject;
 import com.lowdragmc.lowdraglib2.editor.project.ProjectType;
-import com.lowdragmc.lowdraglib2.editor.resource.ColorsResource;
-import com.lowdragmc.lowdraglib2.editor.resource.IRendererResource;
 import com.lowdragmc.lowdraglib2.editor.resource.Resources;
-import com.lowdragmc.lowdraglib2.editor.resource.TexturesResource;
 import com.lowdragmc.lowdraglib2.editor.ui.Editor;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Dialog;
+import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
 import com.lowdragmc.lowdraglib2.syncdata.ISubscription;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.components.Message;
 import com.viscriptshop.gui.data.CategoryInfo;
 import com.viscriptshop.gui.data.MerchantInfo;
 import com.viscriptshop.gui.data.Shop;
+import com.viscriptshop.network.c2s.C2SPayload;
 import com.viscriptshop.util.ShopHelper;
-import lombok.Getter;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
@@ -81,45 +79,34 @@ public class ShopProject implements IProject {
             exportMenuSubscription.unsubscribe();
         }
         exportMenuSubscription = editor.fileMenu.registerMenuCreator((tab, menu) ->
-                menu.branch("viscript_shop.editor.shop.export", m ->
-                        m.leaf("viscript_shop.editor.shop.export", () -> {
-                            for (CategoryInfo categoryInfo : shop.shopInfo.getCategoryInfos()) {
-                                for (MerchantInfo merchant : categoryInfo.getMerchants()) {
-                                    switch (categoryInfo.getShopType()) {
-                                        case ITEM_FOR_ITEM -> {
-                                            if (merchant.getItemA().isEmpty() && merchant.getItemB().isEmpty()) {
-                                                Message.warn("viscript_shop.message.item.empty", editor);
-                                                return;
-                                            } else if (merchant.getItemResult().isEmpty()) {
-                                                Message.warn("viscript_shop.message.itemResult.empty", editor);
-                                                return;
-                                            }
-                                        }
-                                        case CURRENCY -> {
-                                            if (merchant.getItemResult().isEmpty()) {
-                                                Message.warn("viscript_shop.message.itemResult.empty", editor);
-                                                return;
-                                            }
-                                        }
-                                    }
+                menu.branch("viscript_shop.editor.shop.export", m -> {
+                            m.leaf("viscript_shop.editor.shop.export", () -> {
+                                if (isTrueFormat(editor)) {
+                                    Dialog.showFileDialog("viscript_shop.editor.saveAs", new File(LDLib2.getAssetsDir(), "%s/shop/".formatted(ViscriptShop.MOD_ID)), false,
+                                            Dialog.suffixFilter(Shop.SUFFIX), file -> {
+                                                if (file != null && !file.isDirectory()) {
+                                                    if (!file.getName().endsWith(Shop.SUFFIX)) {
+                                                        file = new File(file.getParentFile(), file.getName() + Shop.SUFFIX);
+                                                    }
+                                                    try {
+                                                        var fileData = shop.serializeNBT(Platform.getFrozenRegistry());
+                                                        NbtIo.writeCompressed(fileData, file.toPath());
+                                                        ShopHelper.clearCache();
+                                                    } catch (Exception ignored) {
+                                                    }
+                                                }
+                                            }).show(editor);
                                 }
-                            }
-                            shop.shopInfo.setStage(0);
-                            Dialog.showFileDialog("viscript_shop.editor.saveAs", new File(LDLib2.getAssetsDir(), "%s/shop/".formatted(ViscriptShop.MOD_ID)), false,
-                                    Dialog.suffixFilter(Shop.SUFFIX), file -> {
-                                        if (file != null && !file.isDirectory()) {
-                                            if (!file.getName().endsWith(Shop.SUFFIX)) {
-                                                file = new File(file.getParentFile(), file.getName() + Shop.SUFFIX);
-                                            }
-                                            try {
-                                                var fileData = shop.serializeNBT(Platform.getFrozenRegistry());
-                                                NbtIo.writeCompressed(fileData, file.toPath());
-                                                ShopHelper.clearCache();
-                                            } catch (Exception ignored) {
-                                            }
-                                        }
-                                    }).show(editor);
-                        })
+                            });
+                            m.leaf("viscript_shop.editor.project.upload_shop", () -> {
+                                Dialog.stringEditorDialog("viscript_shop.editor.project.upload_shop", "viscript_shop.editor.project.filename", (result) -> true, (result) -> {
+                                    var fileData = shop.serializeNBT(Platform.getFrozenRegistry());
+                                    fileData.putString("fileName", result);
+                                    RPCPacketDistributor.rpcToServer(C2SPayload.UPLOAD_NPC_FILE, fileData);
+
+                                });
+                            });
+                        }
                 ));
     }
 
@@ -130,5 +117,31 @@ public class ShopProject implements IProject {
             exportMenuSubscription.unsubscribe();
             exportMenuSubscription = null;
         }
+    }
+
+    public boolean isTrueFormat(Editor editor) {
+        for (CategoryInfo categoryInfo : this.shop.shopInfo.getCategoryInfos()) {
+            for (MerchantInfo merchant : categoryInfo.getMerchants()) {
+                switch (categoryInfo.getShopType()) {
+                    case ITEM_FOR_ITEM -> {
+                        if (merchant.getItemA().isEmpty() && merchant.getItemB().isEmpty()) {
+                            Message.warn("viscript_shop.message.item.empty", editor);
+                            return false;
+                        } else if (merchant.getItemResult().isEmpty()) {
+                            Message.warn("viscript_shop.message.itemResult.empty", editor);
+                            return false;
+                        }
+                    }
+                    case CURRENCY -> {
+                        if (merchant.getItemResult().isEmpty()) {
+                            Message.warn("viscript_shop.message.itemResult.empty", editor);
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        this.shop.shopInfo.setStage(0);
+        return true;
     }
 }

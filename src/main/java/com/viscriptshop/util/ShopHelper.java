@@ -1,25 +1,24 @@
 package com.viscriptshop.util;
 
-import com.lowdragmc.lowdraglib2.Platform;
+import com.lowdragmc.lowdraglib2.LDLib2;
 import com.viscriptshop.gui.data.Shop;
 import com.viscriptshop.gui.data.ShopInfo;
-import com.viscriptshop.gui.project.ShopProject;
-import net.minecraft.client.Minecraft;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.resources.ResourceLocation;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 @ParametersAreNonnullByDefault
 public class ShopHelper {
-    private final static Map<ResourceLocation, Shop> CACHE = new HashMap<>();
-    public static final String SHOP_PATH = "shop/";
+    private final static Map<String, CompoundTag> CACHE = new HashMap<>();
+    public static final String SHOP_PATH = "viscript_shop/shop";
     //缓存的商店信息
     public static ShopInfo cacheShopInfo;
 
@@ -30,26 +29,31 @@ public class ShopHelper {
     }
 
     @Nullable
-    public static Shop getShop(ResourceLocation shopLocation) {
+    public static CompoundTag getShop(String shopLocation) {
         return getShop(shopLocation, true);
     }
 
 
-    @Nullable
-    public static Shop getShop(ResourceLocation shopLocation, boolean useCache) {
+    public static CompoundTag getShop(String shopLocation, boolean useCache) {
         return useCache ? CACHE.computeIfAbsent(shopLocation, location -> loadShop(shopLocation)) : loadShop(shopLocation);
     }
 
-    public static Shop loadShop(ResourceLocation shopLocation) {
-        ResourceLocation resourceLocation = ResourceLocation.fromNamespaceAndPath(shopLocation.getNamespace(), SHOP_PATH + shopLocation.getPath() + Shop.SUFFIX);
-        try (var inputStream = Minecraft.getInstance().getResourceManager().open(resourceLocation)) {
-            var tag = NbtIo.readCompressed(inputStream, NbtAccounter.unlimitedHeap());
-            var shop = new Shop();
-            shop.setShopLocation(shopLocation);
-            shop.deserializeNBT(Platform.getFrozenRegistry(), tag);
-            return shop;
-        } catch (Exception ignored) {
-            return null;
+    public static CompoundTag loadShop(String shopLocation) {
+        return readShopFile(getShopFile(shopLocation));
+    }
+
+    private static File getShopFile(String fileName) {
+        if (fileName.startsWith("\"")) fileName = fileName.substring(1);
+        if (fileName.endsWith("\"")) fileName = fileName.substring(0, fileName.length() - 1);
+        return new File(LDLib2.getAssetsDir(), SHOP_PATH + "/" + fileName + Shop.SUFFIX);
+    }
+
+    private static CompoundTag readShopFile(File file) {
+        if (!file.exists()) return new CompoundTag();
+        try (var inputStream = Files.newInputStream(file.toPath())) {
+            return NbtIo.readCompressed(inputStream, NbtAccounter.unlimitedHeap());
+        } catch (IOException e) {
+            return new CompoundTag();
         }
     }
 }

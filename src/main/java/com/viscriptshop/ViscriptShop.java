@@ -1,16 +1,14 @@
 package com.viscriptshop;
 
-import com.lowdragmc.lowdraglib2.Platform;
 import com.lowdragmc.lowdraglib2.registry.AutoRegistry;
 import com.lowdragmc.lowdraglib2.registry.annotation.LDLRegister;
 import com.mojang.logging.LogUtils;
 import com.viscriptshop.command.ICommand;
-import com.viscriptshop.command.argument.ArgumentRegister;
 import com.viscriptshop.gui.data.ShopSavedData;
 import lombok.Getter;
 import lombok.Setter;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -33,7 +31,6 @@ public class ViscriptShop {
 
     public ViscriptShop(IEventBus modEventBus, ModContainer modContainer, Dist dist) {
         NeoForge.EVENT_BUS.addListener(this::onRegisterCommands);
-        ArgumentRegister.ARGUMENT_TYPE.register(modEventBus);
         ShopRegistries.ATTACHMENT_TYPES.register(modEventBus);
     }
 
@@ -73,5 +70,9 @@ public class ViscriptShop {
 
     private static boolean isModLoaded(String modId) {
         return ModList.get().isLoaded(modId);
+    }
+
+    public static boolean isWin() {
+        return Util.getPlatform() == Util.OS.WINDOWS;
     }
 }

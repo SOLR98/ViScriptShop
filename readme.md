@@ -1,3 +1,4 @@
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/zhenshiz/ViScriptShop)
 # ViScriptShop
 
 服务于ViScriptNpc的商店模组

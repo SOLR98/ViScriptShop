@@ -111,9 +111,9 @@ public class CategoryInfo implements IConfigurable, IPersistedSerializable {
 
     @Getter
     @AllArgsConstructor
-    public enum IconType implements StringRepresentable {
-        ITEM(Component.translatable("viscript_shop.data.category.iconType.item").getString()),
-        TEXTURE(Component.translatable("viscript_shop.data.category.iconType.texture").getString());
+    public enum IconType implements StringRepresentable{
+        ITEM("viscript_shop.data.category.iconType.item"),
+        TEXTURE("viscript_shop.data.category.iconType.texture");
 
         private final String name;
 
@@ -125,9 +125,9 @@ public class CategoryInfo implements IConfigurable, IPersistedSerializable {
 
     @Getter
     @AllArgsConstructor
-    public enum ShopType implements StringRepresentable {
-        ITEM_FOR_ITEM(Component.translatable("viscript_shop.data.category.shopType.item_for_item").getString()),
-        CURRENCY(Component.translatable("viscript_shop.data.category.shopType.currency").getString());
+    public enum ShopType implements StringRepresentable{
+        ITEM_FOR_ITEM("viscript_shop.data.category.shopType.item_for_item"),
+        CURRENCY("viscript_shop.data.category.shopType.currency");
 
         private final String name;
 
