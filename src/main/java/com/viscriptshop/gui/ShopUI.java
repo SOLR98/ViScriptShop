@@ -268,7 +268,7 @@ public class ShopUI extends UIElement {
             AggregatedResources costSummary = AggregatedResources.getCostSummary(this.currentShopInfo);
             AggregatedResources gainSummary = AggregatedResources.getGainSummary(this.currentShopInfo);
             if (costSummary.isEmpty() || gainSummary.isEmpty()) {
-                Message.warn("viscript_shop.message.empty", this);
+                Message.warn("viscript_shop.message.shoppingCar.empty", this);
                 return;
             }
             minecraft.player.connection.send(new BuyMerchantPayload(this.currentShopInfo, costSummary, gainSummary));

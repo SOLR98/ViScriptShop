@@ -99,12 +99,13 @@ public class ShopProject implements IProject {
                                 }
                             });
                             m.leaf("viscript_shop.editor.project.upload_shop", () -> {
-                                Dialog.stringEditorDialog("viscript_shop.editor.project.upload_shop", "viscript_shop.editor.project.filename", (result) -> true, (result) -> {
+                                Dialog.stringEditorDialog("viscript_shop.editor.project.upload_shop", "", (result) -> {
+                                    return !result.isEmpty();
+                                }, (result) -> {
                                     var fileData = shop.serializeNBT(Platform.getFrozenRegistry());
                                     fileData.putString("fileName", result);
-                                    RPCPacketDistributor.rpcToServer(C2SPayload.UPLOAD_NPC_FILE, fileData);
-
-                                });
+                                    RPCPacketDistributor.rpcToServer(C2SPayload.UPLOAD_SHOP_FILE, fileData);
+                                }).show(editor);
                             });
                         }
                 ));
