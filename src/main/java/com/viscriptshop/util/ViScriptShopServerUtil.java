@@ -7,37 +7,35 @@ import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.data.MerchantInfo;
 import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.gui.data.ShopSavedData;
-import com.viscriptshop.network.s2c.OpenShopUIPayload;
 import com.viscriptshop.network.s2c.S2CPayload;
 import dev.latvian.mods.kubejs.typings.Info;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
 public class ViScriptShopServerUtil {
 
     @Info("服务端打开商店编辑器")
     public static void serverOpenShopEditor(ServerPlayer player, String shop) {
-        CompoundTag tag = ShopHelper.loadShop(shop);
+        ShopInfo shopInfo = ShopHelper.getShop(shop);
+        CompoundTag tag = new CompoundTag();
+        if (shopInfo != null) tag = shopInfo.serializeNBT(Platform.getFrozenRegistry());
         RPCPacketDistributor.rpcToPlayer(player, S2CPayload.OPEN_SHOP_EDITOR, tag);
     }
 
     @Info("服务端打开商店")
-    public static void serverOpenShop(ServerPlayer player, String shopLocation, Component title) {
+    public static void serverOpenShop(ServerPlayer player, String shopLocation) {
         ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
         ShopInfo shopInfo = shopSavedData.getShopInfo(shopLocation);
         if (shopInfo == null) {
-            CompoundTag shop = ShopHelper.getShop(shopLocation);
-            if (shop != null) {
-                shopInfo = new ShopInfo();
-                shopInfo.deserializeNBT(Platform.getFrozenRegistry(), shop);
+            shopInfo = ShopHelper.getShop(shopLocation);
+            if (shopInfo != null) {
                 shopSavedData.setShopInfo(shopLocation, shopInfo);
             } else {
                 ViscriptShop.LOGGER.error("shop location {} not found", shopLocation);
                 return;
             }
         }
-        player.connection.send(new OpenShopUIPayload(shopInfo, title.getString()));
+        RPCPacketDistributor.rpcToPlayer(player, S2CPayload.OPEN_SHOP_UI, shopInfo);
     }
 
     @Info("重置商店信息")

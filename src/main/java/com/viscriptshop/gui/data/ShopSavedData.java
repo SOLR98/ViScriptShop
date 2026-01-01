@@ -1,9 +1,7 @@
 package com.viscriptshop.gui.data;
 
-import com.lowdragmc.lowdraglib2.Platform;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 import org.jetbrains.annotations.NotNull;
 
@@ -12,14 +10,12 @@ import java.util.Map;
 
 public class ShopSavedData extends SavedData {
     private final Map<String, ShopInfo> shopInfoMap = new HashMap<>();
-    private final ServerLevel world;
 
-    public static SavedData.Factory<ShopSavedData> factory(ServerLevel world) {
-        return new SavedData.Factory<>(() -> new ShopSavedData(world), (nbt, r) -> fromNbt(world, nbt), null);
-    }
-
-    public ShopSavedData(ServerLevel world) {
-        this.world = world;
+    public static SavedData.Factory<ShopSavedData> factory() {
+        return new SavedData.Factory<>(
+                ShopSavedData::new,
+                ShopSavedData::fromNbt
+        );
     }
 
     public void addShopMerchant(String shop, int categoryIndex, MerchantInfo merchantInfo) {
@@ -34,8 +30,6 @@ public class ShopSavedData extends SavedData {
     }
 
     public void setShopInfo(String shop, ShopInfo shopInfo) {
-        System.out.println(shop);
-        System.out.println(shopInfo);
         shopInfoMap.put(shop, shopInfo);
         setDirty();
     }
@@ -50,11 +44,11 @@ public class ShopSavedData extends SavedData {
         setDirty();
     }
 
-    public static ShopSavedData fromNbt(ServerLevel world, CompoundTag nbt) {
-        ShopSavedData shopSavedData = new ShopSavedData(world);
+    public static ShopSavedData fromNbt(CompoundTag nbt, HolderLookup.@NotNull Provider provider) {
+        ShopSavedData shopSavedData = new ShopSavedData();
         for (String shop : nbt.getAllKeys()) {
             ShopInfo shopInfo = new ShopInfo();
-            shopInfo.deserializeNBT(Platform.getFrozenRegistry(), nbt.getCompound(shop));
+            shopInfo.deserializeNBT(provider, nbt.getCompound(shop));
             shopSavedData.shopInfoMap.put(shop, shopInfo);
         }
         return shopSavedData;

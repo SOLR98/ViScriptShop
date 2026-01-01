@@ -2,12 +2,14 @@ package com.viscriptshop;
 
 import com.lowdragmc.lowdraglib2.registry.AutoRegistry;
 import com.lowdragmc.lowdraglib2.registry.annotation.LDLRegister;
+import com.lowdragmc.lowdraglib2.syncdata.AccessorRegistries;
+import com.lowdragmc.lowdraglib2.syncdata.accessor.direct.CustomDirectAccessor;
 import com.mojang.logging.LogUtils;
 import com.viscriptshop.command.ICommand;
+import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.gui.data.ShopSavedData;
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
@@ -32,6 +34,13 @@ public class ViscriptShop {
     public ViscriptShop(IEventBus modEventBus, ModContainer modContainer, Dist dist) {
         NeoForge.EVENT_BUS.addListener(this::onRegisterCommands);
         ShopRegistries.ATTACHMENT_TYPES.register(modEventBus);
+        AccessorRegistries.setPriority(0);
+        AccessorRegistries.registerAccessor(CustomDirectAccessor.builder(ShopInfo.class)
+                .codec(ShopInfo.CODEC)
+                .streamCodec(ShopInfo.STREAM_CODEC)
+                .codecMark()
+                .build()
+        );
     }
 
     //注册指令
@@ -68,11 +77,12 @@ public class ViscriptShop {
         return isModLoaded("jei");
     }
 
-    private static boolean isModLoaded(String modId) {
-        return ModList.get().isLoaded(modId);
+    //FtbLibrary
+    public static boolean isFtbLibraryLoaded() {
+        return isModLoaded("ftblibrary");
     }
 
-    public static boolean isWin() {
-        return Util.getPlatform() == Util.OS.WINDOWS;
+    private static boolean isModLoaded(String modId) {
+        return ModList.get().isLoaded(modId);
     }
 }

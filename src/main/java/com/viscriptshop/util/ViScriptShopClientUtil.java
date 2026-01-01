@@ -30,7 +30,7 @@ public class ViScriptShopClientUtil {
 
         Editor editor = editorWindow.getCurrentEditor();
         if (editor == null) return;
-        if (tag != null && !tag.isEmpty()){
+        if (tag != null && !tag.isEmpty()) {
             var project = (ShopProject) ShopProject.PROVIDER.projectCreator.get();
             project.initNewProject();
             try {
@@ -43,9 +43,9 @@ public class ViScriptShopClientUtil {
     }
 
     @Info("客户端打开商店")
-    public static void clientOpenShop(ShopInfo shopInfo, String title) {
+    public static void clientOpenShop(ShopInfo shopInfo) {
         Minecraft minecraft = Minecraft.getInstance();
-        ShopUI shopUI = new ShopUI(shopInfo, title);
+        ShopUI shopUI = new ShopUI(shopInfo, shopInfo.getName().isEmpty() ? "viscript_shop.ui.title" : shopInfo.getName());
         if (shopInfo.getCategoryInfos().isEmpty()) {
             ViscriptShop.LOGGER.error("不合规的商店信息：商店分类栏为空");
             return;

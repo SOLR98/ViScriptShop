@@ -1,6 +1,7 @@
 package com.viscriptshop.util;
 
 import com.lowdragmc.lowdraglib2.LDLib2;
+import com.lowdragmc.lowdraglib2.Platform;
 import com.viscriptshop.gui.data.Shop;
 import com.viscriptshop.gui.data.ShopInfo;
 import net.minecraft.nbt.CompoundTag;
@@ -17,7 +18,7 @@ import java.util.Map;
 
 @ParametersAreNonnullByDefault
 public class ShopHelper {
-    private final static Map<String, CompoundTag> CACHE = new HashMap<>();
+    private final static Map<String, ShopInfo> CACHE = new HashMap<>();
     public static final String SHOP_PATH = "viscript_shop/shop";
     //缓存的商店信息
     public static ShopInfo cacheShopInfo;
@@ -29,31 +30,29 @@ public class ShopHelper {
     }
 
     @Nullable
-    public static CompoundTag getShop(String shopLocation) {
+    public static ShopInfo getShop(String shopLocation) {
         return getShop(shopLocation, true);
     }
 
 
-    public static CompoundTag getShop(String shopLocation, boolean useCache) {
-        return useCache ? CACHE.computeIfAbsent(shopLocation, location -> loadShop(shopLocation)) : loadShop(shopLocation);
+    public static ShopInfo getShop(String shopLocation, boolean useCache) {
+        return useCache ? CACHE.getOrDefault(shopLocation, loadShop(shopLocation)) : loadShop(shopLocation);
     }
 
-    public static CompoundTag loadShop(String shopLocation) {
-        return readShopFile(getShopFile(shopLocation));
-    }
-
-    private static File getShopFile(String fileName) {
-        if (fileName.startsWith("\"")) fileName = fileName.substring(1);
-        if (fileName.endsWith("\"")) fileName = fileName.substring(0, fileName.length() - 1);
-        return new File(LDLib2.getAssetsDir(), SHOP_PATH + "/" + fileName + Shop.SUFFIX);
-    }
-
-    private static CompoundTag readShopFile(File file) {
-        if (!file.exists()) return new CompoundTag();
+    private static ShopInfo loadShop(String shopLocation) {
+        if (shopLocation.startsWith("\"")) shopLocation = shopLocation.substring(1);
+        if (shopLocation.endsWith("\"")) shopLocation = shopLocation.substring(0, shopLocation.length() - 1);
+        File file = new File(LDLib2.getAssetsDir(), SHOP_PATH + "/" + shopLocation + Shop.SUFFIX);
+        CompoundTag compoundTag;
+        if (!file.exists()) return null;
         try (var inputStream = Files.newInputStream(file.toPath())) {
-            return NbtIo.readCompressed(inputStream, NbtAccounter.unlimitedHeap());
+            compoundTag = NbtIo.readCompressed(inputStream, NbtAccounter.unlimitedHeap());
         } catch (IOException e) {
-            return new CompoundTag();
+            compoundTag = new CompoundTag();
         }
+        ShopInfo shopInfo = new ShopInfo();
+        shopInfo.deserializeNBT(Platform.getFrozenRegistry(), compoundTag);
+        CACHE.put(shopLocation, shopInfo);
+        return shopInfo;
     }
 }

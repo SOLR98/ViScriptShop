@@ -9,6 +9,8 @@
   "command.viscript_shop.money.get": "该玩家余额有%s◎",
   "command.viscript_shop.money.pay": "已扣除%s%s◎给%s",
 
+  "viscript_shop.data.shop.name": "商店名",
+  "viscript_shop.data.shop.name.tip": "如需动态商店名的话此处不要填，请通过指令设置商店名",
   "viscript_shop.data.shop.stage": "阶段值",
   "viscript_shop.data.shop.stage.tip": "编辑器中会显示阶段值相等的商品，商店界面会显示所有≤该值的商品",
   "viscript_shop.data.shop.categoryInfos": "分类",
@@ -80,5 +82,8 @@
 
   "viscript_shop.dialog.delete_category.info": "是否要删除当前分类信息？",
   "viscript_shop.dialog.delete_merchant.info": "是否要删除当前商品信息？",
-  "viscript_shop.dialog.sort_merchant.info": "是否要将商品根据阶段值从小到大排序？"
+  "viscript_shop.dialog.sort_merchant.info": "是否要将商品根据阶段值从小到大排序？",
+
+  "sidebar_button.viscript_shop.shop": "打开商店",
+  "sidebar_button.viscript_shop.shop.tooltip": "选择商店名打开"
 }

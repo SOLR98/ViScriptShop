@@ -26,6 +26,8 @@ public class ShopInfo implements IConfigurable, IPersistedSerializable {
     public static final StreamCodec<ByteBuf, ShopInfo> STREAM_CODEC;
     public static final Codec<ShopInfo> CODEC;
 
+    @Configurable(name = "viscript_shop.data.shop.name",tips = "viscript_shop.data.shop.name.tip")
+    private String name = "";
     @Configurable(name = "viscript_shop.data.shop.stage", tips = "viscript_shop.data.shop.stage.tip")
     private int stage = 0;
     @Persisted

@@ -30,6 +30,7 @@ public class ShopClientEvent {
     public static void shopUiClosing(ScreenEvent.Closing event) {
         if (event.getScreen() instanceof ModularUIScreen screen && screen.modularUI.ui.rootElement instanceof ShopUI shopUI) {
             NeoForge.EVENT_BUS.post(new com.viscriptshop.event.neoforge.ShopClientEvent.Closing(shopUI));
+
         }
     }
 

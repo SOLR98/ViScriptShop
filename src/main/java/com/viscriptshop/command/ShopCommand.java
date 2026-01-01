@@ -15,7 +15,6 @@ import lombok.SneakyThrows;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.commands.arguments.ComponentArgument;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -47,10 +46,7 @@ public class ShopCommand implements ICommand {
                                     getServerShopFiles().forEach(builder::suggest);
                                     return builder.buildFuture();
                                 })
-                                .executes(context -> openShop(context, Component.translatable("viscript_shop.ui.title")))
-                                .then(Commands.argument("title", ComponentArgument.textComponent(buildContext))
-                                        .executes(context -> openShop(context, ComponentArgument.getComponent(context, "title")))
-                                )
+                                .executes(this::openShop)
                         )
                 )
                 .then(Commands.literal("reload")
@@ -152,12 +148,12 @@ public class ShopCommand implements ICommand {
     }
 
     @SneakyThrows
-    private int openShop(CommandContext<CommandSourceStack> context, Component title) {
+    private int openShop(CommandContext<CommandSourceStack> context) {
         CommandSourceStack source = context.getSource();
         ServerPlayer player = source.getPlayer();
         if (player != null) {
             String shop = StringArgumentType.getString(context, "shop");
-            ViScriptShopServerUtil.serverOpenShop(player, shop, title);
+            ViScriptShopServerUtil.serverOpenShop(player, shop);
             return 1;
         } else {
             throw playerOnlyException();
@@ -181,7 +177,7 @@ public class ShopCommand implements ICommand {
         return 1;
     }
 
-    private static List<String> getServerShopFiles() {
+    public static List<String> getServerShopFiles() {
         List<String> shopFiles = new ArrayList<>();
         var assets = new File(LDLib2.getAssetsDir(), ShopHelper.SHOP_PATH);
         if (assets.exists() && assets.isDirectory()) {
@@ -189,11 +185,7 @@ public class ShopCommand implements ICommand {
                 stream.filter(Files::isRegularFile).forEach(file -> {
                     String string = file.toString();
                     if (string.endsWith(Shop.SUFFIX)) {
-                        if (ViscriptShop.isWin()) {
-                            shopFiles.add("\"" + string.replace(assets.getPath() + "\\", "").replace("\\", "/").replace(Shop.SUFFIX, "") + "\"");
-                        } else {
-                            shopFiles.add("\"" + string.replace(assets.getPath(), "").substring(1).replace("\\", "/").replace(Shop.SUFFIX, "") + "\"");
-                        }
+                        shopFiles.add("\"" + string.replace(assets.getPath(), "").substring(1).replace("\\", "/").replace(Shop.SUFFIX, "") + "\"");
                     }
                 });
             } catch (IOException ignored) {

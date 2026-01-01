@@ -8,7 +8,8 @@
   "command.viscript_shop.money.remove": "Deducted %s%s◎. Player balance: %s◎",
   "command.viscript_shop.money.get": "Player balance: %s◎",
   "command.viscript_shop.money.pay": "Deducted %s%s◎ for %s",
-
+  "viscript_shop.data.shop.name": "Shop Name",
+  "viscript_shop.data.shop.name.tip": "For a dynamic shop name, leave this field empty and set it using commands.",
   "viscript_shop.data.shop.stage": "Stage",
   "viscript_shop.data.shop.stage.tip": "Editor shows items with equal Stage. Shop interface shows all items ≤ this value",
   "viscript_shop.data.shop.categoryInfos": "Categories",
@@ -32,7 +33,6 @@
   "viscript_shop.data.merchant.xp": "XP",
   "viscript_shop.data.merchant.stage": "Stage",
   "viscript_shop.data.merchant.stage.tip": "Only displayed if value ≥ Shop Stage",
-
   "viscript_shop.editor.title": "Edit Shop Interface",
   "viscript_shop.editor.shop.add": "Shop Entry",
   "viscript_shop.editor.shop.export": "Export Shop File",
@@ -44,7 +44,6 @@
   "viscript_shop.editor.sort.merchant": "Sort Products",
   "viscript_shop.editor.view_category": "Category",
   "viscript_shop.editor.view.shopPreview": "Shop Preview",
-
   "viscript_shop.configurator.item.count": "Count",
   "viscript_shop.selectItemDialog.title": "Select Item",
   "viscript_shop.ui.title": "Shop",
@@ -55,14 +54,12 @@
   "viscript_shop.ui.shoppingCar": "Cart",
   "viscript_shop.ui.inventory": "Cost",
   "viscript_shop.ui.lock": "Locked",
-
   "viscript_shop.button.confirm": "Confirm",
   "viscript_shop.button.cancel": "Cancel",
   "viscript_shop.button.delete": "Delete",
   "viscript_shop.button.update": "Edit",
   "viscript_shop.button.buy": "Buy",
   "viscript_shop.button.ts": "Stash",
-
   "viscript_shop.message.item.empty": "Trade Item A and Trade Item B cannot both be empty",
   "viscript_shop.message.itemResult.empty": "Result Item cannot be empty",
   "viscript_shop.message.saveSuccess": "Saved successfully",
@@ -77,8 +74,9 @@
   "viscript_shop.message.uploadFile.success": "File upload successful",
   "viscript_shop.message.uploadFile.success.content": "Overwrote existing shop file!",
   "viscript_shop.message.uploadFile.success.content1": "Created and wrote new shop file!",
-
   "viscript_shop.dialog.delete_category.info": "Delete current category information?",
   "viscript_shop.dialog.delete_merchant.info": "Delete current product information?",
-  "viscript_shop.dialog.sort_merchant.info": "Sort products by Stage (ascending)?"
+  "viscript_shop.dialog.sort_merchant.info": "Sort products by Stage (ascending)?",
+  "sidebar_button.viscript_shop.shop": "Open Shop",
+  "sidebar_button.viscript_shop.shop.tooltip": "Select Shop Name Open"
 }
