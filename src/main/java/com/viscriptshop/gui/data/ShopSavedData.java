@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ShopSavedData extends SavedData {
-    private final Map<String, ShopInfo> shopInfoMap = new HashMap<>();
+    public final Map<String, ShopInfo> shopInfoMap = new HashMap<>();
 
     public static SavedData.Factory<ShopSavedData> factory() {
         return new SavedData.Factory<>(
@@ -57,6 +57,8 @@ public class ShopSavedData extends SavedData {
     @Override
     public @NotNull CompoundTag save(@NotNull CompoundTag compoundTag, HolderLookup.@NotNull Provider provider) {
         for (Map.Entry<String, ShopInfo> entry : shopInfoMap.entrySet()) {
+            System.out.println("key:" + entry.getKey());
+            System.out.println("value:" + entry.getValue());
             compoundTag.put(entry.getKey(), entry.getValue().serializeNBT(provider));
         }
         return compoundTag;
