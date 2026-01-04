@@ -1,21 +1,22 @@
 package com.viscriptshop.network.s2c;
 
+import com.lowdragmc.lowdraglib2.Platform;
 import com.lowdragmc.lowdraglib2.editor.ui.EditorWindow;
 import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Dialog;
 import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacket;
 import com.lowdragmc.lowdraglib2.syncdata.rpc.RPCSender;
+import com.mojang.serialization.Codec;
 import com.viscriptshop.gui.ShopEditor;
 import com.viscriptshop.gui.components.DialogSelect;
 import com.viscriptshop.gui.components.Message;
 import com.viscriptshop.gui.data.ShopInfo;
+import com.viscriptshop.util.CodecUtil;
 import com.viscriptshop.util.ViScriptShopClientUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Map;
 
 public class S2CPayload {
     public static final String OPEN_SHOP_EDITOR = "open_shop_editor";
@@ -23,9 +24,6 @@ public class S2CPayload {
     public static final String SEND_MESSAGE = "send_message";
     public static final String SEND_EDITOR_DIALOG = "send_editor_dialog";
     public static final String GET_SHOP_INFO_S2C = "get_shop_info_s2c";
-
-    //data
-    public static List<ShopInfo> shopInfos = new ArrayList<>();
 
     @RPCPacket(OPEN_SHOP_EDITOR)
     public static void openShopEditor(RPCSender sender, CompoundTag tag) {
@@ -53,10 +51,11 @@ public class S2CPayload {
         }
     }
 
-//    @RPCPacket(GET_SHOP_INFO_S2C)
-//    public static void getShopInfo(RPCSender sender, ShopInfo[] infos) {
-//        if (Minecraft.getInstance().screen instanceof ModularUIScreen screen && screen.modularUI.ui.rootElement instanceof DialogSelect dialogSelect) {
-//            shopInfos = Arrays.stream(infos).toList();
-//        }
-//    }
+    @RPCPacket(GET_SHOP_INFO_S2C)
+    public static void getShopInfoS2C(RPCSender sender, CompoundTag compoundTag) {
+        if (Minecraft.getInstance().screen instanceof ModularUIScreen screen && screen.modularUI.ui.rootElement instanceof DialogSelect dialogSelect) {
+            Codec<Map<String, String>> codec = Codec.unboundedMap(Codec.STRING, Codec.STRING);
+            dialogSelect.reload(CodecUtil.deserializeNBT(codec, compoundTag, Platform.getFrozenRegistry()));
+        }
+    }
 }

@@ -88,7 +88,7 @@ public class UIElementUtil {
                     layout.setHeight(size);
                 })
                 .style(style -> {
-                    if (!isRenderBackgroundTexture) style.backgroundTexture(null);
+                    if (!isRenderBackgroundTexture) style.backgroundTexture(IGuiTexture.EMPTY);
                 });
     }
 

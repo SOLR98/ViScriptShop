@@ -324,6 +324,11 @@ public class ShopUI extends UIElement {
         // 重新添加所有商品
         for (int i = 0; i < selectedCategory.getMerchants().size(); i++) {
             MerchantInfo merchantInfo = selectedCategory.getMerchants().get(i);
+            //商品上锁样式：隐藏
+            if (currentShopInfo.getLockedMerchantVisibility().equals(ShopInfo.LockedMerchantVisibility.HIDDEN) && merchantInfo.getStage() > currentShopInfo.getStage()) {
+                continue;
+            }
+            //搜索购买物品筛选
             if (!merchantInfo.getItemResult().is(BuiltInRegistries.ITEM.get(ResourceLocation.parse(this.search))) && !this.search.isEmpty() && !this.search.equals(Items.AIR.toString())) {
                 continue;
             }

@@ -6,6 +6,7 @@ import com.lowdragmc.lowdraglib2.syncdata.AccessorRegistries;
 import com.lowdragmc.lowdraglib2.syncdata.accessor.direct.CustomDirectAccessor;
 import com.mojang.logging.LogUtils;
 import com.viscriptshop.command.ICommand;
+import com.viscriptshop.compat.ModComPat;
 import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.gui.data.ShopSavedData;
 import lombok.Getter;
@@ -17,6 +18,9 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.neoforge.client.gui.ConfigurationScreen;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import org.slf4j.Logger;
@@ -34,6 +38,7 @@ public class ViscriptShop {
     public ViscriptShop(IEventBus modEventBus, ModContainer modContainer, Dist dist) {
         NeoForge.EVENT_BUS.addListener(this::onRegisterCommands);
         ShopRegistries.ATTACHMENT_TYPES.register(modEventBus);
+        ModComPat.init(dist);
         AccessorRegistries.setPriority(0);
         AccessorRegistries.registerAccessor(CustomDirectAccessor.builder(ShopInfo.class)
                 .codec(ShopInfo.CODEC)
@@ -41,6 +46,10 @@ public class ViscriptShop {
                 .codecMark()
                 .build()
         );
+        if (dist == Dist.CLIENT) {
+            modContainer.registerConfig(ModConfig.Type.COMMON, Config.CONFIG_SPEC, String.format("%s_config.toml", MOD_ID));
+            modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
+        }
     }
 
     //注册指令

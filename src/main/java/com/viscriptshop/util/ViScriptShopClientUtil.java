@@ -6,9 +6,6 @@ import com.lowdragmc.lowdraglib2.editor.ui.EditorWindow;
 import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
-import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
-import com.lowdragmc.lowdraglib2.math.Size;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.ShopEditor;
 import com.viscriptshop.gui.ShopUI;
@@ -50,16 +47,7 @@ public class ViScriptShopClientUtil {
             ViscriptShop.LOGGER.error("不合规的商店信息：商店分类栏为空");
             return;
         }
-        ModularUI ui = new ModularUI(UI.of(shopUI, size -> {
-            int width = size.width;
-            int height = size.height;
-
-            float fontSize = Math.max(12, height * 0.04f);
-            for (UIElement child : shopUI.getChildren()) {
-                if (child instanceof Label label) label.getTextStyle().fontSize(fontSize);
-            }
-            return Size.of(width, height);
-        }));
-        minecraft.setScreen(new ModularUIScreen(ui, Component.empty()));
+        ModularUI modularUI = new ModularUI(UI.of(shopUI));
+        minecraft.setScreen(new ModularUIScreen(modularUI, Component.empty()));
     }
 }

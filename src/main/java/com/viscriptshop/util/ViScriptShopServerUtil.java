@@ -44,9 +44,12 @@ public class ViScriptShopServerUtil {
         shopSavedData.resetShopInfo(shop);
     }
 
-    @Info("获取商店的信息")
+    @Info("获取商店的信息，先从savedData里获取，如果不存在再从服务端文件中获取")
     public static ShopInfo getShopInfo(String shop) {
-        return ViscriptShop.getShopSavedData().getShopInfo(shop);
+        ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
+        ShopInfo shopInfo = shopSavedData.getShopInfo(shop);
+        if (shopInfo == null) shopInfo = ShopHelper.getShop(shop);
+        return shopInfo;
     }
 
     @Info("添加商店商品")

@@ -17,7 +17,6 @@ import io.netty.buffer.ByteBuf;
 import lombok.*;
 import net.minecraft.nbt.IntTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.StringRepresentable;
@@ -111,7 +110,7 @@ public class CategoryInfo implements IConfigurable, IPersistedSerializable {
 
     @Getter
     @AllArgsConstructor
-    public enum IconType implements StringRepresentable{
+    public enum IconType implements StringRepresentable {
         ITEM("viscript_shop.data.category.iconType.item"),
         TEXTURE("viscript_shop.data.category.iconType.texture");
 
@@ -125,7 +124,7 @@ public class CategoryInfo implements IConfigurable, IPersistedSerializable {
 
     @Getter
     @AllArgsConstructor
-    public enum ShopType implements StringRepresentable{
+    public enum ShopType implements StringRepresentable {
         ITEM_FOR_ITEM("viscript_shop.data.category.shopType.item_for_item"),
         CURRENCY("viscript_shop.data.category.shopType.currency");
 

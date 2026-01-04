@@ -1,5 +1,6 @@
 package com.viscriptshop.gui.data;
 
+import com.lowdragmc.lowdraglib2.Platform;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.saveddata.SavedData;
@@ -57,8 +58,6 @@ public class ShopSavedData extends SavedData {
     @Override
     public @NotNull CompoundTag save(@NotNull CompoundTag compoundTag, HolderLookup.@NotNull Provider provider) {
         for (Map.Entry<String, ShopInfo> entry : shopInfoMap.entrySet()) {
-            System.out.println("key:" + entry.getKey());
-            System.out.println("value:" + entry.getValue());
             compoundTag.put(entry.getKey(), entry.getValue().serializeNBT(provider));
         }
         return compoundTag;
