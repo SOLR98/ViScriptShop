@@ -19,7 +19,7 @@ import java.util.Map;
 public record GetItemCountS2CPayload(Map<ItemStack, Integer> itemStacks) implements CustomPacketPayload {
     public static final Type<GetItemCountS2CPayload> TYPE = new Type<>(ViscriptShop.id("get_item_count_s2c"));
     public static final StreamCodec<RegistryFriendlyByteBuf, GetItemCountS2CPayload> CODEC = StreamCodec.composite(
-            ByteBufCodecs.map(HashMap::new, ItemUtil.ITEM_STACK_STREAM_CODEC, ByteBufCodecs.VAR_INT),
+            ByteBufCodecs.map(HashMap::new, ItemStack.OPTIONAL_STREAM_CODEC, ByteBufCodecs.VAR_INT),
             GetItemCountS2CPayload::itemStacks,
             GetItemCountS2CPayload::new
     );

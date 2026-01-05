@@ -20,7 +20,7 @@ import java.util.Map;
 @NoArgsConstructor
 public class AggregatedResources {
     public static final StreamCodec<RegistryFriendlyByteBuf, AggregatedResources> STREAM_CODEC = StreamCodec.composite(
-            ByteBufCodecs.map(HashMap::new, ItemUtil.ITEM_STACK_STREAM_CODEC, ByteBufCodecs.VAR_INT),
+            ByteBufCodecs.map(HashMap::new, ItemStack.OPTIONAL_STREAM_CODEC, ByteBufCodecs.VAR_INT),
             AggregatedResources::getItems,
             ByteBufCodecs.INT,
             AggregatedResources::getTotalMoney,

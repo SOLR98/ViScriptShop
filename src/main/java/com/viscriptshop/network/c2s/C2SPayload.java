@@ -44,20 +44,20 @@ public class C2SPayload {
                 if (file.getParentFile().mkdirs()) {
                     try {
                         if (!file.createNewFile()) {
-                            sendEditorDialog(player, Component.translatable("viscript_shop.message.uploadFile.error").getString(), Component.translatable("viscript_shop.message.uploadFile.error.content").getString());
+                            sendEditorDialog(player, Component.translatable("viscript_shop.message.uploadFile.error"), Component.translatable("viscript_shop.message.uploadFile.error.content"));
                             return;
                         }
                     } catch (IOException e) {
-                        sendEditorDialog(player, Component.translatable("viscript_shop.message.uploadFile.error").getString(), Component.translatable("viscript_shop.message.uploadFile.error.content").getString() + e.getMessage());
+                        sendEditorDialog(player, Component.translatable("viscript_shop.message.uploadFile.error"), Component.nullToEmpty(e.getMessage()));
                         return;
                     }
                 }
             }
             try {
                 NbtIo.writeCompressed(tag, file.toPath());
-                sendEditorDialog(player, Component.translatable("viscript_shop.message.uploadFile.success").getString(), exists ? Component.translatable("viscript_shop.message.uploadFile.success.content").getString() : Component.translatable("viscript_shop.message.uploadFile.success.content1").getString());
+                sendEditorDialog(player, Component.translatable("viscript_shop.message.uploadFile.success"), exists ? Component.translatable("viscript_shop.message.uploadFile.success.content") : Component.translatable("viscript_shop.message.uploadFile.success.content1"));
             } catch (IOException e) {
-                sendEditorDialog(player, Component.translatable("viscript_shop.message.uploadFile.error").getString(), Component.translatable("viscript_shop.message.uploadFile.error.content1").getString() + e.getMessage());
+                sendEditorDialog(player, Component.translatable("viscript_shop.message.uploadFile.error"), Component.nullToEmpty(e.getMessage()));
             }
         }
     }
@@ -82,7 +82,7 @@ public class C2SPayload {
     }
 
 
-    public static void sendEditorDialog(ServerPlayer player, String title, String content) {
+    public static void sendEditorDialog(ServerPlayer player, Component title, Component content) {
         RPCPacketDistributor.rpcToPlayer(player, S2CPayload.SEND_EDITOR_DIALOG, title, content);
     }
 }

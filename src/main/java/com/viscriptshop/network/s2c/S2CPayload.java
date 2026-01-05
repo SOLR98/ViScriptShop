@@ -15,6 +15,7 @@ import com.viscriptshop.util.CodecUtil;
 import com.viscriptshop.util.ViScriptShopClientUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 
 import java.util.Map;
 
@@ -36,17 +37,17 @@ public class S2CPayload {
     }
 
     @RPCPacket(SEND_MESSAGE)
-    public static void sendMessage(RPCSender sender, Message.Type messageType, String message) {
+    public static void sendMessage(RPCSender sender, Message.Type messageType, Component message) {
         if (Minecraft.getInstance().screen instanceof ModularUIScreen screen) {
-            Message.send(messageType, message, screen.modularUI.ui.rootElement);
+            Message.send(messageType, message.getString(), screen.modularUI.ui.rootElement);
         }
     }
 
     @RPCPacket(SEND_EDITOR_DIALOG)
-    public static void sendEditorDialog(RPCSender sender, String title, String content) {
+    public static void sendEditorDialog(RPCSender sender, Component title, Component content) {
         if (sender.isServer() && Minecraft.getInstance().screen instanceof ModularUIScreen uiScreen) {
             if (uiScreen.modularUI.ui.rootElement instanceof EditorWindow window && window.getCurrentEditor() instanceof ShopEditor editor) {
-                Dialog.showNotification(title, content, null).show(editor);
+                Dialog.showNotification(title.getString(), content.getString(), null).show(editor);
             }
         }
     }

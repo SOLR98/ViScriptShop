@@ -19,7 +19,7 @@ import java.util.Map;
 public record ReloadShopUIPayload(Map<ItemStack, Integer> costItems) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<ReloadShopUIPayload> TYPE = new CustomPacketPayload.Type<>(ViscriptShop.id("reload_shop_ui"));
     public static final StreamCodec<RegistryFriendlyByteBuf, ReloadShopUIPayload> CODEC = StreamCodec.composite(
-            ByteBufCodecs.map(HashMap::new, ItemUtil.ITEM_STACK_STREAM_CODEC, ByteBufCodecs.VAR_INT),
+            ByteBufCodecs.map(HashMap::new, ItemStack.OPTIONAL_STREAM_CODEC, ByteBufCodecs.VAR_INT),
             ReloadShopUIPayload::costItems,
             ReloadShopUIPayload::new
     );
