@@ -33,11 +33,13 @@ import org.appliedenergistics.yoga.YogaGutter;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class UIElementUtil {
-    public static SearchComponentConfigurator<Item> createItemSearchComponentConfigurator(String name, Supplier<String> getter, Consumer<String> setter, TagKey<Item> tag) {
+    public static SearchComponentConfigurator<Item> createItemSearchComponentConfigurator(String name, Supplier<String> getter, Consumer<String> setter, Set<Item> items, TagKey<Item> tag) {
         return new SearchComponentConfigurator<>(name,
                 () -> {
                     String id = getter.get();
@@ -53,12 +55,16 @@ public class UIElementUtil {
                 false,
                 (word, searchHandler) -> {
                     String lowerWord = word.toLowerCase();
-                    for (var key : BuiltInRegistries.ITEM.keySet()) {
+                    Set<Item> candidatesItems = items;
+                    if (items == null) {
+                        candidatesItems = BuiltInRegistries.ITEM.stream().collect(Collectors.toSet());
+                    }
+                    for (Item item : candidatesItems) {
+                        ResourceLocation key = BuiltInRegistries.ITEM.getKey(item);
                         if (Thread.currentThread().isInterrupted()) return;
-                        Item item = BuiltInRegistries.ITEM.get(key);
                         if (tag != null && !item.getDefaultInstance().is(tag)) continue;
                         if (key.toString().toLowerCase().contains(lowerWord) || Component.translatable(item.getDescriptionId()).getString().toLowerCase().contains(lowerWord)) {
-                            ((IResultHandler<Item>) searchHandler).acceptResult(BuiltInRegistries.ITEM.get(key));
+                            ((IResultHandler<Item>) searchHandler).acceptResult(item);
                         }
                     }
                 },
@@ -73,8 +79,8 @@ public class UIElementUtil {
         );
     }
 
-    public static SearchComponentConfigurator<Item> createItemSearchComponentConfigurator(String name, Supplier<String> getter, Consumer<String> setter) {
-        return createItemSearchComponentConfigurator(name, getter, setter, null);
+    public static SearchComponentConfigurator<Item> createItemSearchComponentConfigurator(String name, Supplier<String> getter, Consumer<String> setter, Set<Item> items) {
+        return createItemSearchComponentConfigurator(name, getter, setter, items, null);
     }
 
     public static ItemSlot createItemSlot(ItemStack item, int size, boolean isRenderBackgroundTexture, boolean showItemTooltips) {

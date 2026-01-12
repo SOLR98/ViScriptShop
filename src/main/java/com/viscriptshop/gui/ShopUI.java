@@ -37,9 +37,7 @@ import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.common.NeoForge;
 import org.appliedenergistics.yoga.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ShopUI extends UIElement {
     Minecraft minecraft = Minecraft.getInstance();
@@ -48,6 +46,7 @@ public class ShopUI extends UIElement {
     public ScrollerView merchantsView = new ScrollerView();
     public ScrollerView shoppingCarView = new ScrollerView();
     public ScrollerView inventoryView = new ScrollerView();
+    public SearchComponent<Item> searchComponent;
 
     private final IGuiTexture DARK_BACKGROUND_RECT = Sprites.BORDER_RT0;
     private final IGuiTexture LIGHT_BACKGROUND_RECT = Sprites.RECT_RD_SOLID;
@@ -174,7 +173,7 @@ public class ShopUI extends UIElement {
         }).layout(layout -> {
             layout.setHeightPercent(100);
         });
-        SearchComponent<Item> searchComponent = UIElementUtil.createItemSearchComponentConfigurator("", this::getSearch, this::setSearch).searchComponent;
+        searchComponent = UIElementUtil.createItemSearchComponentConfigurator("", this::getSearch, this::setSearch, getCategoryItems()).searchComponent;
         searchComponent.layout(layout -> {
             layout.setMargin(YogaEdge.LEFT, 5);
             layout.setWidth(70);
@@ -329,11 +328,16 @@ public class ShopUI extends UIElement {
                 continue;
             }
             //搜索购买物品筛选
-            if (!merchantInfo.getItemResult().is(BuiltInRegistries.ITEM.get(ResourceLocation.parse(this.search))) && !this.search.isEmpty() && !this.search.equals(Items.AIR.toString())) {
+            if (!this.search.isEmpty() && !this.search.equals(Items.AIR.toString()) &&
+                    !merchantInfo.getItemResult().is(BuiltInRegistries.ITEM.get(ResourceLocation.parse(this.search))) &&
+                    !merchantInfo.getItemA().is(BuiltInRegistries.ITEM.get(ResourceLocation.parse(this.search))) &&
+                    !merchantInfo.getItemB().is(BuiltInRegistries.ITEM.get(ResourceLocation.parse(this.search)))) {
                 continue;
             }
             merchantsView.addScrollViewChild(createMerchant(merchantInfo, i));
         }
+
+        searchComponent = UIElementUtil.createItemSearchComponentConfigurator("", this::getSearch, this::setSearch, getCategoryItems()).searchComponent;
     }
 
     public void reloadShoppingItem() {
@@ -578,5 +582,18 @@ public class ShopUI extends UIElement {
             layout.setAlignItems(YogaAlign.CENTER);
             layout.setFlexDirection(YogaFlexDirection.ROW);
         });
+    }
+
+    private Set<Item> getCategoryItems() {
+        Set<Item> items = new HashSet<>();
+        List<MerchantInfo> merchants = selectedCategory.getMerchants();
+        for (MerchantInfo merchant : merchants) {
+            if (merchant.getStage() <= currentShopInfo.getStage()) {
+                items.add(merchant.getItemA().getItem());
+                items.add(merchant.getItemB().getItem());
+                items.add(merchant.getItemResult().getItem());
+            }
+        }
+        return items;
     }
 }

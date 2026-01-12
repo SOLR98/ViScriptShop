@@ -6,7 +6,9 @@ import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
+import com.lowdragmc.lowdraglib2.gui.ui.style.PropertyRegistry;
 import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
+import com.lowdragmc.lowdraglib2.math.interpolate.Eases;
 import com.viscriptshop.ViscriptShop;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -98,6 +100,13 @@ public class Message extends UIElement {
         AtomicInteger time = new AtomicInteger(DEFAULT_TIME);
         this.addEventListener(UIEvents.TICK, event -> {
             time.set(time.get() - 1);
+            if (time.get() == 20) {
+                this.animation()
+                        .duration(1)
+                        .ease(Eases.QUAD_IN_OUT)
+                        .style(PropertyRegistry.OPACITY, 0f)
+                        .start();
+            }
             if (time.get() == 0) parent.removeChild(this);
         });
     }
