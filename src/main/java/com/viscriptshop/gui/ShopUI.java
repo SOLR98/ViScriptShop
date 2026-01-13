@@ -84,7 +84,7 @@ public class ShopUI extends UIElement {
         UIElement root = new UIElement();
         root.layout((layout) -> {
             layout.setWidthPercent(90);
-            layout.setHeightPercent(80);
+            layout.setHeightPercent(85);
             layout.setGap(YogaGutter.ALL, 3);
             layout.setFlexDirection(YogaFlexDirection.ROW);
             layout.setJustifyContent(YogaJustify.CENTER);
@@ -115,7 +115,7 @@ public class ShopUI extends UIElement {
         }).addEventListener(UIEvents.TICK, event -> {
             reloadCategoryList();
         });
-        categoryView.viewPort.getStyle().backgroundTexture(null);
+        categoryView.viewPort.getStyle().backgroundTexture(IGuiTexture.EMPTY);
         categoryView.viewContainer.layout(layout -> {
             layout.setGap(YogaGutter.COLUMN, 5);
             layout.setPadding(YogaEdge.ALL, 3);
@@ -173,13 +173,7 @@ public class ShopUI extends UIElement {
         }).layout(layout -> {
             layout.setHeightPercent(100);
         });
-        searchComponent = UIElementUtil.createItemSearchComponentConfigurator("", this::getSearch, this::setSearch, getCategoryItems()).searchComponent;
-        searchComponent.layout(layout -> {
-            layout.setMargin(YogaEdge.LEFT, 5);
-            layout.setWidth(70);
-        }).addEventListener(UIEvents.LAYOUT_CHANGED, event -> {
-            reloadMerchants();
-        });
+        reloadSearchComponent();
         Label stageLabel = (Label) new Label().setText(Component.translatable("viscript_shop.ui.stage", this.currentShopInfo.getStage())).textStyle(textStyle -> {
             textStyle.textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER).adaptiveWidth(true);
         }).layout(layout -> {
@@ -201,7 +195,7 @@ public class ShopUI extends UIElement {
             layout.setFlex(1);
         });
 
-        merchantsView.viewPort.getStyle().backgroundTexture(null);
+        merchantsView.viewPort.getStyle().backgroundTexture(IGuiTexture.EMPTY);
 
         merchantsView.viewContainer.layout(layout -> {
             layout.setFlexDirection(YogaFlexDirection.COLUMN);
@@ -237,7 +231,7 @@ public class ShopUI extends UIElement {
             layout.setFlex(1);
             layout.setFlexDirection(YogaFlexDirection.COLUMN);
             layout.setPadding(YogaEdge.ALL, 5);
-            layout.setGap(YogaGutter.ALL, 4);
+            layout.setGap(YogaGutter.ALL, 2);
         });
         rightBottom.getStyle().backgroundTexture(DARK_BACKGROUND_RECT);
 
@@ -263,14 +257,12 @@ public class ShopUI extends UIElement {
         inventoryView.viewPort.getLayout().setPadding(YogaEdge.ALL, 3);
         reloadInventoryItem();
 
-        Button buyButton = (Button) new Button().setText("viscript_shop.button.buy").setOnClick(event -> {
-            AggregatedResources costSummary = AggregatedResources.getCostSummary(this.currentShopInfo);
-            AggregatedResources gainSummary = AggregatedResources.getGainSummary(this.currentShopInfo);
-            if (costSummary.isEmpty() || gainSummary.isEmpty()) {
-                Message.warn("viscript_shop.message.shoppingCar.empty", this);
-                return;
-            }
-            minecraft.player.connection.send(new BuyMerchantPayload(this.currentShopInfo, costSummary, gainSummary));
+        Button clearButton = (Button) new Button().setText("viscript_shop.button.clear").setOnClick(event -> {
+            currentShopInfo.getCategoryInfos().forEach(categoryInfo -> {
+                categoryInfo.getMerchants().forEach(merchantInfo -> merchantInfo.setBuyCount(0));
+            });
+            reloadShoppingItem();
+            reloadInventoryItem();
         }).layout(layout -> {
             layout.setWidthPercent(40);
         });
@@ -282,13 +274,24 @@ public class ShopUI extends UIElement {
             layout.setWidthPercent(40);
         });
 
+        Button buyButton = (Button) new Button().setText("viscript_shop.button.buy").setOnClick(event -> {
+            AggregatedResources costSummary = AggregatedResources.getCostSummary(this.currentShopInfo);
+            AggregatedResources gainSummary = AggregatedResources.getGainSummary(this.currentShopInfo);
+            if (costSummary.isEmpty() || gainSummary.isEmpty()) {
+                Message.warn("viscript_shop.message.shoppingCar.empty", this);
+                return;
+            }
+            minecraft.player.connection.send(new BuyMerchantPayload(this.currentShopInfo, costSummary, gainSummary));
+        }).layout(layout -> {
+            layout.setWidthPercent(100);
+        });
+
         rightBottom.addChildren(new Label().setText("viscript_shop.ui.shoppingCar").textStyle(textStyle -> textStyle.adaptiveHeight(true)), shoppingCarView,
-                new Label().setText("viscript_shop.ui.inventory").textStyle(textStyle -> textStyle.adaptiveHeight(true)), inventoryView
-                , new UIElement().layout(layout -> {
+                new Label().setText("viscript_shop.ui.inventory").textStyle(textStyle -> textStyle.adaptiveHeight(true)), inventoryView,
+                new UIElement().layout(layout -> {
                     layout.setFlexDirection(YogaFlexDirection.ROW);
                     layout.setJustifyContent(YogaJustify.SPACE_BETWEEN);
-                    layout.setHeightPercent(20);
-                }).addChildren(buyButton, tsButton));
+                }).addChildren(tsButton, clearButton),buyButton);
 
         right.addChildren(rightTop, rightBottom);
 
@@ -336,8 +339,6 @@ public class ShopUI extends UIElement {
             }
             merchantsView.addScrollViewChild(createMerchant(merchantInfo, i));
         }
-
-        searchComponent = UIElementUtil.createItemSearchComponentConfigurator("", this::getSearch, this::setSearch, getCategoryItems()).searchComponent;
     }
 
     public void reloadShoppingItem() {
@@ -421,6 +422,16 @@ public class ShopUI extends UIElement {
             inventoryView.addScrollViewChild(createItemInfoBox().addChildren(moneyIcon, money));
         }
 
+    }
+
+    public void reloadSearchComponent() {
+        searchComponent = UIElementUtil.createItemSearchComponentConfigurator("", this::getSearch, this::setSearch, getCategoryItems()).searchComponent;
+        searchComponent.layout(layout -> {
+            layout.setMargin(YogaEdge.LEFT, 5);
+            layout.setWidth(70);
+        }).addEventListener(UIEvents.LAYOUT_CHANGED, event -> {
+            reloadMerchants();
+        });
     }
 
     public UIElement createMerchant(MerchantInfo merchantInfo, int index) {
@@ -584,7 +595,7 @@ public class ShopUI extends UIElement {
         });
     }
 
-    private Set<Item> getCategoryItems() {
+    public Set<Item> getCategoryItems() {
         Set<Item> items = new HashSet<>();
         List<MerchantInfo> merchants = selectedCategory.getMerchants();
         for (MerchantInfo merchant : merchants) {

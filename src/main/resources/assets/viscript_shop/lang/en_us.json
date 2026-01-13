@@ -73,6 +73,7 @@
   "viscript_shop.button.update": "Edit",
   "viscript_shop.button.buy": "Buy",
   "viscript_shop.button.ts": "Stash",
+  "viscript_shop.button.clear": "Clear",
 
   "viscript_shop.message.item.empty": "Trade Item A and Trade Item B cannot both be empty.",
   "viscript_shop.message.itemResult.empty": "Result Item cannot be empty.",

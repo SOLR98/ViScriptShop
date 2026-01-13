@@ -73,6 +73,7 @@
   "viscript_shop.button.update": "编辑",
   "viscript_shop.button.buy": "购买",
   "viscript_shop.button.ts": "暂存",
+  "viscript_shop.button.clear": "清空",
 
   "viscript_shop.message.item.empty": "交易物品A和交易物品B不能都为空",
   "viscript_shop.message.itemResult.empty": "返回物品不能为空",

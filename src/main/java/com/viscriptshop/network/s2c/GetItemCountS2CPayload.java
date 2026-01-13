@@ -4,6 +4,7 @@ import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.ShopUI;
 import com.viscriptshop.util.ItemUtil;
+import com.viscriptshop.util.UIElementUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -30,6 +31,7 @@ public record GetItemCountS2CPayload(Map<ItemStack, Integer> itemStacks) impleme
             payload.itemStacks().forEach(shopUI::setItemCount);
             shopUI.reloadInventoryItem();
             shopUI.reloadShoppingItem();
+            shopUI.reloadSearchComponent();
         }
     }
 
