@@ -34,6 +34,7 @@ public record ReloadShopUIPayload(Map<ItemStack, Integer> costItems) implements 
             });
             shopUI.reloadInventoryItem();
             shopUI.reloadShoppingItem();
+            shopUI.reloadSearchComponent();
         }
     }
 
