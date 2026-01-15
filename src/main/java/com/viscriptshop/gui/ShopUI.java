@@ -12,6 +12,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.*;
 import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
+import com.lowdragmc.lowdraglib2.utils.search.IResultHandler;
 import com.viscriptshop.ShopRegistries;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.event.neoforge.ShopClientEvent;
@@ -36,6 +37,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.common.NeoForge;
 import org.appliedenergistics.yoga.*;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -173,7 +176,13 @@ public class ShopUI extends UIElement {
         }).layout(layout -> {
             layout.setHeightPercent(100);
         });
-        reloadSearchComponent();
+        searchComponent = UIElementUtil.createItemSearchComponentConfigurator("", this::getSearch, this::setSearch, getCategoryItems()).searchComponent;
+        searchComponent.layout(layout -> {
+            layout.setMargin(YogaEdge.LEFT, 5);
+            layout.setWidth(70);
+        }).addEventListener(UIEvents.LAYOUT_CHANGED, event -> {
+            reloadMerchants();
+        });
         Label stageLabel = (Label) new Label().setText(Component.translatable("viscript_shop.ui.stage", this.currentShopInfo.getStage())).textStyle(textStyle -> {
             textStyle.textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER).adaptiveWidth(true);
         }).layout(layout -> {
@@ -291,7 +300,7 @@ public class ShopUI extends UIElement {
                 new UIElement().layout(layout -> {
                     layout.setFlexDirection(YogaFlexDirection.ROW);
                     layout.setJustifyContent(YogaJustify.SPACE_BETWEEN);
-                }).addChildren(tsButton, clearButton),buyButton);
+                }).addChildren(tsButton, clearButton), buyButton);
 
         right.addChildren(rightTop, rightBottom);
 
@@ -425,12 +434,31 @@ public class ShopUI extends UIElement {
     }
 
     public void reloadSearchComponent() {
-        searchComponent = UIElementUtil.createItemSearchComponentConfigurator("", this::getSearch, this::setSearch, getCategoryItems()).searchComponent;
-        searchComponent.layout(layout -> {
-            layout.setMargin(YogaEdge.LEFT, 5);
-            layout.setWidth(70);
-        }).addEventListener(UIEvents.LAYOUT_CHANGED, event -> {
-            reloadMerchants();
+        searchComponent.setSearchUI(new SearchComponent.ISearchUI<>() {
+            @Override
+            public @NotNull String resultText(@NotNull Item value) {
+                return BuiltInRegistries.ITEM.getKey(value).toString();
+            }
+
+            @Override
+            public void onResultSelected(@Nullable Item value) {
+                BuiltInRegistries.ITEM.get(ResourceLocation.parse(
+                        search != null ? search : Items.AIR.toString()
+                ));
+            }
+
+            @Override
+            public void search(String word, IResultHandler<Item> searchHandler) {
+                String lowerWord = word.toLowerCase();
+                Set<Item> candidatesItems = getCategoryItems();
+                for (Item item : candidatesItems) {
+                    ResourceLocation key = BuiltInRegistries.ITEM.getKey(item);
+                    if (Thread.currentThread().isInterrupted()) return;
+                    if (key.toString().toLowerCase().contains(lowerWord) || Component.translatable(item.getDescriptionId()).getString().toLowerCase().contains(lowerWord)) {
+                        searchHandler.acceptResult(item);
+                    }
+                }
+            }
         });
     }
 
