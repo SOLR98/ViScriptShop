@@ -18,11 +18,9 @@ public class BeyondDimensionsHelper implements IContainerHelper {
         DimensionsNet net = DimensionsNet.getNetFromPlayer(player);
         if (net != null) {
             UnifiedStorage storage = net.getUnifiedStorage();
-            if (storage != null) {
-                IStackKey<?> key = new ItemStackKey(item);
-                KeyAmount keyAmount = storage.getStackByKey(key);
-                return (int) keyAmount.amount();
-            }
+            IStackKey<?> key = new ItemStackKey(item);
+            KeyAmount keyAmount = storage.getStackByKey(key);
+            return (int) keyAmount.amount();
         }
         return 0;
     }
@@ -34,11 +32,10 @@ public class BeyondDimensionsHelper implements IContainerHelper {
         if (net == null || count <= 0) return 0;
 
         var storage = net.getUnifiedStorage();
-        if (storage == null) return 0;
 
         IStackKey<?> key = new ItemStackKey(item);
 
-        KeyAmount extracted = storage.extract(key, count, false);
+        KeyAmount extracted = storage.extract(key, count, false, false);
 
         return (int) extracted.amount();
     }

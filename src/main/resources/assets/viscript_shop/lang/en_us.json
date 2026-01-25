@@ -6,7 +6,7 @@
   "command.viscript_shop.setStage.shop": "Shop stage value set to %s.",
   "command.viscript_shop.money.add": "Added %s◎ to %s. Player balance: %s◎.",
   "command.viscript_shop.money.remove": "Removed %s◎ from %s. Player balance: %s◎.",
-  "command.viscript_shop.money.get": "Player balance: %s◎.",
+  "command.viscript_shop.money.get": "%s balance: %s◎.",
   "command.viscript_shop.money.pay": "Paid %s◎ from %s to %s.",
 
   "viscript_shop.configuration.config": "ViScriptShop Configuration",

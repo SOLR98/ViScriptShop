@@ -6,7 +6,7 @@
   "command.viscript_shop.setStage.shop": "已将该商店的阶段值设置为%s",
   "command.viscript_shop.money.add": "已为%s添加%s◎，该玩家余额有%s◎",
   "command.viscript_shop.money.remove": "已扣除%s%s◎，该玩家余额有%s◎",
-  "command.viscript_shop.money.get": "该玩家余额有%s◎",
+  "command.viscript_shop.money.get": "%s余额有%s◎",
   "command.viscript_shop.money.pay": "已扣除%s%s◎给%s",
 
   "viscript_shop.configuration.config": "ViScriptShop模组配置",
