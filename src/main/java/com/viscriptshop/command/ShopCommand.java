@@ -25,7 +25,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
-@LDLRegister(name = "shop", registry = "viscript_shop:command")
+@LDLRegister(name = "shop", registry = ICommand.COMMAND_ID)
 public class ShopCommand implements ICommand {
     @Override
     public void register(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext buildContext, Commands.CommandSelection commandSelection) {

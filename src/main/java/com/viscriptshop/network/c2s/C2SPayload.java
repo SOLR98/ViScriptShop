@@ -6,6 +6,7 @@ import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacket;
 import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
 import com.lowdragmc.lowdraglib2.syncdata.rpc.RPCSender;
 import com.mojang.serialization.Codec;
+import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.command.ShopCommand;
 import com.viscriptshop.gui.data.Shop;
 import com.viscriptshop.gui.data.ShopInfo;
@@ -24,9 +25,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class C2SPayload {
-    public static final String UPLOAD_SHOP_FILE = "upload_shop_file";
-    public static final String GET_SHOP_INFO_C2S = "get_shop_info_c2s";
-    public static final String OPEN_SHOP_UI_C2S = "open_shop_ui_c2s";
+    public static final String MOD_ID = ViscriptShop.MOD_ID + ":";
+    public static final String UPLOAD_SHOP_FILE = MOD_ID + "upload_shop_file";
+    public static final String GET_SHOP_INFO_C2S = MOD_ID + "get_shop_info_c2s";
+    public static final String OPEN_SHOP_UI_C2S = MOD_ID + "open_shop_ui_c2s";
 
     @RPCPacket(UPLOAD_SHOP_FILE)
     public static void uploadShopFile(RPCSender sender, CompoundTag tag) {

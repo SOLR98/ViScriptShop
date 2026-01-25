@@ -141,6 +141,8 @@ dependencies {
     implementation "curse.maven:ftb-library-forge-404465:7312258"
     implementation "curse.maven:ftb-teams-forge-404468:7369021"
     implementation "curse.maven:architectury-api-419699:5786327"
+    //Lightman's Currency
+    implementation "maven.modrinth:lightmans-currency:${lightmans_currency_version}"
 
 //    implementation files("libs/ldlib2-neoforge-1.21.1-2.0.4.jar")
 //    jarJar(implementation("org.appliedenergistics.yoga:yoga:1.0.0"))

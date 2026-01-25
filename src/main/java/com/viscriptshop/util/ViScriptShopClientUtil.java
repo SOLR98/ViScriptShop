@@ -6,6 +6,7 @@ import com.lowdragmc.lowdraglib2.editor.ui.EditorWindow;
 import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
+import com.viscriptshop.ShopRegistries;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.ShopEditor;
 import com.viscriptshop.gui.ShopUI;
@@ -13,6 +14,7 @@ import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.gui.project.ShopProject;
 import dev.latvian.mods.kubejs.typings.Info;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 
@@ -49,5 +51,10 @@ public class ViScriptShopClientUtil {
         }
         ModularUI modularUI = new ModularUI(UI.of(shopUI));
         minecraft.setScreen(new ModularUIScreen(modularUI, Component.empty()));
+    }
+
+    @Info("获取玩家钱")
+    public static int getMoney(LocalPlayer player) {
+        return player.getData(ShopRegistries.MONEY).getMoney();
     }
 }

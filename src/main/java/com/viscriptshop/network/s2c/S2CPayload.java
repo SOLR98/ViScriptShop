@@ -7,6 +7,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.Dialog;
 import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacket;
 import com.lowdragmc.lowdraglib2.syncdata.rpc.RPCSender;
 import com.mojang.serialization.Codec;
+import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.ShopEditor;
 import com.viscriptshop.gui.components.DialogSelect;
 import com.viscriptshop.gui.components.Message;
@@ -20,11 +21,12 @@ import net.minecraft.network.chat.Component;
 import java.util.Map;
 
 public class S2CPayload {
-    public static final String OPEN_SHOP_EDITOR = "open_shop_editor";
-    public static final String OPEN_SHOP_UI = "open_shop_ui";
-    public static final String SEND_MESSAGE = "send_message";
-    public static final String SEND_EDITOR_DIALOG = "send_editor_dialog";
-    public static final String GET_SHOP_INFO_S2C = "get_shop_info_s2c";
+    public static final String MOD_ID = ViscriptShop.MOD_ID + ":";
+    public static final String OPEN_SHOP_EDITOR = MOD_ID + "open_shop_editor";
+    public static final String OPEN_SHOP_UI = MOD_ID + "open_shop_ui";
+    public static final String SEND_MESSAGE = MOD_ID + "send_message";
+    public static final String SEND_EDITOR_DIALOG = MOD_ID + "send_editor_dialog";
+    public static final String GET_SHOP_INFO_S2C = MOD_ID + "get_shop_info_s2c";
 
     @RPCPacket(OPEN_SHOP_EDITOR)
     public static void openShopEditor(RPCSender sender, CompoundTag tag) {

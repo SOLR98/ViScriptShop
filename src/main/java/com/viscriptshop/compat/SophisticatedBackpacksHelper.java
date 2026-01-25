@@ -1,10 +1,12 @@
 package com.viscriptshop.compat;
 
+import com.lowdragmc.lowdraglib2.registry.annotation.LDLRegister;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.IItemHandler;
+import net.p3pp3rf1y.sophisticatedbackpacks.SophisticatedBackpacks;
 import net.p3pp3rf1y.sophisticatedbackpacks.backpack.BackpackStorage;
 import net.p3pp3rf1y.sophisticatedbackpacks.backpack.wrapper.BackpackWrapper;
 import net.p3pp3rf1y.sophisticatedbackpacks.common.gui.BackpackContainer;
@@ -19,18 +21,31 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-public class SophisticatedBackpacksHelper {
-    //从精妙背包中扣除指定物品
-    public static int removeItemFromSophisticatedBackpacks(ServerPlayer player, ItemStack target, int needToRemove) {
-        if (needToRemove <= 0) return 0;
+@LDLRegister(name = SophisticatedBackpacks.MOD_ID, registry = IContainerHelper.CONTAINER_HELPER_ID, modID = SophisticatedBackpacks.MOD_ID)
+public class SophisticatedBackpacksHelper implements IContainerHelper {
+    @Override
+    public int getItemStackCount(ServerPlayer player, ItemStack item) {
+        int count = 0;
+        for (ItemStack itemStack : getItemsFromInventoryBackpack(player)) {
+            if (ItemStack.isSameItemSameComponents(itemStack, item)) {
+                count += itemStack.getCount();
+            }
+        }
+        return count;
+    }
 
-        final int[] remain = {needToRemove};
+    //从精妙背包中扣除指定物品
+    @Override
+    public int removeItemStackByCount(ServerPlayer player, ItemStack item, int count) {
+        if (count <= 0) return 0;
+
+        final int[] remain = {count};
         for (ItemStack backpackItem : getAllInventoryBackpack(player)) {
             modifyInventoryBackpack(player, backpackItem, (inventoryHandler) -> {
                 for (int i = 0; i < inventoryHandler.getSlots(); i++) {
                     if (remain[0] <= 0) break;
                     ItemStack stackInSlot = inventoryHandler.getStackInSlot(i);
-                    if (ItemStack.isSameItemSameComponents(stackInSlot, target)) {
+                    if (ItemStack.isSameItemSameComponents(stackInSlot, item)) {
                         int canRemove = Math.min(stackInSlot.getCount(), remain[0]);
                         ItemStack removed = inventoryHandler.extractItem(i, canRemove, false);
                         remain[0] -= removed.getCount();
@@ -39,7 +54,7 @@ public class SophisticatedBackpacksHelper {
             });
         }
 
-        return remain[0];
+        return count - remain[0];
     }
 
     //获取玩家所有背包中所有的物品，不包括玩家物品栏

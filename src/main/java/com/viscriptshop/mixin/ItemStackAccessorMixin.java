@@ -19,7 +19,7 @@ import java.util.function.Supplier;
 @Mixin(ItemStackAccessor.class)
 public class ItemStackAccessorMixin {
 
-    @Inject(method = "create", at = @At(value = "INVOKE", target = "Lcom/lowdragmc/lowdraglib2/gui/ui/elements/ItemSlot;setItem(Lnet/minecraft/world/item/ItemStack;)Lcom/lowdragmc/lowdraglib2/gui/ui/elements/ItemSlot;"))
+    @Inject(method = "create", at = @At(value = "INVOKE", target = "Lcom/lowdragmc/lowdraglib2/gui/ui/UIElement;addChild(Lcom/lowdragmc/lowdraglib2/gui/ui/UIElement;)Lcom/lowdragmc/lowdraglib2/gui/ui/UIElement;"))
     public void create(String name, Supplier<ItemStack> supplier, Consumer<ItemStack> consumer, boolean forceUpdate, Field field, Object owner, CallbackInfoReturnable<Configurator> cir, @Local(name = "slot") ItemSlot slot) {
         slot.addEventListener(UIEvents.CLICK, event -> {
             var dialog = new SelectItemDialog(itemStack -> {

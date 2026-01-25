@@ -12,6 +12,7 @@ import net.minecraft.network.chat.Component;
 import java.util.function.Supplier;
 
 public interface ICommand extends ILDLRegister<ICommand, Supplier<ICommand>> {
+    String COMMAND_ID = "viscript_shop:command";
 
     void register(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext buildContext, Commands.CommandSelection commandSelection);
 

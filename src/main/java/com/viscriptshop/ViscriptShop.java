@@ -91,6 +91,11 @@ public class ViscriptShop {
         return isModLoaded("ftblibrary");
     }
 
+    //Lightmans Currency
+    public static boolean isLightmansCurrency() {
+        return isModLoaded("lightmanscurrency");
+    }
+
     private static boolean isModLoaded(String modId) {
         return ModList.get().isLoaded(modId);
     }

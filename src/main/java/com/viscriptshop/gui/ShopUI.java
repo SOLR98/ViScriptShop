@@ -87,7 +87,7 @@ public class ShopUI extends UIElement {
         UIElement root = new UIElement();
         root.layout((layout) -> {
             layout.setWidthPercent(90);
-            layout.setHeightPercent(85);
+            layout.setHeightPercent(87);
             layout.setGap(YogaGutter.ALL, 3);
             layout.setFlexDirection(YogaFlexDirection.ROW);
             layout.setJustifyContent(YogaJustify.CENTER);
