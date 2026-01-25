@@ -59,7 +59,6 @@ public class LightmansCurrencyHelper implements IContainerHelper {
             ItemStack stack = contents.getItem(i);
             if (ItemStack.isSameItem(stack, item)) {
                 int toRemove = Math.min(remaining, stack.getCount());
-                System.out.println(toRemove);
                 stack.shrink(toRemove);
                 remaining -= toRemove;
             }
