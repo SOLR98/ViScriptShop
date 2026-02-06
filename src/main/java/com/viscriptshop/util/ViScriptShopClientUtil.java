@@ -6,8 +6,6 @@ import com.lowdragmc.lowdraglib2.editor.ui.EditorWindow;
 import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
-import com.lowdragmc.lowdraglib2.gui.ui.style.StylesheetManager;
-import com.viscriptshop.Config;
 import com.viscriptshop.ShopRegistries;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.ShopEditor;
@@ -19,7 +17,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 
 public class ViScriptShopClientUtil {
     @Info("客户端打开商店编辑器")
@@ -53,8 +50,6 @@ public class ViScriptShopClientUtil {
             return;
         }
         ModularUI modularUI = new ModularUI(UI.of(shopUI));
-        modularUI.getStyleEngine().clearAllStylesheets();
-        modularUI.getStyleEngine().addStylesheet(StylesheetManager.INSTANCE.getStylesheetSafe(ResourceLocation.parse(Config.shopUiStyleSheet.get())));
         minecraft.setScreen(new ModularUIScreen(modularUI, Component.empty()));
     }
 
