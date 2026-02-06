@@ -40,6 +40,8 @@
   "viscript_shop.data.merchant.tradeType.buy": "买",
   "viscript_shop.data.merchant.tradeType.sell": "卖",
   "viscript_shop.data.merchant.xp": "经验值",
+  "viscript_shop.data.merchant.command": "指令",
+  "viscript_shop.data.merchant.command.tip": "多条指令使用;分割",
   "viscript_shop.data.merchant.stage": "阶段值",
   "viscript_shop.data.merchant.stage.tip": "只有≥商店的阶段值才会被展示",
 

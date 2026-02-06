@@ -85,6 +85,7 @@ public class ShopUI extends UIElement {
             layout.setAlignItems(YogaAlign.CENTER);
         }).addEventListener(UIEvents.TICK, event -> NeoForge.EVENT_BUS.post(new ShopClientEvent.Tick(this)));
         UIElement root = new UIElement();
+        root.addClass("panel_bg");
         root.layout((layout) -> {
             layout.setWidthPercent(90);
             layout.setHeightPercent(87);
@@ -355,7 +356,7 @@ public class ShopUI extends UIElement {
 
         AggregatedResources gainSummary = AggregatedResources.getGainSummary(currentShopInfo);
         gainSummary.getItems().forEach((itemStack, count) -> {
-            Label countLabel = (Label) new Label().setText(getCountText(count, 9999))
+            Label countLabel = (Label) new Label().setText(getCountText(count))
                     .textStyle(textStyle -> {
                         textStyle.textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.BOTTOM);
                         textStyle.fontSize(5);
@@ -378,7 +379,7 @@ public class ShopUI extends UIElement {
                 layout.setHeightPercent(100);
                 layout.setMargin(YogaEdge.LEFT, 2);
             });
-            Label money = (Label) new Label().setText(getCountText(gainSummary.getTotalMoney(), 99999)).textStyle(textStyle -> {
+            Label money = (Label) new Label().setText(getCountText(gainSummary.getTotalMoney())).textStyle(textStyle -> {
                 textStyle.textAlignVertical(Vertical.BOTTOM).adaptiveWidth(true);
                 textStyle.fontSize(5);
             }).layout(layout -> {
@@ -396,7 +397,7 @@ public class ShopUI extends UIElement {
         costSummary.getItems().forEach((itemStack, count) -> {
             int itemCount = getItemCount(itemStack);
             String color = itemCount >= count ? "§a" : "§c";
-            Label countLabel = (Label) new Label().setText(color + getCountText(count, 999) + "§f/" + getCountText(itemCount, 999))
+            Label countLabel = (Label) new Label().setText(color + getCountText(count) + "§f/" + getCountText(itemCount))
                     .textStyle(textStyle -> {
                         textStyle.textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.BOTTOM);
                         textStyle.fontSize(4);
@@ -420,7 +421,7 @@ public class ShopUI extends UIElement {
                 layout.setWidth(16);
                 layout.setMargin(YogaEdge.LEFT, 2);
             });
-            Label money = (Label) new Label().setText(color + getCountText(costSummary.getTotalMoney(), 99999)).textStyle(textStyle -> {
+            Label money = (Label) new Label().setText(color + getCountText(costSummary.getTotalMoney())).textStyle(textStyle -> {
                 textStyle.textAlignVertical(Vertical.BOTTOM).adaptiveWidth(true);
                 textStyle.fontSize(5);
             }).layout(layout -> {
@@ -609,8 +610,10 @@ public class ShopUI extends UIElement {
         }
     }
 
-    private String getCountText(int count, int max) {
-        return count <= max ? count + "" : max + "+";
+    private String getCountText(int count) {
+        if (count < 1000) return String.valueOf(count);
+        if (count < 1000000) return String.format(java.util.Locale.US, "%.1fk", count / 1000.0);
+        return String.format(java.util.Locale.US, "%.1fm", count / 1000000.0);
     }
 
     private UIElement createItemInfoBox() {

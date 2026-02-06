@@ -1,17 +1,19 @@
 package com.viscriptshop.compat;
 
 import com.lowdragmc.lowdraglib2.registry.annotation.LDLRegister;
+import com.viscriptshop.util.ItemUtil;
 import io.github.lightman314.lightmanscurrency.LightmansCurrency;
 import io.github.lightman314.lightmanscurrency.api.money.coins.CoinAPI;
 import io.github.lightman314.lightmanscurrency.common.attachments.WalletHandler;
 import io.github.lightman314.lightmanscurrency.common.items.WalletItem;
 import io.github.lightman314.lightmanscurrency.common.items.data.WalletDataWrapper;
-import lombok.extern.slf4j.Slf4j;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 
-@Slf4j
+/**
+ * Lightmans Currency兼容 玩家穿戴的钱袋
+ */
 @LDLRegister(name = LightmansCurrency.MODID, registry = IContainerHelper.CONTAINER_HELPER_ID, modID = LightmansCurrency.MODID)
 public class LightmansCurrencyHelper implements IContainerHelper {
     @Override
@@ -26,17 +28,7 @@ public class LightmansCurrencyHelper implements IContainerHelper {
             return 0;
         }
 
-        Container contents = WalletItem.getDataWrapper(wallet).getContents();
-
-        int count = 0;
-        for (int i = 0; i < contents.getContainerSize(); i++) {
-            ItemStack stack = contents.getItem(i);
-            if (ItemStack.isSameItem(stack, item)) {
-                count += stack.getCount();
-            }
-        }
-
-        return count;
+        return ItemUtil.getItemCountByContainer(WalletItem.getDataWrapper(wallet).getContents(), item);
     }
 
     @Override
@@ -53,19 +45,10 @@ public class LightmansCurrencyHelper implements IContainerHelper {
 
         WalletDataWrapper wrapper = WalletItem.getDataWrapper(wallet);
         Container contents = wrapper.getContents();
-
-        int remaining = count;
-        for (int i = 0; i < contents.getContainerSize() && remaining > 0; i++) {
-            ItemStack stack = contents.getItem(i);
-            if (ItemStack.isSameItem(stack, item)) {
-                int toRemove = Math.min(remaining, stack.getCount());
-                stack.shrink(toRemove);
-                remaining -= toRemove;
-            }
-        }
+        count = ItemUtil.removeItemByContainer(contents, item, count);
 
         wrapper.setContents(contents, player);
 
-        return count - remaining;
+        return count;
     }
 }

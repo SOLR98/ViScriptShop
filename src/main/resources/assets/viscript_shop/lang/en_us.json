@@ -40,6 +40,8 @@
   "viscript_shop.data.merchant.tradeType.buy": "Buy",
   "viscript_shop.data.merchant.tradeType.sell": "Sell",
   "viscript_shop.data.merchant.xp": "Experience",
+  "viscript_shop.data.merchant.command": "Command",
+  "viscript_shop.data.merchant.command.tip": "Separate multiple commands with ;",
   "viscript_shop.data.merchant.stage": "Stage Value",
   "viscript_shop.data.merchant.stage.tip": "Displayed only if ≥ shop's stage value.",
 

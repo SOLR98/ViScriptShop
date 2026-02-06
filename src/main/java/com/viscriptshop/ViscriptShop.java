@@ -92,8 +92,13 @@ public class ViscriptShop {
     }
 
     //Lightmans Currency
-    public static boolean isLightmansCurrency() {
+    public static boolean isLightmansCurrencyLoaded() {
         return isModLoaded("lightmanscurrency");
+    }
+
+    //汇流来世
+    public static boolean isConfluenceLoaded(){
+        return isModLoaded("confluence");
     }
 
     private static boolean isModLoaded(String modId) {

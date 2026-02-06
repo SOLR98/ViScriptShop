@@ -1,6 +1,8 @@
 package com.viscriptshop.network.c2s;
 
+import com.lowdragmc.lowdraglib2.Platform;
 import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.viscriptshop.ShopRegistries;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.event.neoforge.ShopServerEvent;
@@ -11,10 +13,13 @@ import com.viscriptshop.network.s2c.ReloadShopUIPayload;
 import com.viscriptshop.network.s2c.S2CPayload;
 import com.viscriptshop.util.ItemUtil;
 import com.viscriptshop.util.ViScriptShopServerUtil;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.NeoForge;
@@ -78,7 +83,32 @@ public record BuyMerchantPayload(ShopInfo shopInfo, AggregatedResources cost,
         if (gain.getTotalMoney() > 0) ViScriptShopServerUtil.addMoney(player, gain.getTotalMoney());
         //给予玩家经验
         if (gain.getTotalXp() > 0) player.giveExperiencePoints(gain.getTotalXp());
+        // 执行指令
+        if (!gain.getCommands().isEmpty()) {
+            for (String command : gain.getCommands()) {
+                executeCommands(player, command);
+            }
+        }
         player.connection.send(new ReloadShopUIPayload(costItems));
+    }
+
+    public static void executeCommands(ServerPlayer player, String value) {
+        var commands = value.split(";");
+        for (var command : commands) {
+            command = command.trim();
+            if (!command.isBlank()) {
+                MinecraftServer server = Platform.getMinecraftServer();
+                CommandSourceStack commandSource = player.createCommandSourceStack().withPermission(Commands.LEVEL_GAMEMASTERS).withSuppressedOutput();
+                var dispatcher = server.getCommands().getDispatcher();
+                try {
+                    dispatcher.execute(dispatcher.parse(command, commandSource));
+                } catch (UnsupportedOperationException e) {
+                    server.getCommands().performPrefixedCommand(commandSource, command);
+                } catch (CommandSyntaxException e) {
+                    ViscriptShop.LOGGER.error("Error executing command on server: {}", command, e);
+                }
+            }
+        }
     }
 
     @Override

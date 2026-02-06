@@ -47,6 +47,8 @@ public class MerchantInfo implements IConfigurable, IPersistedSerializable {
     @Configurable(name = "viscript_shop.data.merchant.xp")
     @ConfigNumber(range = {0, Integer.MAX_VALUE})
     private int xp = 0;
+    @Configurable(name = "viscript_shop.data.merchant.command", tips="viscript_shop.data.merchant.command.tip")
+    private String command = "";
     @Configurable(name = "viscript_shop.data.merchant.stage", tips = "viscript_shop.data.merchant.stage.tip")
     @ConfigNumber(range = {0, Integer.MAX_VALUE})
     private int stage = 0;

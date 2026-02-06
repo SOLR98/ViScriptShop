@@ -21,6 +21,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+/**
+ * 精妙背包兼容
+ */
 @LDLRegister(name = SophisticatedBackpacks.MOD_ID, registry = IContainerHelper.CONTAINER_HELPER_ID, modID = SophisticatedBackpacks.MOD_ID)
 public class SophisticatedBackpacksHelper implements IContainerHelper {
     @Override
@@ -54,7 +57,7 @@ public class SophisticatedBackpacksHelper implements IContainerHelper {
             });
         }
 
-        return count - remain[0];
+        return remain[0];
     }
 
     //获取玩家所有背包中所有的物品，不包括玩家物品栏

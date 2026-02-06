@@ -3,6 +3,7 @@ package com.viscriptshop;
 import com.lowdragmc.lowdraglib2.registry.AutoRegistry;
 import com.viscriptshop.command.ICommand;
 import com.viscriptshop.compat.IContainerHelper;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.function.Supplier;
 
@@ -12,8 +13,8 @@ public class ViScriptShopRegistries {
 
     static {
         COMMANDS = AutoRegistry.LDLibRegister
-                .create(ViscriptShop.id("command"), ICommand.class, AutoRegistry::noArgsCreator);
+                .create(ResourceLocation.parse(ICommand.COMMAND_ID), ICommand.class, AutoRegistry::noArgsCreator);
         ContainerHelper = AutoRegistry.LDLibRegister
-                .create(ViscriptShop.id("container_helper"), IContainerHelper.class, AutoRegistry::noArgsCreator);
+                .create(ResourceLocation.parse(IContainerHelper.CONTAINER_HELPER_ID), IContainerHelper.class, AutoRegistry::noArgsCreator);
     }
 }

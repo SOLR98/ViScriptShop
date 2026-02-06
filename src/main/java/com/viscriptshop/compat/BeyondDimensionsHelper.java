@@ -10,9 +10,11 @@ import com.wintercogs.beyonddimensions.BeyondDimensions;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 
+/**
+ * 超越维度兼容维度背包
+ */
 @LDLRegister(name = BeyondDimensions.MODID, registry = IContainerHelper.CONTAINER_HELPER_ID, modID = BeyondDimensions.MODID)
 public class BeyondDimensionsHelper implements IContainerHelper {
-    //获取玩家超越维度中的指定物品
     @Override
     public int getItemStackCount(ServerPlayer player, ItemStack item) {
         DimensionsNet net = DimensionsNet.getNetFromPlayer(player);
@@ -25,7 +27,6 @@ public class BeyondDimensionsHelper implements IContainerHelper {
         return 0;
     }
 
-    //从超越维度中扣除指定物品
     @Override
     public int removeItemStackByCount(ServerPlayer player, ItemStack item, int count) {
         DimensionsNet net = DimensionsNet.getNetFromPlayer(player);
@@ -37,6 +38,6 @@ public class BeyondDimensionsHelper implements IContainerHelper {
 
         KeyAmount extracted = storage.extract(key, count, false, false);
 
-        return (int) extracted.amount();
+        return count - (int) extracted.amount();
     }
 }

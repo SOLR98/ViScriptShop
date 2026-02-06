@@ -42,10 +42,24 @@ repositories {
     }
 
     //cf
-    repositories {
-        maven {
-            url "https://cursemaven.com"
+    maven {
+        url = "https://www.cursemaven.com"
+        content {
+            includeGroup "curse.maven"
         }
+    }
+
+    maven {
+        name = "Illusive Soulworks maven"
+        url = "https://maven.theillusivec4.top/"
+    }
+    maven {
+        name = "magicTeam MavenReleases"
+        url = "https://maven.confluence.ink/releases"
+    }
+    maven {
+        name = "magicTeam MavenSnapshots"
+        url = "https://maven.confluence.ink/snapshots"
     }
 }
 
@@ -143,10 +157,16 @@ dependencies {
     implementation "curse.maven:architectury-api-419699:5786327"
     //Lightman's Currency
     implementation "maven.modrinth:lightmans-currency:${lightmans_currency_version}"
+    //汇流来世
+    implementation "top.theillusivec4.curios:curios-neoforge:${curios_version}"
+    implementation "org.confluence.lib:Confluence-Magic-Lib:${confluence_lib_version}"
+    implementation ("org.confluence.mod:ConfluenceOtherworld:${confluence_version}") {
+        transitive = false
+    }
 
-//    implementation files("libs/ldlib2-neoforge-1.21.1-2.0.4.jar")
-//    jarJar(implementation("org.appliedenergistics.yoga:yoga:1.0.0"))
-//    additionalRuntimeClasspath "org.appliedenergistics.yoga:yoga:1.0.0"
+    compileOnly "org.confluence:TerraCurio:${terra_curio_version}"
+    compileOnly "curse.maven:terra-entity-1173196:6878178"
+
 }
 
 tasks.withType(ProcessResources).configureEach {

@@ -1,6 +1,5 @@
 package com.viscriptshop.gui.data;
 
-import com.viscriptshop.util.ItemUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,7 +8,9 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -22,6 +23,8 @@ public class AggregatedResources {
     public static final StreamCodec<RegistryFriendlyByteBuf, AggregatedResources> STREAM_CODEC = StreamCodec.composite(
             ByteBufCodecs.map(HashMap::new, ItemStack.OPTIONAL_STREAM_CODEC, ByteBufCodecs.VAR_INT),
             AggregatedResources::getItems,
+            ByteBufCodecs.collection(ArrayList::new, ByteBufCodecs.STRING_UTF8),
+            AggregatedResources::getCommands,
             ByteBufCodecs.INT,
             AggregatedResources::getTotalMoney,
             ByteBufCodecs.INT,
@@ -30,11 +33,12 @@ public class AggregatedResources {
     );
 
     private Map<ItemStack, Integer> items = new HashMap<>();
+    private List<String> commands = new ArrayList<>();
     private int totalMoney = 0;
     private int totalXp = 0;
 
     public boolean isEmpty() {
-        return items.isEmpty() && totalMoney == 0 && totalXp == 0;
+        return items.isEmpty() && totalMoney == 0 && totalXp == 0 && commands.isEmpty();
     }
 
     /**
@@ -93,6 +97,17 @@ public class AggregatedResources {
     }
 
     /**
+     * 合并指令
+     *
+     * @param command 指令
+     */
+    public void addCommand(String command) {
+        if (!command.isEmpty()) {
+            commands.add(command);
+        }
+    }
+
+    /**
      * 计算购物车中所有商品的成本（玩家需要支付的）。
      *
      * @param shopInfo 商店信息，包括各个分类里所有的购物车列表
@@ -137,6 +152,9 @@ public class AggregatedResources {
             for (MerchantInfo merchant : categoryInfo.getMerchants()) {
                 int count = (int) merchant.getBuyCount();
                 if (count <= 0) continue;
+                //通用收益
+                gain.addXp(merchant.getXp(), count);
+                gain.addCommand(merchant.getCommand());
                 switch (categoryInfo.getShopType()) {
                     case ITEM_FOR_ITEM -> {
                         // 以物换物商店：收益是 itemResult
@@ -150,9 +168,8 @@ public class AggregatedResources {
                                 gain.addItem(merchant.getItemResult(), count);
                             }
                             case SELL -> {
-                                // 出售物品：收益是货币和经验值
+                                // 出售物品：收益是货币
                                 gain.addMoney(merchant.getMoney(), count);
-                                gain.addXp(merchant.getXp(), count);
                             }
                         }
                     }
