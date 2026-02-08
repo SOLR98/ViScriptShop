@@ -165,7 +165,7 @@ dependencies {
     }
 
     compileOnly "org.confluence:TerraCurio:${terra_curio_version}"
-    compileOnly "curse.maven:terra-entity-1173196:6878178"
+    compileOnly "org.confluence:TerraEntity:${terra_entity_version}"
 
 }
 

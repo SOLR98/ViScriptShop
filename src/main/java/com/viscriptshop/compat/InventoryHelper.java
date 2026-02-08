@@ -15,7 +15,7 @@ public class InventoryHelper implements IContainerHelper {
         int count = 0;
 
         //背包
-        count += ItemUtil.getItemCountByContainer(player.inventoryMenu.getCraftSlots(), item);
+        count += player.getInventory().clearOrCountMatchingItems(itemStack -> ItemStack.isSameItemSameComponents(itemStack, item), 0, player.inventoryMenu.getCraftSlots());
 
         //末影箱
         count += ItemUtil.getItemCountByContainer(player.getEnderChestInventory(), item);
@@ -27,7 +27,7 @@ public class InventoryHelper implements IContainerHelper {
     public int removeItemStackByCount(ServerPlayer player, ItemStack item, int count) {
 
         //背包
-        count = ItemUtil.removeItemByContainer(player.inventoryMenu.getCraftSlots(), item, count);
+        count -= player.getInventory().clearOrCountMatchingItems(itemStack -> ItemStack.isSameItemSameComponents(itemStack, item), count, player.inventoryMenu.getCraftSlots());
 
         //末影箱
         count = ItemUtil.removeItemByContainer(player.getEnderChestInventory(), item, count);

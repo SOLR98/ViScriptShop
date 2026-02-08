@@ -1,6 +1,5 @@
 package com.viscriptshop.gui.data;
 
-import com.lowdragmc.lowdraglib2.Platform;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.saveddata.SavedData;
