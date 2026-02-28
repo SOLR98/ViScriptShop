@@ -7,8 +7,8 @@ import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.project.ShopProject;
 import com.viscriptshop.gui.view.CategoryView;
 import com.viscriptshop.gui.view.ShopPreviewView;
+import dev.vfyjxf.taffy.style.TaffyDisplay;
 import net.minecraft.resources.ResourceLocation;
-import org.appliedenergistics.yoga.YogaDisplay;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -26,7 +26,7 @@ public class ShopEditor extends Editor {
         fileMenu.addProjectProvider(ShopProject.PROVIDER);
         this.leftWindow.getLeftTop().addView(categoryView);
         this.centerWindow.getLeftTop().addView(shopPreviewView);
-        this.bottomWindow.setDisplay(YogaDisplay.NONE);
+        this.bottomWindow.setDisplay(TaffyDisplay.NONE);
         this.bottomWindow.getParentWindow().removeSplitWindow(this.bottomWindow);
     }
 

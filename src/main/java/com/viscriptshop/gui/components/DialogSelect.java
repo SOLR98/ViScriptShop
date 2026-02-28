@@ -28,7 +28,7 @@ public class DialogSelect extends Dialog {
             Label label = (Label) new Label().setText("viscript_shop.ui.no_shop").textStyle(textStyle -> {
                 textStyle.textAlignVertical(Vertical.CENTER).adaptiveWidth(true);
             }).layout(layout -> {
-                layout.setWidthPercent(100);
+                layout.widthPercent(100);
             });
             this.contentContainer.addChildren(label);
         } else {
@@ -40,7 +40,7 @@ public class DialogSelect extends Dialog {
                 String name = map.get(value);
                 return name.isEmpty() ? Component.translatable("viscript_shop.ui.title") : Component.translatable(name);
             }));
-            selector.layout(layout -> layout.setWidthPercent(100));
+            selector.layout(layout -> layout.widthPercent(100));
             this.contentContainer.addChildren(selector);
         }
 

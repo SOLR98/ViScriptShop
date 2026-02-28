@@ -10,10 +10,9 @@ import com.lowdragmc.lowdraglib2.gui.ui.style.PropertyRegistry;
 import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
 import com.lowdragmc.lowdraglib2.math.interpolate.Eases;
 import com.viscriptshop.ViscriptShop;
+import dev.vfyjxf.taffy.style.*;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
-import org.appliedenergistics.yoga.*;
-import org.appliedenergistics.yoga.style.StyleSizeLength;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -31,26 +30,26 @@ public class Message extends UIElement {
     public Message(UIElement parent) {
         this.parent = parent;
         this.layout(layout -> {
-            layout.setPositionType(YogaPositionType.ABSOLUTE);
-            layout.setFlexDirection(YogaFlexDirection.ROW);
-            layout.setWidth(StyleSizeLength.AUTO);
-            layout.setHeightPercent(8);
-            layout.setPadding(YogaEdge.ALL, 5);
-            layout.setPositionPercent(YogaEdge.TOP, 3);
-            layout.setJustifyContent(YogaJustify.CENTER);
-            layout.setAlignItems(YogaAlign.CENTER);
+            layout.positionType(TaffyPosition.ABSOLUTE);
+            layout.flexDirection(FlexDirection.ROW);
+            layout.setWidth(TaffyDimension.AUTO);
+            layout.heightPercent(8);
+            layout.paddingAll(5);
+            layout.paddingTop(3);
+            layout.justifyContent(AlignContent.CENTER);
+            layout.alignItems(AlignItems.CENTER);
         }).style(style -> style.backgroundTexture(Sprites.BORDER));
         this.icon = new UIElement().layout(layout -> {
-            layout.setWidth(8);
-            layout.setHeight(8);
+            layout.width(8);
+            layout.height(8);
         });
         this.label = (Label) new Label().textStyle(textStyle -> {
             textStyle.textAlignHorizontal(Horizontal.CENTER);
             textStyle.textAlignVertical(Vertical.CENTER);
             textStyle.adaptiveWidth(true);
         }).layout(layout -> {
-            layout.setMargin(YogaEdge.LEFT, 3);
-            layout.setMargin(YogaEdge.RIGHT, 3);
+            layout.marginLeft(3);
+            layout.marginRight(3);
         });
         this.addChildren(
                 icon,

@@ -31,8 +31,8 @@ public class CategoryFloatView extends FloatView {
 
         if (info != null) {
             ConfiguratorGroup configuratorGroup = (ConfiguratorGroup) new ConfiguratorGroup().layout(layout -> {
-                layout.setWidthPercent(100);
-                layout.setHeightPercent(100);
+                layout.widthPercent(100);
+                layout.heightPercent(100);
             });
             configuratorGroup.setCollapse(false);
 

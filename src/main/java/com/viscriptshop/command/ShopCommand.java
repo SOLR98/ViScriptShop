@@ -53,7 +53,9 @@ public class ShopCommand implements ICommand {
                         .executes(this::reload)
                         .then(Commands.argument("shop", StringArgumentType.string())
                                 .suggests((context, builder) -> {
-                                    getServerShopFiles().forEach(builder::suggest);
+                                    ViscriptShop.getShopSavedData().shopInfoMap.forEach((key, value) -> {
+                                        builder.suggest(key);
+                                    });
                                     return builder.buildFuture();
                                 })
                                 .executes(this::reloadShop)
@@ -62,7 +64,9 @@ public class ShopCommand implements ICommand {
                 .then(Commands.literal("setStage")
                         .then(Commands.argument("shop", StringArgumentType.string())
                                 .suggests((context, builder) -> {
-                                    getServerShopFiles().forEach(builder::suggest);
+                                    ViscriptShop.getShopSavedData().shopInfoMap.forEach((key, value) -> {
+                                        builder.suggest(key);
+                                    });
                                     return builder.buildFuture();
                                 })
                                 .then(Commands.argument("stage", IntegerArgumentType.integer())

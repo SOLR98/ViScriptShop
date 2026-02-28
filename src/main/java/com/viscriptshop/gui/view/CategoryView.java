@@ -16,10 +16,9 @@ import com.viscriptshop.gui.data.CategoryInfo;
 import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.gui.project.ShopProject;
 import com.viscriptshop.util.UIElementUtil;
+import dev.vfyjxf.taffy.style.FlexDirection;
 import lombok.Getter;
 import net.minecraft.network.chat.Component;
-import org.appliedenergistics.yoga.YogaEdge;
-import org.appliedenergistics.yoga.YogaFlexDirection;
 
 import java.util.List;
 
@@ -36,8 +35,8 @@ public class CategoryView extends View {
         this.editor = editor;
         this.categoryFloatView = new CategoryFloatView(editor, "viscript_shop.data.shop.categoryInfos");
         this.scrollerView.layout(layout -> {
-            layout.setWidthPercent(100);
-            layout.setHeightPercent(100);
+            layout.widthPercent(100);
+            layout.heightPercent(100);
         });
         this.scrollerView.viewPort.getStyle().backgroundTexture(null);
         this.addChildren(this.scrollerView);
@@ -47,8 +46,8 @@ public class CategoryView extends View {
         if (editor.getCurrentProject() instanceof ShopProject shopProject) {
             this.shopInfo = shopProject.shop.shopInfo;
             scrollerView.viewContainer.layout(layout -> {
-                layout.setPadding(YogaEdge.ALL, 5);
-                layout.setFlexDirection(YogaFlexDirection.COLUMN);
+                layout.paddingAll(5);
+                layout.flexDirection(FlexDirection.COLUMN);
             }).addEventListener(UIEvents.TICK, event -> {
                 reloadCategoryList();
             });
@@ -67,17 +66,17 @@ public class CategoryView extends View {
                     new ColorRectTexture(ColorPattern.T_BLACK.color),
                     new ColorRectTexture(ColorPattern.T_WHITE.color)
             ).layout(layout -> {
-                layout.setFlex(11);
-                layout.setMargin(YogaEdge.RIGHT, 10);
+                layout.flex(11);
+                layout.marginRight(10);
             });
             int finalI = i;
             UIElement updateButton = new UIElement().style(style -> {
                 style.backgroundTexture(Icons.EDIT_ON.copy().setColor(ColorPattern.LIGHT_BLUE.color));
                 style.tooltips("viscript_shop.button.update");
             }).layout(layout -> {
-                layout.setMargin(YogaEdge.TOP, 5);
-                layout.setFlex(1);
-                layout.setHeight(15);
+                layout.marginTop(5);
+                layout.flex(1);
+                layout.height(15);
             }).addEventListener(UIEvents.MOUSE_DOWN, event -> {
                 if (event.button == 0) {
                     categoryFloatView.showEdit(categoryInfo);
@@ -88,9 +87,9 @@ public class CategoryView extends View {
                 style.backgroundTexture(Icons.DELETE.copy().setColor(ColorPattern.RED.color));
                 style.tooltips("viscript_shop.button.delete");
             }).layout(layout -> {
-                layout.setMargin(YogaEdge.TOP, 5);
-                layout.setFlex(1);
-                layout.setHeight(15);
+                layout.marginTop(5);
+                layout.flex(1);
+                layout.height(15);
             }).addEventListener(UIEvents.MOUSE_DOWN, event -> {
                 if (event.button == 0) {
                     Dialog.showCheckBox("viscript_shop.button.delete", "viscript_shop.dialog.delete_category.info", (result) -> {
@@ -100,7 +99,7 @@ public class CategoryView extends View {
                 }
             });
             UIElement uiElement = new UIElement().addChildren(categoryUI, updateButton, deleteButton);
-            uiElement.getLayout().setFlexDirection(YogaFlexDirection.ROW);
+            uiElement.getLayout().flexDirection(FlexDirection.ROW);
             scrollerView.viewContainer.addChildren(uiElement);
         }
 
@@ -109,8 +108,8 @@ public class CategoryView extends View {
                     shopInfo.getCategoryInfos().add(categoryInfo);
                     this.categoryFloatView.showEdit(categoryInfo);
                 }).layout(layout -> {
-                    layout.setMaxWidth(15);
-                    layout.setMaxHeight(15);
+                    layout.maxWidth(15);
+                    layout.maxHeight(15);
                 }).addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
                     event.hoverTooltips = new HoverTooltips(List.of(Component.translatable("viscript_shop.editor.add.category")), null, null, null);
                 })

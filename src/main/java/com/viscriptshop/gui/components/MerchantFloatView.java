@@ -1,6 +1,5 @@
 package com.viscriptshop.gui.components;
 
-import com.lowdragmc.lowdraglib2.configurator.ui.Configurator;
 import com.lowdragmc.lowdraglib2.configurator.ui.ConfiguratorGroup;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.viscriptshop.gui.data.CategoryInfo;
@@ -30,9 +29,9 @@ public class MerchantFloatView extends FloatView {
         this.contentContainer.clearAllChildren();
 
         if (merchant != null && shopType != null) {
-            ConfiguratorGroup configurator = (ConfiguratorGroup) merchant.createConfigurator(shopType).layout(layout->{
-                layout.setWidthPercent(100);
-                layout.setHeightPercent(100);
+            ConfiguratorGroup configurator = (ConfiguratorGroup) merchant.createConfigurator(shopType).layout(layout -> {
+                layout.widthPercent(100);
+                layout.heightPercent(100);
             });
             configurator.setCollapse(false);
             this.contentContainer.addChild(configurator);

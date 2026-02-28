@@ -26,6 +26,10 @@ import com.viscriptshop.network.c2s.BuyMerchantPayload;
 import com.viscriptshop.network.c2s.GetItemCountC2SPayload;
 import com.viscriptshop.util.ShopHelper;
 import com.viscriptshop.util.UIElementUtil;
+import dev.vfyjxf.taffy.style.AlignContent;
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
+import dev.vfyjxf.taffy.style.FlexWrap;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.Minecraft;
@@ -36,7 +40,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.common.NeoForge;
-import org.appliedenergistics.yoga.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -79,77 +82,77 @@ public class ShopUI extends UIElement {
             minecraft.player.connection.send(new GetItemCountC2SPayload(selectedCategory));
         }
         this.layout(layout -> {
-            layout.setWidthPercent(100);
-            layout.setHeightPercent(100);
-            layout.setJustifyContent(YogaJustify.CENTER);
-            layout.setAlignItems(YogaAlign.CENTER);
+            layout.widthPercent(100);
+            layout.heightPercent(100);
+            layout.justifyContent(AlignContent.CENTER);
+            layout.alignItems(AlignItems.CENTER);
         }).addEventListener(UIEvents.TICK, event -> NeoForge.EVENT_BUS.post(new ShopClientEvent.Tick(this)));
         UIElement root = new UIElement();
-        root.addClass("panel_bg");
         root.layout((layout) -> {
-            layout.setWidthPercent(90);
-            layout.setHeightPercent(87);
-            layout.setGap(YogaGutter.ALL, 3);
-            layout.setFlexDirection(YogaFlexDirection.ROW);
-            layout.setJustifyContent(YogaJustify.CENTER);
-            layout.setAlignItems(YogaAlign.CENTER);
+            layout.widthPercent(90);
+            layout.heightPercent(87);
+            layout.gapAll(3);
+            layout.flexDirection(FlexDirection.ROW);
+            layout.justifyContent(AlignContent.CENTER);
+            layout.alignItems(AlignItems.CENTER);
         });
         this.addChildren(root);
         //左
         UIElement left = new UIElement().layout(layout -> {
-            layout.setWidthPercent(22);
-            layout.setGap(YogaGutter.ALL, 3);
-            layout.setFlexDirection(YogaFlexDirection.COLUMN);
+            layout.heightPercent(100);
+            layout.widthPercent(22);
+            layout.gapAll(3);
+            layout.flexDirection(FlexDirection.COLUMN);
         });
         UIElement leftTop = new UIElement().layout(layout -> {
-            layout.setWidthPercent(100);
-            layout.setHeightPercent(10);
+            layout.widthPercent(100);
+            layout.heightPercent(10);
         }).style(style -> {
             style.backgroundTexture(DARK_BACKGROUND_RECT);
         }).addChild(new Label().setText("viscript_shop.data.shop.categoryInfos").textStyle(textStyle -> {
             textStyle.textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER);
         }).layout(layout -> {
-            layout.setWidthPercent(100);
-            layout.setHeightPercent(100);
+            layout.widthPercent(100);
+            layout.heightPercent(100);
         }));
 
         categoryView.layout(layout -> {
-            layout.setWidthPercent(100);
-            layout.setHeightPercent(80);
+            layout.widthPercent(100);
+            layout.heightPercent(80);
         }).addEventListener(UIEvents.TICK, event -> {
             reloadCategoryList();
         });
         categoryView.viewPort.getStyle().backgroundTexture(IGuiTexture.EMPTY);
         categoryView.viewContainer.layout(layout -> {
-            layout.setGap(YogaGutter.COLUMN, 5);
-            layout.setPadding(YogaEdge.ALL, 3);
-            layout.setFlexDirection(YogaFlexDirection.COLUMN);
+            layout.gapColumn(5);
+            layout.paddingAll(3);
+            layout.flexDirection(FlexDirection.COLUMN);
         });
         UIElement leftCenter = new UIElement().layout(layout -> {
-            layout.setWidthPercent(100);
-            layout.setHeightPercent(74);
+            layout.widthPercent(100);
+            layout.heightPercent(74);
         }).style(style -> {
             style.backgroundTexture(DARK_BACKGROUND_RECT);
         }).addChild(categoryView);
 
         UIElement leftBottom = new UIElement().layout(layout -> {
-            layout.setWidthPercent(100);
-            layout.setHeightPercent(13);
-            layout.setFlexDirection(YogaFlexDirection.COLUMN);
+            layout.widthPercent(100);
+            layout.heightPercent(13);
+            layout.flexDirection(FlexDirection.COLUMN);
         }).style(style -> {
             style.backgroundTexture(DARK_BACKGROUND_RECT);
         }).addChildren(
                 new Label().setText("viscript_shop.ui.balance").textStyle(textStyle -> {
                     textStyle.textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.BOTTOM);
                 }).layout(layout -> {
-                    layout.setWidthPercent(100);
-                    layout.setHeightPercent(50);
+                    layout.widthPercent(100);
+                    layout.heightPercent(50);
                 }),
                 new Label().setText("◎ " + minecraft.player.getData(ShopRegistries.MONEY).getMoney()).textStyle(textStyle -> {
                     textStyle.textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER);
                 }).layout(layout -> {
-                    layout.setWidthPercent(100);
-                    layout.setHeightPercent(50);
+                    layout.widthPercent(100);
+                    layout.heightPercent(50);
                 }).addEventListener(UIEvents.TICK, event -> {
                     ((Label) event.currentElement).setText("◎ " + minecraft.player.getData(ShopRegistries.MONEY).getMoney());
                 })
@@ -158,58 +161,58 @@ public class ShopUI extends UIElement {
         left.addChildren(leftTop, leftCenter, leftBottom);
         //中
         UIElement center = new UIElement().layout(layout -> {
-            layout.setWidthPercent(55);
-            layout.setHeightPercent(100);
-            layout.setPadding(YogaEdge.HORIZONTAL, 5);
-            layout.setPadding(YogaEdge.VERTICAL, 3);
-            layout.setFlexDirection(YogaFlexDirection.COLUMN);
+            layout.widthPercent(55);
+            layout.heightPercent(100);
+            layout.paddingHorizontal(5);
+            layout.paddingVertical(3);
+            layout.flexDirection(FlexDirection.COLUMN);
         });
         center.getStyle().backgroundTexture(DARK_BACKGROUND_RECT);
         UIElement head = new UIElement().layout(layout -> {
-            layout.setWidthPercent(100);
-            layout.setHeightPercent(10);
-            layout.setFlexDirection(YogaFlexDirection.ROW);
-            layout.setJustifyContent(YogaJustify.SPACE_BETWEEN);
-            layout.setAlignItems(YogaAlign.CENTER);
+            layout.widthPercent(100);
+            layout.heightPercent(10);
+            layout.flexDirection(FlexDirection.ROW);
+            layout.justifyContent(AlignContent.SPACE_BETWEEN);
+            layout.alignItems(AlignItems.CENTER);
         });
         Label centerTitle = (Label) new Label().setText("viscript_shop.ui.topTitle").textStyle(textStyle -> {
             textStyle.textAlignHorizontal(Horizontal.LEFT).textAlignVertical(Vertical.CENTER).adaptiveWidth(true);
         }).layout(layout -> {
-            layout.setHeightPercent(100);
+            layout.heightPercent(100);
         });
         searchComponent = UIElementUtil.createItemSearchComponentConfigurator("", this::getSearch, this::setSearch, getCategoryItems()).searchComponent;
         searchComponent.layout(layout -> {
-            layout.setMargin(YogaEdge.LEFT, 5);
-            layout.setWidth(70);
+            layout.marginLeft(5);
+            layout.width(70);
         }).addEventListener(UIEvents.LAYOUT_CHANGED, event -> {
             reloadMerchants();
         });
         Label stageLabel = (Label) new Label().setText(Component.translatable("viscript_shop.ui.stage", this.currentShopInfo.getStage())).textStyle(textStyle -> {
             textStyle.textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER).adaptiveWidth(true);
         }).layout(layout -> {
-            layout.setHeightPercent(100);
-            layout.setMargin(YogaEdge.RIGHT, 10);
+            layout.heightPercent(100);
+            layout.marginRight(10);
         });
         head.addChildren(new UIElement().layout(layout -> {
-            layout.setHeightPercent(100);
-            layout.setAlignItems(YogaAlign.CENTER);
-            layout.setFlexDirection(YogaFlexDirection.ROW);
+            layout.heightPercent(100);
+            layout.alignItems(AlignItems.CENTER);
+            layout.flexDirection(FlexDirection.ROW);
         }).addChildren(centerTitle, searchComponent), new UIElement().layout(layout -> {
-            layout.setHeightPercent(100);
-            layout.setAlignItems(YogaAlign.CENTER);
-            layout.setFlexDirection(YogaFlexDirection.ROW);
+            layout.heightPercent(100);
+            layout.alignItems(AlignItems.CENTER);
+            layout.flexDirection(FlexDirection.ROW);
         }).addChildren(stageLabel, new PlayerHeadElement()));
 
         merchantsView.layout(layout -> {
-            layout.setWidthPercent(100);
-            layout.setFlex(1);
+            layout.widthPercent(100);
+            layout.flex(1);
         });
 
         merchantsView.viewPort.getStyle().backgroundTexture(IGuiTexture.EMPTY);
 
         merchantsView.viewContainer.layout(layout -> {
-            layout.setFlexDirection(YogaFlexDirection.COLUMN);
-            layout.setGap(YogaGutter.ALL, 5);
+            layout.flexDirection(FlexDirection.COLUMN);
+            layout.gapAll(5);
         });
 
         reloadMerchants();
@@ -217,14 +220,14 @@ public class ShopUI extends UIElement {
         center.addChildren(head, merchantsView);
         //右
         UIElement right = new UIElement().layout(layout -> {
-            layout.setWidthPercent(25);
-            layout.setHeightPercent(100);
-            layout.setGap(YogaGutter.ALL, 3);
-            layout.setFlexDirection(YogaFlexDirection.COLUMN);
+            layout.widthPercent(25);
+            layout.heightPercent(100);
+            layout.gapAll(3);
+            layout.flexDirection(FlexDirection.COLUMN);
         });
         UIElement rightTop = new UIElement().layout(layout -> {
-            layout.setWidthPercent(100);
-            layout.setHeightPercent(10);
+            layout.widthPercent(100);
+            layout.heightPercent(10);
         }).style(style -> {
             style.backgroundTexture(DARK_BACKGROUND_RECT);
         }).addChild(new Label().setText(title)
@@ -232,39 +235,39 @@ public class ShopUI extends UIElement {
                     textStyle.textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER);
                 })
                 .layout(layout -> {
-                    layout.setWidthPercent(100);
-                    layout.setHeightPercent(100);
+                    layout.widthPercent(100);
+                    layout.heightPercent(100);
                 }));
 
         UIElement rightBottom = new UIElement().layout(layout -> {
-            layout.setWidthPercent(100);
-            layout.setFlex(1);
-            layout.setFlexDirection(YogaFlexDirection.COLUMN);
-            layout.setPadding(YogaEdge.ALL, 5);
-            layout.setGap(YogaGutter.ALL, 2);
+            layout.widthPercent(100);
+            layout.flex(1);
+            layout.flexDirection(FlexDirection.COLUMN);
+            layout.paddingAll(5);
+            layout.gapAll(2);
         });
         rightBottom.getStyle().backgroundTexture(DARK_BACKGROUND_RECT);
 
         shoppingCarView.layout(layout -> {
-            layout.setWidthPercent(100);
-            layout.setHeightPercent(35);
+            layout.widthPercent(100);
+            layout.heightPercent(35);
         });
         shoppingCarView.viewContainer.layout(layout -> {
-            layout.setFlexDirection(YogaFlexDirection.ROW);
-            layout.setWrap(YogaWrap.WRAP);
+            layout.flexDirection(FlexDirection.ROW);
+            layout.wrap(FlexWrap.WRAP);
         });
-        shoppingCarView.viewPort.getLayout().setPadding(YogaEdge.ALL, 3);
+        shoppingCarView.viewPort.getLayout().paddingAll(3);
         reloadShoppingItem();
 
         inventoryView.layout(layout -> {
-            layout.setWidthPercent(100);
-            layout.setHeightPercent(35);
+            layout.widthPercent(100);
+            layout.heightPercent(35);
         });
         inventoryView.viewContainer.layout(layout -> {
-            layout.setFlexDirection(YogaFlexDirection.ROW);
-            layout.setWrap(YogaWrap.WRAP);
+            layout.flexDirection(FlexDirection.ROW);
+            layout.wrap(FlexWrap.WRAP);
         });
-        inventoryView.viewPort.getLayout().setPadding(YogaEdge.ALL, 3);
+        inventoryView.viewPort.getLayout().paddingAll(3);
         reloadInventoryItem();
 
         Button clearButton = (Button) new Button().setText("viscript_shop.button.clear").setOnClick(event -> {
@@ -274,14 +277,14 @@ public class ShopUI extends UIElement {
             reloadShoppingItem();
             reloadInventoryItem();
         }).layout(layout -> {
-            layout.setWidthPercent(40);
+            layout.widthPercent(40);
         });
 
         Button tsButton = (Button) new Button().setText("viscript_shop.button.ts").setOnClick(event -> {
             ShopHelper.cacheShopInfo = this.currentShopInfo;
             if (minecraft.screen != null) minecraft.screen.onClose();
         }).layout(layout -> {
-            layout.setWidthPercent(40);
+            layout.widthPercent(40);
         });
 
         Button buyButton = (Button) new Button().setText("viscript_shop.button.buy").setOnClick(event -> {
@@ -293,14 +296,14 @@ public class ShopUI extends UIElement {
             }
             minecraft.player.connection.send(new BuyMerchantPayload(this.currentShopInfo, costSummary, gainSummary));
         }).layout(layout -> {
-            layout.setWidthPercent(100);
+            layout.widthPercent(100);
         });
 
         rightBottom.addChildren(new Label().setText("viscript_shop.ui.shoppingCar").textStyle(textStyle -> textStyle.adaptiveHeight(true)), shoppingCarView,
                 new Label().setText("viscript_shop.ui.inventory").textStyle(textStyle -> textStyle.adaptiveHeight(true)), inventoryView,
                 new UIElement().layout(layout -> {
-                    layout.setFlexDirection(YogaFlexDirection.ROW);
-                    layout.setJustifyContent(YogaJustify.SPACE_BETWEEN);
+                    layout.flexDirection(FlexDirection.ROW);
+                    layout.justifyContent(AlignContent.SPACE_BETWEEN);
                 }).addChildren(tsButton, clearButton), buyButton);
 
         right.addChildren(rightTop, rightBottom);
@@ -362,8 +365,8 @@ public class ShopUI extends UIElement {
                         textStyle.fontSize(5);
                     })
                     .layout(layout -> {
-                        layout.setWidth(10);
-                        layout.setHeightPercent(100);
+                        layout.width(10);
+                        layout.heightPercent(100);
                     })
                     .addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
                         event.hoverTooltips = new HoverTooltips(List.of(Component.nullToEmpty(String.valueOf(count))), null, null, null);
@@ -375,15 +378,15 @@ public class ShopUI extends UIElement {
                 textStyle.textAlignVertical(Vertical.CENTER);
                 textStyle.fontSize(16);
             }).layout(layout -> {
-                layout.setWidth(16);
-                layout.setHeightPercent(100);
-                layout.setMargin(YogaEdge.LEFT, 2);
+                layout.width(16);
+                layout.heightPercent(100);
+                layout.marginLeft(2);
             });
             Label money = (Label) new Label().setText(getCountText(gainSummary.getTotalMoney())).textStyle(textStyle -> {
                 textStyle.textAlignVertical(Vertical.BOTTOM).adaptiveWidth(true);
                 textStyle.fontSize(5);
             }).layout(layout -> {
-                layout.setHeightPercent(100);
+                layout.heightPercent(100);
             }).addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
                 event.hoverTooltips = new HoverTooltips(List.of(Component.nullToEmpty(String.valueOf(gainSummary.getTotalMoney()))), null, null, null);
             });
@@ -403,8 +406,8 @@ public class ShopUI extends UIElement {
                         textStyle.fontSize(4);
                     })
                     .layout(layout -> {
-                        layout.setWidth(10);
-                        layout.setHeightPercent(100);
+                        layout.width(10);
+                        layout.heightPercent(100);
                     })
                     .addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
                         event.hoverTooltips = new HoverTooltips(List.of(Component.nullToEmpty(color + count + "§f/" + itemCount)), null, null, null);
@@ -417,15 +420,15 @@ public class ShopUI extends UIElement {
                 textStyle.textAlignVertical(Vertical.CENTER);
                 textStyle.fontSize(16);
             }).layout(layout -> {
-                layout.setHeightPercent(100);
-                layout.setWidth(16);
-                layout.setMargin(YogaEdge.LEFT, 2);
+                layout.heightPercent(100);
+                layout.width(16);
+                layout.marginLeft(2);
             });
             Label money = (Label) new Label().setText(color + getCountText(costSummary.getTotalMoney())).textStyle(textStyle -> {
                 textStyle.textAlignVertical(Vertical.BOTTOM).adaptiveWidth(true);
                 textStyle.fontSize(5);
             }).layout(layout -> {
-                layout.setHeightPercent(100);
+                layout.heightPercent(100);
             }).addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
                 event.hoverTooltips = new HoverTooltips(List.of(Component.nullToEmpty(color + costSummary.getTotalMoney())), null, null, null);
             });
@@ -465,30 +468,30 @@ public class ShopUI extends UIElement {
 
     public UIElement createMerchant(MerchantInfo merchantInfo, int index) {
         UIElement merchant = new UIElement().layout(layout -> {
-            layout.setWidthPercent(100);
-            layout.setHeight(20);
-            layout.setGap(YogaGutter.ALL, 6);
-            layout.setFlexDirection(YogaFlexDirection.ROW);
-            layout.setPadding(YogaEdge.HORIZONTAL, 5);
-            layout.setAlignItems(YogaAlign.CENTER);
+            layout.widthPercent(100);
+            layout.height(20);
+            layout.gapAll(6);
+            layout.flexDirection(FlexDirection.ROW);
+            layout.paddingHorizontal(5);
+            layout.alignItems(AlignItems.CENTER);
         });
         merchant.getStyle().backgroundTexture(LIGHT_BACKGROUND_RECT);
         Label id = (Label) new Label().setText(String.valueOf(index + 1)).textStyle(textStyle -> {
             textStyle.textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER).adaptiveWidth(true);
         }).layout(layout -> {
-            layout.setHeightPercent(100);
+            layout.heightPercent(100);
         });
 
         UIElement uiElement = new UIElement().layout(layout -> {
-            layout.setWidthPercent(25);
-            layout.setHeightPercent(100);
-            layout.setGap(YogaGutter.ALL, 5);
-            layout.setFlexDirection(YogaFlexDirection.ROW);
-            layout.setAlignItems(YogaAlign.CENTER);
+            layout.widthPercent(25);
+            layout.heightPercent(100);
+            layout.gapAll(5);
+            layout.flexDirection(FlexDirection.ROW);
+            layout.alignItems(AlignItems.CENTER);
         });
         UIElement rightArrowIcon = new UIElement().style(style -> style.backgroundTexture(RIGHT_ARROW)).layout(layout -> {
-            layout.setWidth(16);
-            layout.setHeight(16);
+            layout.width(16);
+            layout.height(16);
         });
         ItemSlot resultItemSlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemResult(), false, true).setId("itemResult" + index);
 
@@ -508,22 +511,22 @@ public class ShopUI extends UIElement {
                     textStyle.textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER).adaptiveWidth(true);
                     textStyle.fontSize(8);
                 }).layout(layout -> {
-                    layout.setHeightPercent(100);
+                    layout.heightPercent(100);
                 });
-                uiElement.getLayout().setJustifyContent(YogaJustify.SPACE_BETWEEN);
-                uiElement.getLayout().setWidthPercent(50);
+                uiElement.getLayout().justifyContent(AlignContent.SPACE_BETWEEN);
+                uiElement.getLayout().widthPercent(50);
                 UIElement moneyUI = new UIElement().layout(layout -> {
-                    layout.setWidthPercent(40);
-                    layout.setHeightPercent(100);
-                    layout.setJustifyContent(YogaJustify.CENTER);
-                    layout.setAlignItems(YogaAlign.CENTER);
+                    layout.widthPercent(40);
+                    layout.heightPercent(100);
+                    layout.justifyContent(AlignContent.CENTER);
+                    layout.alignItems(AlignItems.CENTER);
                 }).addChild(money);
 
                 UIElement itemUI = new UIElement().layout(layout -> {
-                    layout.setWidthPercent(40);
-                    layout.setHeightPercent(100);
-                    layout.setJustifyContent(YogaJustify.CENTER);
-                    layout.setAlignItems(YogaAlign.CENTER);
+                    layout.widthPercent(40);
+                    layout.heightPercent(100);
+                    layout.justifyContent(AlignContent.CENTER);
+                    layout.alignItems(AlignItems.CENTER);
                 }).addChild(resultItemSlot);
                 switch (merchantInfo.getTradeType()) {
                     case BUY -> uiElement.addChildren(moneyUI, rightArrowIcon, itemUI);
@@ -548,10 +551,10 @@ public class ShopUI extends UIElement {
         countConfigurator.layout(layout -> {
             switch (selectedCategory.getShopType()) {
                 case ITEM_FOR_ITEM -> {
-                    layout.setWidth(35);
+                    layout.width(35);
                 }
                 case CURRENCY -> {
-                    layout.setWidth(30);
+                    layout.width(30);
                 }
             }
         });
@@ -568,17 +571,17 @@ public class ShopUI extends UIElement {
             countConfigurator.textField.setActive(false);
         }
         UIElement LockIcon = new UIElement().style(style -> style.backgroundTexture(LOCK)).layout(layout -> {
-            layout.setWidth(16);
-            layout.setHeight(16);
+            layout.width(16);
+            layout.height(16);
         }).addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
             event.hoverTooltips = new HoverTooltips(List.of(Component.translatable("viscript_shop.ui.stage.lock", merchantInfo.getStage())), null, null, null);
         });
 
         merchant.addChildren(new UIElement().layout(layout -> {
-            layout.setGap(YogaGutter.ALL, 2);
-            layout.setFlexDirection(YogaFlexDirection.ROW);
-            layout.setAlignItems(YogaAlign.CENTER);
-            layout.setHeightPercent(100);
+            layout.gapAll(2);
+            layout.flexDirection(FlexDirection.ROW);
+            layout.alignItems(AlignItems.CENTER);
+            layout.heightPercent(100);
         }).addChildren(redButton, countConfigurator, addButton));
 
         if (merchantInfo.getStage() > currentShopInfo.getStage()) merchant.addChildren(LockIcon);
@@ -618,11 +621,11 @@ public class ShopUI extends UIElement {
 
     private UIElement createItemInfoBox() {
         return new UIElement().layout(layout -> {
-            layout.setWidthPercent(50);
-            layout.setHeight(20);
-            layout.setJustifyContent(YogaJustify.FLEX_START);
-            layout.setAlignItems(YogaAlign.CENTER);
-            layout.setFlexDirection(YogaFlexDirection.ROW);
+            layout.widthPercent(50);
+            layout.height(20);
+            layout.justifyContent(AlignContent.FLEX_START);
+            layout.alignItems(AlignItems.CENTER);
+            layout.flexDirection(FlexDirection.ROW);
         });
     }
 

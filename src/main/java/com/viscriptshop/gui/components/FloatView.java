@@ -8,9 +8,9 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
+import dev.vfyjxf.taffy.style.*;
 import lombok.Getter;
 import net.minecraft.network.chat.Component;
-import org.appliedenergistics.yoga.*;
 import org.joml.Vector2f;
 
 import java.util.function.Supplier;
@@ -32,27 +32,27 @@ public class FloatView extends UIElement {
 
     public FloatView(UIElement parent, String title) {
         this.parent = parent;
-        getLayout().setPositionType(YogaPositionType.ABSOLUTE);
-        getLayout().setWidth(200);
-        getLayout().setPositionPercent(YogaEdge.LEFT, 0);
-        getLayout().setPositionPercent(YogaEdge.TOP, 0);
+        getLayout().positionType(TaffyPosition.ABSOLUTE);
+        getLayout().width(200);
+        getLayout().paddingLeft(0);
+        getLayout().paddingTop(0);
 
         this.titleBar = new UIElement();
         this.contentContainer = new UIElement();
 
         Button closeButton = (Button) new Button().setText("x").setOnClick(event -> hide())
                 .layout(layout -> {
-                    layout.setWidth(10);
-                    layout.setHeight(10);
-                    layout.setMargin(YogaEdge.LEFT, 5);
+                    layout.width(10);
+                    layout.height(10);
+                    layout.marginLeft(5);
                 }).style(style -> {
                     style.backgroundTexture(Icons.CLOSE);
                 });
         this.titleBar.layout(layout -> {
-            layout.setWidthPercent(100);
-            layout.setAlignItems(YogaAlign.CENTER);
-            layout.setPadding(YogaEdge.ALL, 5);
-            layout.setFlexDirection(YogaFlexDirection.ROW);
+            layout.widthPercent(100);
+            layout.alignItems(AlignItems.CENTER);
+            layout.paddingAll(5);
+            layout.flexDirection(FlexDirection.ROW);
         }).style(style -> style.backgroundTexture(Sprites.BORDER1_RT1));
         this.label = (Label) new Label()
                 .textStyle(style -> style
@@ -60,7 +60,7 @@ public class FloatView extends UIElement {
                         .textAlignHorizontal(Horizontal.LEFT)
                 )
                 .setText(title)
-                .layout(layout -> layout.setFlex(1));
+                .layout(layout -> layout.flex(1));
         titleBar.addChildren(label, closeButton);
 
         titleBar.addEventListener(UIEvents.MOUSE_DOWN, event -> titleBar.startDrag(new Vector2f(this.getLayoutX(), this.getLayoutY()), null));
@@ -68,8 +68,8 @@ public class FloatView extends UIElement {
             if (event.currentElement == titleBar && event.dragHandler.draggingObject instanceof Vector2f initialPos) {
                 var newPos = new Vector2f(initialPos).add(event.x - event.dragStartX, event.y - event.dragStartY);
                 this.layout(layout -> {
-                    layout.setPosition(YogaEdge.LEFT, newPos.x);
-                    layout.setPosition(YogaEdge.TOP, newPos.y);
+                    layout.left(newPos.x);
+                    layout.top(newPos.y);
                 });
             }
         });
@@ -80,11 +80,11 @@ public class FloatView extends UIElement {
         });
 
         this.contentContainer.layout(layout -> {
-            layout.setWidthPercent(100);
-            layout.setAlignItems(YogaAlign.CENTER);
-            layout.setJustifyContent(YogaJustify.CENTER);
-            layout.setPadding(YogaEdge.ALL, 4);
-            layout.setGap(YogaGutter.ALL, 2);
+            layout.widthPercent(100);
+            layout.alignItems(AlignItems.CENTER);
+            layout.justifyContent(AlignContent.CENTER);
+            layout.paddingAll(4);
+            layout.gapAll(2);
         }).style(style -> style.backgroundTexture(Sprites.RECT_SOLID));
 
         addChildren(titleBar, contentContainer);
@@ -106,7 +106,7 @@ public class FloatView extends UIElement {
     }
 
     public void hide() {
-        if (isShow){
+        if (isShow) {
             isShow = false;
             this.parent.removeChild(this);
         }
@@ -115,22 +115,22 @@ public class FloatView extends UIElement {
     public void showContainer() {
         if (isHidden) {
             isHidden = false;
-            contentContainer.setDisplay(YogaDisplay.FLEX);
+            contentContainer.setDisplay(TaffyDisplay.FLEX);
         }
     }
 
     public void hideContainer() {
         if (!isHidden) {
             isHidden = true;
-            contentContainer.setDisplay(YogaDisplay.NONE);
+            contentContainer.setDisplay(TaffyDisplay.NONE);
         }
     }
 
     public UIElement createInformation(Component title, Supplier<Component> info) {
         return new UIElement().layout(layout -> {
-            layout.setWidthPercent(100);
-            layout.setFlexDirection(YogaFlexDirection.ROW);
-            layout.setHeight(9);
+            layout.widthPercent(100);
+            layout.flexDirection(FlexDirection.ROW);
+            layout.height(9);
         }).addChildren(
                 new Label().setText(title).textStyle(style -> style
                         .adaptiveWidth(true)
@@ -139,7 +139,7 @@ public class FloatView extends UIElement {
                         .adaptiveWidth(true)
                         .textAlignVertical(Vertical.CENTER)
                         .textAlignHorizontal(Horizontal.RIGHT)).layout(layout -> {
-                    layout.setFlex(1);
+                    layout.flex(1);
                 }).addEventListener(UIEvents.TICK, event -> ((Label) event.currentElement).setText(info.get()))
         );
     }

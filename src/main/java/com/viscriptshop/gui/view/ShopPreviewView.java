@@ -15,8 +15,8 @@ import com.viscriptshop.gui.data.CategoryInfo;
 import com.viscriptshop.gui.data.MerchantInfo;
 import com.viscriptshop.gui.project.ShopProject;
 import com.viscriptshop.util.UIElementUtil;
+import dev.vfyjxf.taffy.style.*;
 import net.minecraft.network.chat.Component;
-import org.appliedenergistics.yoga.*;
 
 import java.util.Comparator;
 
@@ -32,37 +32,37 @@ public class ShopPreviewView extends View {
         this.editor = editor;
         this.merchantFloatView = new MerchantFloatView(editor, "viscript_shop.data.category.merchants");
         this.head.layout(layout -> {
-            layout.setFlexDirection(YogaFlexDirection.ROW);
-            layout.setWidthPercent(100);
-            layout.setHeight(15);
+            layout.flexDirection(FlexDirection.ROW);
+            layout.widthPercent(100);
+            layout.height(15);
         }).style(style -> style.backgroundTexture(Sprites.RECT_SOLID));
-        head.setDisplay(YogaDisplay.NONE);
+        head.setDisplay(TaffyDisplay.NONE);
         UIElement addButton = new Button().setText("viscript_shop.editor.add.merchant").setOnClick(event -> {
             MerchantInfo merchantInfo = new MerchantInfo();
             selectedCategory.getMerchants().add(merchantInfo);
             merchantFloatView.showEdit(merchantInfo, selectedCategory.getShopType());
         }).layout(layout -> {
-            layout.setMargin(YogaEdge.RIGHT, 5);
-            layout.setHeightPercent(100);
+            layout.marginRight(5);
+            layout.widthPercent(100);
         });
         UIElement sortButton = new Button().setText("viscript_shop.editor.sort.merchant").setOnClick(event -> {
             Dialog.showCheckBox("viscript_shop.editor.sort.merchant", "viscript_shop.dialog.sort_merchant.info", (result) -> {
                 if (result) selectedCategory.getMerchants().sort(Comparator.comparingInt(MerchantInfo::getStage));
             }).show(editor);
         }).layout(layout -> {
-            layout.setHeightPercent(100);
+            layout.heightPercent(100);
         });
         head.addChildren(addButton, sortButton);
 
         this.scrollerView.layout(layout -> {
-            layout.setWidthPercent(100);
-            layout.setFlex(1);
+            layout.widthPercent(100);
+            layout.flex(1);
         });
         this.scrollerView.viewContainer.layout(layout -> {
-            layout.setFlexDirection(YogaFlexDirection.ROW);
-            layout.setWrap(YogaWrap.WRAP);
-            layout.setPadding(YogaEdge.ALL, 5);
-            layout.setGap(YogaGutter.ALL, 5);
+            layout.flexDirection(FlexDirection.ROW);
+            layout.wrap(FlexWrap.WRAP);
+            layout.paddingAll(5);
+            layout.gapAll(5);
         });
 
         this.addChildren(head, scrollerView);
@@ -75,7 +75,7 @@ public class ShopPreviewView extends View {
     public void reloadMerchants() {
         selectedCategory = editor.categoryView.getSelectedCategory();
         if (selectedCategory != null && editor.getCurrentProject() instanceof ShopProject shopProject) {
-            head.setDisplay(YogaDisplay.FLEX);
+            head.setDisplay(TaffyDisplay.FLEX);
             scrollerView.clearAllScrollViewChildren();
 
             // 重新添加所有商品
@@ -96,21 +96,21 @@ public class ShopPreviewView extends View {
         switch (selectedCategory.getShopType()) {
             case ITEM_FOR_ITEM -> {
                 UIElement merchant = new UIElement().layout(layout -> {
-                    layout.setWidth(100);
-                    layout.setGap(YogaGutter.ALL, 5);
-                    layout.setMargin(YogaEdge.LEFT, 5);
-                    layout.setJustifyContent(YogaJustify.CENTER);
-                    layout.setFlexDirection(YogaFlexDirection.ROW);
-                    layout.setAlignItems(YogaAlign.CENTER);
+                    layout.width(100);
+                    layout.gapAll(5);
+                    layout.marginLeft(5);
+                    layout.justifyContent(AlignContent.CENTER);
+                    layout.flexDirection(FlexDirection.ROW);
+                    layout.alignItems(AlignItems.CENTER);
                 });
                 ItemSlot itemASlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemA(), false, true).addEventListener(UIEvents.MOUSE_DOWN, event -> showMerchantMenuTab(event, merchantInfo, i));
                 ItemSlot itemBSlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemB(), false, true).addEventListener(UIEvents.MOUSE_DOWN, event -> showMerchantMenuTab(event, merchantInfo, i));
                 ItemSlot resultItemSlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemResult(), true, true).addEventListener(UIEvents.MOUSE_DOWN, event -> showMerchantMenuTab(event, merchantInfo, i));
                 merchant.addChildren(itemASlot, itemBSlot,
                         new UIElement().style(style -> style.backgroundTexture(Icons.RIGHT_ARROW_NO_BAR_S_LIGHT)).layout(layout -> {
-                            layout.setWidth(6);
-                            layout.setHeight(6);
-                            layout.setMargin(YogaEdge.ALL, 5);
+                            layout.width(6);
+                            layout.height(6);
+                            layout.marginAll(5);
                         }),
                         resultItemSlot
                 );
@@ -118,18 +118,18 @@ public class ShopPreviewView extends View {
             }
             case CURRENCY -> {
                 UIElement merchant = new UIElement().layout(layout -> {
-                    layout.setWidth(55);
-                    layout.setFlexDirection(YogaFlexDirection.COLUMN);
-                    layout.setAlignItems(YogaAlign.CENTER);
-                    layout.setJustifyContent(YogaJustify.CENTER);
-                    layout.setPadding(YogaEdge.ALL, 5);
+                    layout.width(55);
+                    layout.flexDirection(FlexDirection.COLUMN);
+                    layout.alignItems(AlignItems.CENTER);
+                    layout.justifyContent(AlignContent.CENTER);
+                    layout.paddingAll(5);
                 });
                 merchant.getStyle().backgroundTexture(Sprites.RECT_SOLID);
 
                 ItemSlot itemSlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemResult(), false, true)
                         .layout(layout -> {
-                            layout.setWidth(30);
-                            layout.setHeight(30);
+                            layout.width(30);
+                            layout.height(30);
                         });
 
                 MerchantInfo.TradeType tradeType = merchantInfo.getTradeType();
@@ -140,9 +140,9 @@ public class ShopPreviewView extends View {
                         .textStyle(style -> style
                                 .textAlignHorizontal(Horizontal.CENTER)
                         ).layout(layout -> {
-                            layout.setWidthPercent(100);
-                            layout.setMargin(YogaEdge.TOP, 5);
-                            layout.setMargin(YogaEdge.BOTTOM, 10);
+                            layout.widthPercent(100);
+                            layout.marginTop(5);
+                            layout.marginBottom(10);
                         });
 
                 int money = merchantInfo.getMoney();
@@ -152,7 +152,7 @@ public class ShopPreviewView extends View {
                                 .textColor(0xFFFFAA00)
                                 .textAlignHorizontal(Horizontal.CENTER)
                         ).layout(layout -> {
-                            layout.setWidthPercent(100);
+                            layout.widthPercent(100);
                         });
 
                 merchant.addChildren(itemSlot, tradeLabel, priceLabel);
