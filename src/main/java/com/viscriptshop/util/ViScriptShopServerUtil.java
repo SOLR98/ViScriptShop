@@ -2,6 +2,7 @@ package com.viscriptshop.util;
 
 import com.lowdragmc.lowdraglib2.Platform;
 import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
+import com.viscriptshop.Config;
 import com.viscriptshop.ShopRegistries;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.data.MerchantInfo;
@@ -11,6 +12,7 @@ import com.viscriptshop.network.s2c.S2CPayload;
 import dev.latvian.mods.kubejs.typings.Info;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
+import net.sirgrantd.sg_economy.api.SGEconomyApi;
 
 public class ViScriptShopServerUtil {
 
@@ -68,11 +70,17 @@ public class ViScriptShopServerUtil {
 
     @Info("获取玩家钱")
     public static int getMoney(ServerPlayer player) {
+        if (ViscriptShop.isMagicCoinsLoaded() && Config.isReplaceMoneyToMagicCoin.get()) {
+            return SGEconomyApi.get().getBalanceAsInt(player);
+        }
         return player.getData(ShopRegistries.MONEY).getMoney();
     }
 
     @Info("设置玩家钱")
     public static void setMoney(ServerPlayer player, int money) {
+        if (ViscriptShop.isMagicCoinsLoaded() && Config.isReplaceMoneyToMagicCoin.get()) {
+            SGEconomyApi.get().setBalanceAsInt(player, money);
+        }
         ShopRegistries.Money m = new ShopRegistries.Money();
         m.setMoney(money);
         player.setData(ShopRegistries.MONEY, m);

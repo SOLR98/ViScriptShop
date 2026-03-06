@@ -35,6 +35,7 @@ public class ShopPreviewView extends View {
             layout.flexDirection(FlexDirection.ROW);
             layout.widthPercent(100);
             layout.height(15);
+            layout.gapAll(5);
         }).style(style -> style.backgroundTexture(Sprites.RECT_SOLID));
         head.setDisplay(TaffyDisplay.NONE);
         UIElement addButton = new Button().setText("viscript_shop.editor.add.merchant").setOnClick(event -> {
@@ -42,8 +43,7 @@ public class ShopPreviewView extends View {
             selectedCategory.getMerchants().add(merchantInfo);
             merchantFloatView.showEdit(merchantInfo, selectedCategory.getShopType());
         }).layout(layout -> {
-            layout.marginRight(5);
-            layout.widthPercent(100);
+            layout.heightPercent(100);
         });
         UIElement sortButton = new Button().setText("viscript_shop.editor.sort.merchant").setOnClick(event -> {
             Dialog.showCheckBox("viscript_shop.editor.sort.merchant", "viscript_shop.dialog.sort_merchant.info", (result) -> {

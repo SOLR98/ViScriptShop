@@ -12,6 +12,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Menu;
+import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.utils.UIElementProvider;
 import com.lowdragmc.lowdraglib2.gui.util.TreeBuilder;
@@ -19,68 +20,79 @@ import com.lowdragmc.lowdraglib2.gui.util.TreeNode;
 import com.lowdragmc.lowdraglib2.utils.search.IResultHandler;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.data.CategoryInfo;
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import org.appliedenergistics.yoga.YogaAlign;
-import org.appliedenergistics.yoga.YogaEdge;
-import org.appliedenergistics.yoga.YogaFlexDirection;
-import org.appliedenergistics.yoga.YogaGutter;
+import net.minecraft.world.item.TooltipFlag;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
-import java.util.Set;
+import java.util.Collection;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public class UIElementUtil {
-    public static SearchComponentConfigurator<Item> createItemSearchComponentConfigurator(String name, Supplier<String> getter, Consumer<String> setter, Set<Item> items, TagKey<Item> tag) {
-        return new SearchComponentConfigurator<>(name,
-                () -> {
-                    String id = getter.get();
-                    return id != null ? BuiltInRegistries.ITEM.get(ResourceLocation.parse(id)) : Items.AIR;
-                },
-                item -> {
-                    ResourceLocation key = BuiltInRegistries.ITEM.getKey(item);
-                    setter.accept(key.toString());
-                },
-                BuiltInRegistries.ITEM.get(ResourceLocation.parse(
-                        getter.get() != null ? getter.get() : Items.AIR.toString()
-                )),
+    public static SearchComponentConfigurator<ItemStack> createItemStackSearchComponentConfigurator(String name, Supplier<ItemStack> itemGetter, Consumer<ItemStack> itemSetter, Collection<ItemStack> items) {
+        return new SearchComponentConfigurator<>(
+                name,
+                itemGetter,
+                itemSetter,
+                ItemStack.EMPTY,
                 false,
                 (word, searchHandler) -> {
-                    String lowerWord = word.toLowerCase();
-                    Set<Item> candidatesItems = items;
-                    if (items == null) {
-                        candidatesItems = BuiltInRegistries.ITEM.stream().collect(Collectors.toSet());
+                    Collection<ItemStack> candidatesItems = items;
+
+                    if (candidatesItems == null) {
+                        candidatesItems = BuiltInRegistries.ITEM.stream()
+                                .map(ItemStack::new)
+                                .toList();
                     }
-                    for (Item item : candidatesItems) {
-                        ResourceLocation key = BuiltInRegistries.ITEM.getKey(item);
+
+                    IResultHandler<ItemStack> handler = (IResultHandler<ItemStack>) searchHandler;
+
+                    for (ItemStack stack : candidatesItems) {
                         if (Thread.currentThread().isInterrupted()) return;
-                        if (tag != null && !item.getDefaultInstance().is(tag)) continue;
-                        if (key.toString().toLowerCase().contains(lowerWord) || Component.translatable(item.getDescriptionId()).getString().toLowerCase().contains(lowerWord)) {
-                            ((IResultHandler<Item>) searchHandler).acceptResult(item);
+
+                        if (stack.isEmpty()) {
+                            handler.acceptResult(stack);
+                            continue;
+                        }
+
+                        if (SimpleItemStackFilter.matchItemSearch(stack, word)) {
+                            handler.acceptResult(stack);
                         }
                     }
                 },
-                value -> BuiltInRegistries.ITEM.getKey(value).toString(),
+                value -> value.isEmpty() ? "" : value.getHoverName().getString(),
                 value -> {
-                    UIElementProvider<Item> itemUIProvider = UIElementProvider.iconText(
+                    UIElementProvider<ItemStack> itemUIProvider = UIElementProvider.iconText(
                             ItemStackTexture::new,
-                            item -> Component.translatable(item.getDescriptionId())
+                            ItemStack::getHoverName
                     );
-                    return itemUIProvider.createUI(value);
+                    return itemUIProvider.createUI(value).addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
+                        if (!value.isEmpty()) {
+                            Minecraft mc = Minecraft.getInstance();
+                            TooltipFlag flag = mc.options.advancedItemTooltips
+                                    ? net.minecraft.world.item.TooltipFlag.ADVANCED
+                                    : net.minecraft.world.item.TooltipFlag.NORMAL;
+
+                            List<Component> tooltips = value.getTooltipLines(
+                                    Item.TooltipContext.of(mc.level),
+                                    mc.player,
+                                    flag
+                            );
+
+                            event.hoverTooltips = new HoverTooltips(tooltips, null, null, value);
+                        }
+                    });
                 }
         );
-    }
-
-    public static SearchComponentConfigurator<Item> createItemSearchComponentConfigurator(String name, Supplier<String> getter, Consumer<String> setter, Set<Item> items) {
-        return createItemSearchComponentConfigurator(name, getter, setter, items, null);
     }
 
     public static ItemSlot createItemSlot(ItemStack item, int size, boolean isRenderBackgroundTexture, boolean showItemTooltips) {
@@ -90,8 +102,8 @@ public class UIElementUtil {
                     slotStyle.showItemTooltips(showItemTooltips);
                 })
                 .layout(layout -> {
-                    layout.setWidth(size);
-                    layout.setHeight(size);
+                    layout.width(size);
+                    layout.height(size);
                 })
                 .style(style -> {
                     if (!isRenderBackgroundTexture) style.backgroundTexture(IGuiTexture.EMPTY);
@@ -104,24 +116,24 @@ public class UIElementUtil {
 
     public static UIElement createCategoryUI(CategoryInfo categoryInfo, boolean isSelected, Consumer<CategoryInfo> onSelectCallback, IGuiTexture defaultBg, IGuiTexture selectedBg) {
         UIElement category = new UIElement().layout(layout -> {
-            layout.setWidthPercent(100);
-            layout.setHeight(18);
-            layout.setGap(YogaGutter.ALL, 5);
-            layout.setFlexDirection(YogaFlexDirection.ROW);
-            layout.setAlignItems(YogaAlign.CENTER);
-            layout.setMargin(YogaEdge.BOTTOM, 5);
+            layout.widthPercent(100);
+            layout.height(18);
+            layout.gapAll(5);
+            layout.flexDirection(FlexDirection.ROW);
+            layout.alignItems(AlignItems.CENTER);
+            layout.marginBottom(5);
         }).addEventListener(UIEvents.MOUSE_DOWN, event -> {
             if (event.button == 0) {
                 onSelectCallback.accept(categoryInfo);
             }
         });
         UIElement icon = new UIElement().layout(layout -> {
-            layout.setMinWidth(16);
-            layout.setMinHeight(16);
-            layout.setWidth(16);
-            layout.setHeight(16);
-            layout.setMaxWidth(16);
-            layout.setMaxHeight(16);
+            layout.minWidth(16);
+            layout.minHeight(16);
+            layout.width(16);
+            layout.height(16);
+            layout.maxWidth(16);
+            layout.maxHeight(16);
         });
         Label label = (Label) new Label().setText(categoryInfo.getName())
                 .textStyle(textStyle -> {
@@ -131,12 +143,12 @@ public class UIElementUtil {
                         textStyle.textColor(ColorPattern.WHITE.color);
                     }
                 }).layout(layout -> {
-                    layout.setHeightPercent(100);
+                    layout.heightPercent(100);
                 });
         UIElement name = new UIElement().layout(layout -> {
-                    layout.setFlex(8);
-                    layout.setHeightPercent(100);
-                    layout.setPadding(YogaEdge.ALL, 3);
+                    layout.flex(8);
+                    layout.heightPercent(100);
+                    layout.paddingAll(3);
                 }).style(style -> {
                     style.backgroundTexture(isSelected ? selectedBg : defaultBg);
                 })
@@ -163,8 +175,8 @@ public class UIElementUtil {
     private static <T, C> Menu<T, C> openMenu(float posX, float posY, TreeNode<T, C> menuNode, UIElementProvider<T> uiProvider, @NotNull UIElement parent) {
         Menu<T, C> menu = new Menu<>(menuNode, uiProvider);
         menu.layout((layout) -> {
-            layout.setPosition(YogaEdge.LEFT, posX - parent.getContentX());
-            layout.setPosition(YogaEdge.TOP, posY - parent.getContentY());
+            layout.left(posX - parent.getContentX());
+            layout.top(posY - parent.getContentY());
         });
         parent.addChildren(menu);
         return menu;

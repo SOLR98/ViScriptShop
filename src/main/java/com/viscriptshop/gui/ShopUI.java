@@ -1,9 +1,11 @@
 package com.viscriptshop.gui;
 
 import com.lowdragmc.lowdraglib2.configurator.ui.NumberConfigurator;
+import com.lowdragmc.lowdraglib2.configurator.ui.StringConfigurator;
 import com.lowdragmc.lowdraglib2.gui.ColorPattern;
 import com.lowdragmc.lowdraglib2.gui.texture.ColorRectTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
@@ -13,11 +15,11 @@ import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
 import com.lowdragmc.lowdraglib2.utils.search.IResultHandler;
-import com.viscriptshop.ShopRegistries;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.event.neoforge.ShopClientEvent;
 import com.viscriptshop.gui.components.Message;
 import com.viscriptshop.gui.components.PlayerHeadElement;
+import com.viscriptshop.gui.components.SceneToggleBuilder;
 import com.viscriptshop.gui.data.AggregatedResources;
 import com.viscriptshop.gui.data.CategoryInfo;
 import com.viscriptshop.gui.data.MerchantInfo;
@@ -25,18 +27,15 @@ import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.network.c2s.BuyMerchantPayload;
 import com.viscriptshop.network.c2s.GetItemCountC2SPayload;
 import com.viscriptshop.util.ShopHelper;
+import com.viscriptshop.util.SimpleItemStackFilter;
 import com.viscriptshop.util.UIElementUtil;
-import dev.vfyjxf.taffy.style.AlignContent;
-import dev.vfyjxf.taffy.style.AlignItems;
-import dev.vfyjxf.taffy.style.FlexDirection;
-import dev.vfyjxf.taffy.style.FlexWrap;
+import com.viscriptshop.util.ViScriptShopClientUtil;
+import dev.vfyjxf.taffy.style.*;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.common.NeoForge;
@@ -52,7 +51,7 @@ public class ShopUI extends UIElement {
     public ScrollerView merchantsView = new ScrollerView();
     public ScrollerView shoppingCarView = new ScrollerView();
     public ScrollerView inventoryView = new ScrollerView();
-    public SearchComponent<Item> searchComponent;
+    public SearchComponent<ItemStack> searchComponent;
 
     private final IGuiTexture DARK_BACKGROUND_RECT = Sprites.BORDER_RT0;
     private final IGuiTexture LIGHT_BACKGROUND_RECT = Sprites.RECT_RD_SOLID;
@@ -70,8 +69,14 @@ public class ShopUI extends UIElement {
     private CategoryInfo selectedCategory;
     @Getter
     @Setter
-    private String search = "";
-
+    private ItemStack searchItem = ItemStack.EMPTY;
+    @Getter
+    @Setter
+    private String searchId = "";
+    //当前模式 true为物品查询 false为序号查询
+    @Getter
+    @Setter
+    private boolean searchMode = true;
 
     public ShopUI(ShopInfo shopInfo, String title) {
         this.playerItems.clear();
@@ -148,13 +153,13 @@ public class ShopUI extends UIElement {
                     layout.widthPercent(100);
                     layout.heightPercent(50);
                 }),
-                new Label().setText("◎ " + minecraft.player.getData(ShopRegistries.MONEY).getMoney()).textStyle(textStyle -> {
+                new Label().setText("◎ " + ViScriptShopClientUtil.getMoney(minecraft.player)).textStyle(textStyle -> {
                     textStyle.textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER);
                 }).layout(layout -> {
                     layout.widthPercent(100);
                     layout.heightPercent(50);
                 }).addEventListener(UIEvents.TICK, event -> {
-                    ((Label) event.currentElement).setText("◎ " + minecraft.player.getData(ShopRegistries.MONEY).getMoney());
+                    ((Label) event.currentElement).setText("◎ " + ViScriptShopClientUtil.getMoney(minecraft.player));
                 })
         );
 
@@ -180,13 +185,39 @@ public class ShopUI extends UIElement {
         }).layout(layout -> {
             layout.heightPercent(100);
         });
-        searchComponent = UIElementUtil.createItemSearchComponentConfigurator("", this::getSearch, this::setSearch, getCategoryItems()).searchComponent;
-        searchComponent.layout(layout -> {
-            layout.marginLeft(5);
-            layout.width(70);
-        }).addEventListener(UIEvents.LAYOUT_CHANGED, event -> {
+        //物品输入框
+        searchComponent = UIElementUtil.createItemStackSearchComponentConfigurator("", this::getSearchItem, search -> {
+            this.searchItem = search;
             reloadMerchants();
+        }, getCategoryItems()).searchComponent;
+        searchComponent.layout(layout -> {
+            layout.width(70);
         });
+        //序号输入框
+        StringConfigurator idInput = (StringConfigurator) new StringConfigurator("", this::getSearchId, search -> {
+            if (search.chars().allMatch(Character::isDigit)) {
+                this.searchId = search;
+                reloadMerchants();
+            }
+        }, searchId, true)
+                .layout(layout -> layout.width(20)).setDisplay(TaffyDisplay.NONE);
+        idInput.textField.textFieldStyle(textStyle -> textStyle.placeholder(Component.empty()));
+        Toggle toggle = (Toggle) new SceneToggleBuilder(this::isSearchMode, this::setSearchMode)
+                .icon(new ItemStackTexture(Items.GRASS_BLOCK), SpriteTexture.of(ViscriptShop.formattedMod("textures/id.png")))
+                .build()
+                .setOnToggleChanged(isOn -> {
+                    reloadMerchants();
+                    searchComponent.setDisplay(isOn ? TaffyDisplay.FLEX : TaffyDisplay.NONE);
+                    idInput.setDisplay(isOn ? TaffyDisplay.NONE : TaffyDisplay.FLEX);
+                })
+                .addEventListener(UIEvents.TICK, event -> {
+                    event.target.getStyle().tooltips(Component.translatable(searchMode ? "viscript_shop.ui.searchMode.item" : "viscript_shop.ui.searchMode.id"));
+                })
+                .layout(layout -> {
+                    layout.width(16);
+                    layout.height(16);
+                });
+
         Label stageLabel = (Label) new Label().setText(Component.translatable("viscript_shop.ui.stage", this.currentShopInfo.getStage())).textStyle(textStyle -> {
             textStyle.textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER).adaptiveWidth(true);
         }).layout(layout -> {
@@ -197,7 +228,8 @@ public class ShopUI extends UIElement {
             layout.heightPercent(100);
             layout.alignItems(AlignItems.CENTER);
             layout.flexDirection(FlexDirection.ROW);
-        }).addChildren(centerTitle, searchComponent), new UIElement().layout(layout -> {
+            layout.gapAll(5);
+        }).addChildren(centerTitle, searchComponent, idInput, toggle), new UIElement().layout(layout -> {
             layout.heightPercent(100);
             layout.alignItems(AlignItems.CENTER);
             layout.flexDirection(FlexDirection.ROW);
@@ -343,12 +375,27 @@ public class ShopUI extends UIElement {
             if (currentShopInfo.getLockedMerchantVisibility().equals(ShopInfo.LockedMerchantVisibility.HIDDEN) && merchantInfo.getStage() > currentShopInfo.getStage()) {
                 continue;
             }
-            //搜索购买物品筛选
-            if (!this.search.isEmpty() && !this.search.equals(Items.AIR.toString()) &&
-                    !merchantInfo.getItemResult().is(BuiltInRegistries.ITEM.get(ResourceLocation.parse(this.search))) &&
-                    !merchantInfo.getItemA().is(BuiltInRegistries.ITEM.get(ResourceLocation.parse(this.search))) &&
-                    !merchantInfo.getItemB().is(BuiltInRegistries.ITEM.get(ResourceLocation.parse(this.search)))) {
-                continue;
+            //搜索筛选 物品筛选和序号筛选
+            if (this.searchMode) {
+                if (!this.searchItem.isEmpty()) {
+                    boolean isMatch = ItemStack.isSameItemSameComponents(merchantInfo.getItemResult(), this.searchItem) ||
+                            ItemStack.isSameItemSameComponents(merchantInfo.getItemA(), this.searchItem) ||
+                            ItemStack.isSameItemSameComponents(merchantInfo.getItemB(), this.searchItem);
+                    if (!isMatch) {
+                        continue;
+                    }
+                }
+            } else {
+                if (!this.searchId.isEmpty()) {
+                    try {
+                        int targetIndex = Integer.parseInt(this.searchId);
+                        if ((i + 1) != targetIndex) {
+                            continue;
+                        }
+                    } catch (NumberFormatException e) {
+                        continue;
+                    }
+                }
             }
             merchantsView.addScrollViewChild(createMerchant(merchantInfo, i));
         }
@@ -415,7 +462,7 @@ public class ShopUI extends UIElement {
             inventoryView.addScrollViewChild(createItemInfoBox().addChildren(UIElementUtil.createItemSlot(itemStack, false, true), countLabel));
         });
         if (costSummary.getTotalMoney() > 0 && minecraft.player != null) {
-            String color = costSummary.getTotalMoney() <= minecraft.player.getData(ShopRegistries.MONEY).getMoney() ? "§a" : "§c";
+            String color = costSummary.getTotalMoney() <= ViScriptShopClientUtil.getMoney(minecraft.player) ? "§a" : "§c";
             Label moneyIcon = (Label) new Label().setText("◎ ").textStyle(textStyle -> {
                 textStyle.textAlignVertical(Vertical.CENTER);
                 textStyle.fontSize(16);
@@ -438,28 +485,39 @@ public class ShopUI extends UIElement {
     }
 
     public void reloadSearchComponent() {
+        Set<ItemStack> items = getCategoryItems();
         searchComponent.setSearchUI(new SearchComponent.ISearchUI<>() {
             @Override
-            public @NotNull String resultText(@NotNull Item value) {
-                return BuiltInRegistries.ITEM.getKey(value).toString();
+            public @NotNull String resultText(@NotNull ItemStack value) {
+                return value.isEmpty() ? "" : value.getHoverName().getString();
             }
 
             @Override
-            public void onResultSelected(@Nullable Item value) {
-                BuiltInRegistries.ITEM.get(ResourceLocation.parse(
-                        search != null ? search : Items.AIR.toString()
-                ));
+            public void onResultSelected(@Nullable ItemStack value) {
+                searchItem = value;
+                reloadMerchants();
             }
 
             @Override
-            public void search(String word, IResultHandler<Item> searchHandler) {
-                String lowerWord = word.toLowerCase();
-                Set<Item> candidatesItems = getCategoryItems();
-                for (Item item : candidatesItems) {
-                    ResourceLocation key = BuiltInRegistries.ITEM.getKey(item);
+            public void search(String word, IResultHandler<ItemStack> handler) {
+                Collection<ItemStack> candidatesItems = items;
+
+                if (candidatesItems == null) {
+                    candidatesItems = BuiltInRegistries.ITEM.stream()
+                            .map(ItemStack::new)
+                            .toList();
+                }
+
+                for (ItemStack stack : candidatesItems) {
                     if (Thread.currentThread().isInterrupted()) return;
-                    if (key.toString().toLowerCase().contains(lowerWord) || Component.translatable(item.getDescriptionId()).getString().toLowerCase().contains(lowerWord)) {
-                        searchHandler.acceptResult(item);
+
+                    if (stack.isEmpty()) {
+                        handler.acceptResult(stack);
+                        continue;
+                    }
+
+                    if (SimpleItemStackFilter.matchItemSearch(stack, word)) {
+                        handler.acceptResult(stack);
                     }
                 }
             }
@@ -472,28 +530,31 @@ public class ShopUI extends UIElement {
             layout.height(20);
             layout.gapAll(6);
             layout.flexDirection(FlexDirection.ROW);
-            layout.paddingHorizontal(5);
+            layout.paddingHorizontal(4);
             layout.alignItems(AlignItems.CENTER);
         });
         merchant.getStyle().backgroundTexture(LIGHT_BACKGROUND_RECT);
         Label id = (Label) new Label().setText(String.valueOf(index + 1)).textStyle(textStyle -> {
-            textStyle.textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER).adaptiveWidth(true);
+            textStyle.textAlignHorizontal(Horizontal.LEFT).textAlignVertical(Vertical.CENTER);
+            textStyle.fontSize(6);
         }).layout(layout -> {
+            layout.width(20);
             layout.heightPercent(100);
         });
 
         UIElement uiElement = new UIElement().layout(layout -> {
-            layout.widthPercent(25);
+            layout.widthPercent(20);
             layout.heightPercent(100);
             layout.gapAll(5);
             layout.flexDirection(FlexDirection.ROW);
             layout.alignItems(AlignItems.CENTER);
         });
         UIElement rightArrowIcon = new UIElement().style(style -> style.backgroundTexture(RIGHT_ARROW)).layout(layout -> {
-            layout.width(16);
-            layout.height(16);
+            layout.width(12);
+            layout.height(12);
         });
         ItemSlot resultItemSlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemResult(), false, true).setId("itemResult" + index);
+        resultItemSlot.getLayout().marginRight(2);
 
         merchant.addChildren(id);
 
@@ -507,14 +568,16 @@ public class ShopUI extends UIElement {
                 merchant.addChildren(uiElement, rightArrowIcon, resultItemSlot);
             }
             case CURRENCY -> {
-                Label money = (Label) new Label().setText("◎" + merchantInfo.getMoney()).textStyle(textStyle -> {
+                Label money = (Label) new Label().setText("◎" + getCountText(merchantInfo.getMoney())).textStyle(textStyle -> {
                     textStyle.textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER).adaptiveWidth(true);
                     textStyle.fontSize(8);
                 }).layout(layout -> {
                     layout.heightPercent(100);
+                }).addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
+                    event.hoverTooltips = new HoverTooltips(List.of(Component.nullToEmpty(String.valueOf(merchantInfo.getMoney()))), null, null, null);
                 });
                 uiElement.getLayout().justifyContent(AlignContent.SPACE_BETWEEN);
-                uiElement.getLayout().widthPercent(50);
+                uiElement.getLayout().widthPercent(45);
                 UIElement moneyUI = new UIElement().layout(layout -> {
                     layout.widthPercent(40);
                     layout.heightPercent(100);
@@ -629,16 +692,35 @@ public class ShopUI extends UIElement {
         });
     }
 
-    public Set<Item> getCategoryItems() {
-        Set<Item> items = new HashSet<>();
+    public Set<ItemStack> getCategoryItems() {
+        Set<ItemStack> items = new HashSet<>();
+        items.add(ItemStack.EMPTY);
         List<MerchantInfo> merchants = selectedCategory.getMerchants();
+
         for (MerchantInfo merchant : merchants) {
             if (merchant.getStage() <= currentShopInfo.getStage()) {
-                items.add(merchant.getItemA().getItem());
-                items.add(merchant.getItemB().getItem());
-                items.add(merchant.getItemResult().getItem());
+                if (selectedCategory.getShopType() == CategoryInfo.ShopType.ITEM_FOR_ITEM) {
+                    addItemStackIfUnique(items, merchant.getItemA());
+                    addItemStackIfUnique(items, merchant.getItemB());
+                }
+                addItemStackIfUnique(items, merchant.getItemResult());
             }
         }
         return items;
+    }
+
+    private void addItemStackIfUnique(Set<ItemStack> list, ItemStack stack) {
+        if (stack == null || stack.isEmpty()) {
+            return;
+        }
+        for (ItemStack existing : list) {
+            if (ItemStack.isSameItemSameComponents(existing, stack)) {
+                return;
+            }
+        }
+        ItemStack displayStack = stack.copy();
+        displayStack.setCount(1);
+
+        list.add(displayStack);
     }
 }

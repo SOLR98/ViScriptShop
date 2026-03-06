@@ -3,7 +3,6 @@ package com.viscriptshop.network.c2s;
 import com.lowdragmc.lowdraglib2.Platform;
 import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.viscriptshop.ShopRegistries;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.event.neoforge.ShopServerEvent;
 import com.viscriptshop.gui.components.Message;
@@ -59,9 +58,9 @@ public record BuyMerchantPayload(ShopInfo shopInfo, AggregatedResources cost,
                 return;
             }
         }
-        if (cost.getTotalMoney() > player.getData(ShopRegistries.MONEY).getMoney()) {
+        if (cost.getTotalMoney() > ViScriptShopServerUtil.getMoney(player)) {
             //钱不够
-            RPCPacketDistributor.rpcToPlayer(player, S2CPayload.SEND_MESSAGE, Message.Type.ERROR, Component.translatable("viscript_shop.message.noEnoughMoney", cost.getTotalMoney() - player.getData(ShopRegistries.MONEY).getMoney()));
+            RPCPacketDistributor.rpcToPlayer(player, S2CPayload.SEND_MESSAGE, Message.Type.ERROR, Component.translatable("viscript_shop.message.noEnoughMoney", cost.getTotalMoney() - ViScriptShopServerUtil.getMoney(player)));
             NeoForge.EVENT_BUS.post(new ShopServerEvent.BuyPre(player, shopInfo, cost, gain));
             return;
         }

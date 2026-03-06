@@ -11,6 +11,7 @@
 
   "viscript_shop.configuration.config": "ViScriptShop模组配置",
   "viscript_shop.configuration.showFtbLibraryButton": "是否打开FTB Library的按钮来允许打开商店",
+  "viscript_shop.configuration.isReplaceMoneyToMagicCoin": "是否使用MagicCoins的货币来替换本模组的货币",
 
   "viscript_shop.data.shop.name": "商店名",
   "viscript_shop.data.shop.name.tip": "如需动态商店名的话此处不要填，请通过指令设置商店名",
@@ -68,6 +69,8 @@
   "viscript_shop.ui.inventory": "消费",
   "viscript_shop.ui.lock": "已禁用",
   "viscript_shop.ui.no_shop": "无商店信息可选",
+  "viscript_shop.ui.searchMode.item": "物品查询",
+  "viscript_shop.ui.searchMode.id": "序号查询",
 
   "viscript_shop.button.confirm": "确定",
   "viscript_shop.button.cancel": "取消",

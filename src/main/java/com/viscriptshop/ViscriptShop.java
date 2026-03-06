@@ -101,6 +101,11 @@ public class ViscriptShop {
         return isModLoaded("confluence");
     }
 
+    //Magic Coins
+    public static boolean isMagicCoinsLoaded(){
+        return isModLoaded("magic_coins");
+    }
+
     private static boolean isModLoaded(String modId) {
         return ModList.get().isLoaded(modId);
     }

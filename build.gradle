@@ -162,6 +162,9 @@ dependencies {
     implementation ("org.confluence.mod:ConfluenceOtherworld:${confluence_version}") {
         transitive = false
     }
+    //Magic Coins
+    implementation "curse.maven:magic-coins-597281:7605721"
+    implementation "curse.maven:sg-economy-api-1446971:7604579"
 
     compileOnly "org.confluence:TerraCurio:${terra_curio_version}"
     compileOnly "org.confluence:TerraEntity:${terra_entity_version}"
