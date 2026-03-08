@@ -46,8 +46,8 @@ public class ViscriptShop {
                 .codecMark()
                 .build()
         );
+        modContainer.registerConfig(ModConfig.Type.COMMON, Config.CONFIG_SPEC, String.format("%s_config.toml", MOD_ID));
         if (dist == Dist.CLIENT) {
-            modContainer.registerConfig(ModConfig.Type.COMMON, Config.CONFIG_SPEC, String.format("%s_config.toml", MOD_ID));
             modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
         }
     }
@@ -97,12 +97,12 @@ public class ViscriptShop {
     }
 
     //汇流来世
-    public static boolean isConfluenceLoaded(){
+    public static boolean isConfluenceLoaded() {
         return isModLoaded("confluence");
     }
 
     //Magic Coins
-    public static boolean isMagicCoinsLoaded(){
+    public static boolean isMagicCoinsLoaded() {
         return isModLoaded("magic_coins");
     }
 
