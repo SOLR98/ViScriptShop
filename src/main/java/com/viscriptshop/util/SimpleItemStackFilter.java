@@ -11,7 +11,7 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 
 /**
- * 简单的 ItemStack 筛选器 (Minecraft 1.21.1)
+ * 简单的 ItemStack 筛选器
  * 支持：物品ID、物品名称、附魔、药水效果、描述筛选
  */
 public class SimpleItemStackFilter {
@@ -98,11 +98,9 @@ public class SimpleItemStackFilter {
     }
 
     /**
-     * 检查附魔是否匹配 (1.21.1 API)
-     * 格式: "sharpness" 或 "sharpness:5"
+     * 检查附魔是否匹配
      */
     private static boolean matchesEnchantment(ItemStack stack, String enchantCondition) {
-        // 使用 1.21.1 的 API
         ItemEnchantments enchantments = EnchantmentHelper.getEnchantmentsForCrafting(stack);
         if (enchantments.isEmpty()) {
             return false;
@@ -137,7 +135,7 @@ public class SimpleItemStackFilter {
     }
 
     /**
-     * 检查药水效果是否匹配 (1.21.1 API)
+     * 检查药水效果是否匹配
      * 支持本地化名称和等级，例如: "力量"、"strength"、"力量:2"
      */
     private static boolean matchesPotionEffect(ItemStack stack, String potionCondition) {
@@ -177,11 +175,10 @@ public class SimpleItemStackFilter {
     }
 
     /**
-     * 检查物品描述是否匹配 (1.21.1 API)
+     * 检查物品描述是否匹配
      * 格式: "legendary"
      */
     private static boolean matchesLore(ItemStack stack, String loreCondition) {
-        // 在 1.21.1 中，Lore 存储在 DataComponents.LORE_LINES 中
         var loreLines = stack.get(DataComponents.LORE);
 
         if (loreLines == null || loreLines.lines().isEmpty()) {
@@ -192,7 +189,6 @@ public class SimpleItemStackFilter {
 
         for (var loreComponent : loreLines.lines()) {
             String loreText = loreComponent.getString();
-            // 移除格式化代码
             String cleanLore = cleanText(loreText);
 
             if (cleanLore.toLowerCase().contains(loreLower)) {
@@ -213,7 +209,7 @@ public class SimpleItemStackFilter {
     }
 
     /**
-     * 获取附魔ID (1.21.1)
+     * 获取附魔ID
      */
     private static String getEnchantmentId(Holder<Enchantment> enchantmentHolder) {
         return enchantmentHolder.unwrapKey()
