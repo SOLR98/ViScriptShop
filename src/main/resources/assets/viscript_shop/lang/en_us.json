@@ -76,6 +76,9 @@
   "viscript_shop.button.cancel": "Cancel",
   "viscript_shop.button.delete": "Delete",
   "viscript_shop.button.update": "Edit",
+  "viscript_shop.button.copy": "Copy",
+  "viscript_shop.button.cut": "Cut",
+  "viscript_shop.button.paste": "Paste",
   "viscript_shop.button.buy": "Buy",
   "viscript_shop.button.ts": "Stash",
   "viscript_shop.button.clear": "Clear",
@@ -98,6 +101,16 @@
   "viscript_shop.dialog.delete_category.info": "Are you sure you want to delete the current category information?",
   "viscript_shop.dialog.delete_merchant.info": "Are you sure you want to delete the current merchandise information?",
   "viscript_shop.dialog.sort_merchant.info": "Do you want to sort the merchandise by stage value from smallest to largest?",
+
+  "viscript_shop.editor.paste.error": "Paste Failed",
+  "viscript_shop.editor.paste.type_mismatch": "Type mismatch! Cannot paste merchandise of a different type.",
+
+  "viscript_shop.editor.copy.success": "Copied!",
+  "viscript_shop.editor.cut.success": "Cut!",
+  "viscript_shop.editor.setTradeType": "Set Trade Type",
+  "viscript_shop.editor.setTradeType.success": "All merchandise set to: %s",
+
+  "viscript_shop.dialog.setTradeType.info": "Are you sure you want to set all merchandise in the current category to the specified trade type?",
 
   "sidebar_button.viscript_shop.shop": "Open Shop",
   "sidebar_button.viscript_shop.shop.tooltip": "Select a shop name to open"

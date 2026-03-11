@@ -54,36 +54,6 @@ public class CategoryInfo implements IConfigurable, IPersistedSerializable {
         STREAM_CODEC = ByteBufCodecs.fromCodec(CODEC);
     }
 
-    @Override
-    public void buildConfigurator(ConfiguratorGroup father) {
-        IConfigurable.super.buildConfigurator(father);
-        ArrayConfiguratorGroup<MerchantInfo> merchantInfoArrayConfiguratorGroup = new ArrayConfiguratorGroup<>("viscript_shop.data.category.merchants", true,
-                () -> new ArrayList<>(this.getMerchants()),
-                (getter, setter) -> {
-                    MerchantInfo instance = getter.get();
-                    final ShopType[] currentShopType = {this.shopType};
-                    ConfiguratorGroup configuratorGroup = new ConfiguratorGroup();
-                    configuratorGroup.addConfigurators(instance.createConfigurator(this.shopType));
-                    configuratorGroup.setCollapse(false);
-                    configuratorGroup.addEventListener(UIEvents.TICK, event -> {
-                        ShopType shopTypeHolder = this.shopType;
-                        if (shopTypeHolder != currentShopType[0]) {
-                            configuratorGroup.removeAllConfigurators();
-                            configuratorGroup.addConfigurators(instance.createConfigurator(shopTypeHolder));
-                            currentShopType[0] = shopTypeHolder;
-                        }
-                    });
-                    return configuratorGroup;
-                }, true);
-        merchantInfoArrayConfiguratorGroup.setAddDefault(MerchantInfo::new);
-        merchantInfoArrayConfiguratorGroup.setOnUpdate(list -> {
-            List<MerchantInfo> origin = this.getMerchants();
-            origin.clear();
-            origin.addAll(list);
-        });
-        father.addConfigurators(merchantInfoArrayConfiguratorGroup);
-    }
-
     @SneakyThrows
     private void iconTypeSubConfiguratorBuilder(IconType value, ConfiguratorGroup group) {
         switch (value) {

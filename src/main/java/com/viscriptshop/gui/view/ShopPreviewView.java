@@ -4,6 +4,7 @@ import com.lowdragmc.lowdraglib2.editor.ui.View;
 import com.lowdragmc.lowdraglib2.gui.texture.Icons;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
+import com.lowdragmc.lowdraglib2.gui.ui.data.TextWrap;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.*;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
@@ -26,6 +27,12 @@ public class ShopPreviewView extends View {
     public final ScrollerView scrollerView = new ScrollerView();
     private final MerchantFloatView merchantFloatView;
     private CategoryInfo selectedCategory = null;
+
+    // 剪贴板：用于跨分类复制/剪切/粘贴商品
+    private static MerchantClipboard clipboard = null;
+
+    // 拖拽状态
+    private Integer selectedForMoveIndex = null;  // 选中的商品索引，用于移动
 
     public ShopPreviewView(ShopEditor editor) {
         super("viscript_shop.editor.view.shopPreview");
@@ -52,7 +59,19 @@ public class ShopPreviewView extends View {
         }).layout(layout -> {
             layout.heightPercent(100);
         });
-        head.addChildren(addButton, sortButton);
+        UIElement setTradeTypeButton = new Button().setText("viscript_shop.editor.setTradeType").setOnClick(event -> {
+            showTradeTypeDialog();
+        }).layout(layout -> {
+            layout.heightPercent(100);
+        });
+        UIElement pasteButton = new Button().setText("viscript_shop.button.paste").setOnClick(event -> {
+            pasteMerchant(-1);
+        }).layout(layout -> {
+            layout.heightPercent(100);
+        });
+        head.addChildren(addButton, sortButton, setTradeTypeButton, pasteButton).addEventListener(UIEvents.TICK, event -> {
+            setTradeTypeButton.setDisplay(selectedCategory.getShopType().equals(CategoryInfo.ShopType.CURRENCY) ? TaffyDisplay.FLEX : TaffyDisplay.NONE);
+        });
 
         this.scrollerView.layout(layout -> {
             layout.widthPercent(100);
@@ -93,9 +112,10 @@ public class ShopPreviewView extends View {
     }
 
     public UIElement createMerchant(MerchantInfo merchantInfo, int i) {
+        UIElement merchant;
         switch (selectedCategory.getShopType()) {
             case ITEM_FOR_ITEM -> {
-                UIElement merchant = new UIElement().layout(layout -> {
+                merchant = new UIElement().layout(layout -> {
                     layout.width(100);
                     layout.gapAll(5);
                     layout.marginLeft(5);
@@ -103,10 +123,14 @@ public class ShopPreviewView extends View {
                     layout.flexDirection(FlexDirection.ROW);
                     layout.alignItems(AlignItems.CENTER);
                 });
+                // 检查是否被选中，如果是则高亮
+                if (selectedForMoveIndex != null && selectedForMoveIndex == i) {
+                    merchant.getStyle().backgroundTexture(Sprites.BORDER1_RT1);
+                }
                 ItemSlot itemASlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemA(), false, true).addEventListener(UIEvents.MOUSE_DOWN, event -> showMerchantMenuTab(event, merchantInfo, i));
                 ItemSlot itemBSlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemB(), false, true).addEventListener(UIEvents.MOUSE_DOWN, event -> showMerchantMenuTab(event, merchantInfo, i));
                 ItemSlot resultItemSlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemResult(), true, true).addEventListener(UIEvents.MOUSE_DOWN, event -> showMerchantMenuTab(event, merchantInfo, i));
-                merchant.addChildren(itemASlot, itemBSlot,
+                merchant.addChildren(createDragHandle(merchantInfo, i), itemASlot, itemBSlot,
                         new UIElement().style(style -> style.backgroundTexture(Icons.RIGHT_ARROW_NO_BAR_S_LIGHT)).layout(layout -> {
                             layout.width(6);
                             layout.height(6);
@@ -117,14 +141,19 @@ public class ShopPreviewView extends View {
                 return merchant;
             }
             case CURRENCY -> {
-                UIElement merchant = new UIElement().layout(layout -> {
+                merchant = new UIElement().layout(layout -> {
                     layout.width(55);
                     layout.flexDirection(FlexDirection.COLUMN);
                     layout.alignItems(AlignItems.CENTER);
                     layout.justifyContent(AlignContent.CENTER);
                     layout.paddingAll(5);
                 });
-                merchant.getStyle().backgroundTexture(Sprites.RECT_SOLID);
+                // 检查是否被选中，如果是则高亮
+                if (selectedForMoveIndex != null && selectedForMoveIndex == i) {
+                    merchant.getStyle().backgroundTexture(Sprites.BORDER1_RT1);
+                } else {
+                    merchant.getStyle().backgroundTexture(Sprites.RECT_SOLID);
+                }
 
                 ItemSlot itemSlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemResult(), false, true)
                         .layout(layout -> {
@@ -155,7 +184,8 @@ public class ShopPreviewView extends View {
                             layout.widthPercent(100);
                         });
 
-                merchant.addChildren(itemSlot, tradeLabel, priceLabel);
+                // 纵向布局，拖拽句柄放在顶部
+                merchant.addChildren(createDragHandleForColumn(merchantInfo, i), itemSlot, tradeLabel, priceLabel);
 
                 return merchant;
             }
@@ -163,6 +193,31 @@ public class ShopPreviewView extends View {
                 return new UIElement();
             }
         }
+    }
+
+    private UIElement createDragHandle(MerchantInfo merchantInfo, int index) {
+        return new UIElement().layout(layout -> {
+            layout.width(10);
+            layout.heightPercent(100);
+        }).style(style -> {
+            style.backgroundTexture(Icons.ARROW_UP_DOWN);
+        }).addEventListener(UIEvents.MOUSE_DOWN, event -> {
+            selectSwapMerchantInfo(event, merchantInfo, index);
+            event.stopPropagation();
+        });
+    }
+
+    private UIElement createDragHandleForColumn(MerchantInfo merchantInfo, int index) {
+        return new UIElement().layout(layout -> {
+            layout.width(15);
+            layout.height(10);
+            layout.alignSelf(AlignItems.CENTER);
+        }).style(style -> {
+            style.backgroundTexture(Icons.ARROW_LEFT_RIGHT);
+        }).addEventListener(UIEvents.MOUSE_DOWN, event -> {
+            selectSwapMerchantInfo(event, merchantInfo, index);
+            event.stopPropagation();
+        });
     }
 
     public void removeMerchant(int index) {
@@ -175,16 +230,184 @@ public class ShopPreviewView extends View {
             float posX = clickedElement.getPositionX();
             float posY = clickedElement.getPositionY() + clickedElement.getSizeHeight();
 
-            TreeBuilder.Menu merchantMenu = TreeBuilder.Menu.start().leaf("viscript_shop.button.update", () -> {
-                merchantFloatView.showEdit(merchantInfo, selectedCategory.getShopType());
-            }).leaf("viscript_shop.button.delete", () -> {
-                Dialog.showCheckBox("viscript_shop.button.delete", "viscript_shop.dialog.delete_merchant.info", (result) -> {
-                    if (result) removeMerchant(index);
-                }).show(editor);
-            });
+            TreeBuilder.Menu merchantMenu = TreeBuilder.Menu.start()
+                    .leaf("viscript_shop.button.update", () -> {
+                        merchantFloatView.showEdit(merchantInfo, selectedCategory.getShopType());
+                    })
+                    .leaf("viscript_shop.button.copy", () -> {
+                        copyMerchant(merchantInfo, index);
+                    })
+                    .leaf("viscript_shop.button.cut", () -> {
+                        cutMerchant(merchantInfo, index);
+                    })
+                    .leaf("viscript_shop.button.paste", () -> {
+                        pasteMerchant(index + 1);
+                    })
+                    .leaf("viscript_shop.button.delete", () -> {
+                        Dialog.showCheckBox("viscript_shop.button.delete", "viscript_shop.dialog.delete_merchant.info", (result) -> {
+                            if (result) removeMerchant(index);
+                        }).show(editor);
+                    });
 
             UIElementUtil.openMenu(posX, posY, merchantMenu, this);
             event.stopPropagation();
         }
     }
+
+    /**
+     * 复制商品到剪贴板
+     */
+    private void copyMerchant(MerchantInfo merchantInfo, int index) {
+        clipboard = new MerchantClipboard(merchantInfo, selectedCategory, index, false);
+        Dialog.showNotification("viscript_shop.editor.copy.success", 1.5f).show(editor);
+    }
+
+    /**
+     * 剪切商品到剪贴板
+     */
+    private void cutMerchant(MerchantInfo merchantInfo, int index) {
+        clipboard = new MerchantClipboard(merchantInfo, selectedCategory, index, true);
+        Dialog.showNotification("viscript_shop.editor.cut.success", 1.5f).show(editor);
+    }
+
+    /**
+     * 从剪贴板粘贴商品
+     */
+    private void pasteMerchant(int insertIndex) {
+        if (clipboard == null) return;
+
+        // 检查类型兼容性
+        if (clipboard.getSourceType() != selectedCategory.getShopType()) {
+            Dialog.showNotification("viscript_shop.editor.paste.type_mismatch", 2f).show(editor);
+            return;
+        }
+
+        MerchantInfo newMerchant = clipboard.merchantInfo().copy();
+
+        if (insertIndex >= 0 && insertIndex <= selectedCategory.getMerchants().size()) {
+            selectedCategory.getMerchants().add(insertIndex, newMerchant);
+        } else {
+            selectedCategory.getMerchants().add(newMerchant);
+        }
+
+        // 如果是剪切操作，从原分类删除原商品
+        if (clipboard.isCut()) {
+            CategoryInfo sourceCategory = clipboard.sourceCategory();
+            int sourceIndex = clipboard.sourceIndex();
+
+            // 如果在同一个分类中粘贴，需要调整索引
+            if (sourceCategory == selectedCategory && sourceIndex < insertIndex) {
+                sourceIndex++;
+            }
+
+            // 检查索引是否有效
+            if (sourceIndex >= 0 && sourceIndex < sourceCategory.getMerchants().size()) {
+                sourceCategory.getMerchants().remove(sourceIndex);
+            }
+
+            // 清空剪贴板
+            clipboard = null;
+        }
+    }
+
+    /**
+     * 商品剪贴板
+     * 用于存储复制/剪切的商品信息
+     */
+    private record MerchantClipboard(MerchantInfo merchantInfo, CategoryInfo sourceCategory, int sourceIndex,
+                                     boolean isCut) {
+        public CategoryInfo.ShopType getSourceType() {
+            return sourceCategory.getShopType();
+        }
+
+    }
+
+    /**
+     * 显示设置交易类型的对话框
+     */
+    private void showTradeTypeDialog() {
+        var dialog = new Dialog();
+        dialog.setTitle("viscript_shop.editor.setTradeType");
+
+        dialog.addContent(new Label()
+                .textStyle(textStyle -> textStyle.textWrap(TextWrap.WRAP).adaptiveHeight(true))
+                .setText("viscript_shop.dialog.setTradeType.info")
+                .layout(layout -> layout.widthPercent(100)));
+
+        dialog.addButton(new Button()
+                .setOnClick(e -> {
+                    setAllTradeType(MerchantInfo.TradeType.BUY);
+                    dialog.close();
+                })
+                .setText("viscript_shop.data.merchant.tradeType.buy"));
+
+        dialog.addButton(new Button()
+                .setOnClick(e -> {
+                    setAllTradeType(MerchantInfo.TradeType.SELL);
+                    dialog.close();
+                })
+                .setText("viscript_shop.data.merchant.tradeType.sell"));
+
+        dialog.addButton(new Button()
+                .setOnClick(e -> dialog.close())
+                .setText("ldlib.gui.tips.cancel"));
+
+        dialog.show(editor);
+    }
+
+    /**
+     * 设置当前分类下所有商品的交易类型
+     */
+    private void setAllTradeType(MerchantInfo.TradeType tradeType) {
+        selectedCategory.getMerchants().forEach(merchant -> {
+            merchant.setTradeType(tradeType);
+        });
+        reloadMerchants();
+        Dialog.showNotification(
+                Component.translatable("viscript_shop.editor.setTradeType.success",
+                        Component.translatable(tradeType.getSerializedName())).getString(),
+                1.5f
+        ).show(editor);
+    }
+
+    private void selectSwapMerchantInfo(UIEvent event, MerchantInfo merchantInfo, int index) {
+        if (selectedForMoveIndex == null) {
+            selectedForMoveIndex = index;
+            reloadMerchants();
+        } else {
+            if (selectedForMoveIndex != index) {
+                moveMerchantData(selectedForMoveIndex, index);
+            }
+
+            clearSelection();
+        }
+
+        event.stopPropagation();
+    }
+
+    /**
+     * 清除选中状态
+     */
+    private void clearSelection() {
+        selectedForMoveIndex = null;
+        reloadMerchants();
+    }
+
+    /**
+     * 移动商品数据
+     */
+    private void moveMerchantData(int fromIndex, int toIndex) {
+        var merchants = selectedCategory.getMerchants();
+
+        if (fromIndex < 0 || fromIndex >= merchants.size() ||
+                toIndex < 0 || toIndex >= merchants.size() ||
+                fromIndex == toIndex) {
+            return;
+        }
+
+        // 移动元素
+        var merchant = merchants.remove(fromIndex);
+        merchants.add(toIndex, merchant);
+    }
+
 }

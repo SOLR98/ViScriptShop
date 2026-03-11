@@ -1,5 +1,6 @@
 package com.viscriptshop.gui.data;
 
+import com.lowdragmc.lowdraglib2.Platform;
 import com.lowdragmc.lowdraglib2.configurator.IConfigurable;
 import com.lowdragmc.lowdraglib2.configurator.annotation.ConfigNumber;
 import com.lowdragmc.lowdraglib2.configurator.annotation.Configurable;
@@ -8,11 +9,14 @@ import com.lowdragmc.lowdraglib2.configurator.ui.ConfiguratorGroup;
 import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
 import com.lowdragmc.lowdraglib2.utils.PersistedParser;
 import com.mojang.serialization.Codec;
+import com.viscriptshop.util.CodecUtil;
+import dev.vfyjxf.taffy.style.TaffyDisplay;
 import io.netty.buffer.ByteBuf;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.StringRepresentable;
@@ -47,7 +51,7 @@ public class MerchantInfo implements IConfigurable, IPersistedSerializable {
     @Configurable(name = "viscript_shop.data.merchant.xp")
     @ConfigNumber(range = {0, Integer.MAX_VALUE})
     private int xp = 0;
-    @Configurable(name = "viscript_shop.data.merchant.command", tips="viscript_shop.data.merchant.command.tip")
+    @Configurable(name = "viscript_shop.data.merchant.command", tips = "viscript_shop.data.merchant.command.tip")
     private String command = "";
     @Configurable(name = "viscript_shop.data.merchant.stage", tips = "viscript_shop.data.merchant.stage.tip")
     @ConfigNumber(range = {0, Integer.MAX_VALUE})
@@ -64,7 +68,7 @@ public class MerchantInfo implements IConfigurable, IPersistedSerializable {
         ConfiguratorGroup group = new ConfiguratorGroup();
         group.setCanCollapse(false);
         group.setCollapse(false);
-        group.lineContainer.setDisplay(YogaDisplay.NONE);
+        group.lineContainer.setDisplay(TaffyDisplay.NONE);
         buildConfigurator(group);
         List<Configurator> configurators = new ArrayList<>(group.getConfigurators());
         group.removeAllConfigurators();
@@ -115,6 +119,11 @@ public class MerchantInfo implements IConfigurable, IPersistedSerializable {
     public MerchantInfo stage(int stage) {
         this.stage = stage;
         return this;
+    }
+
+    public MerchantInfo copy() {
+        Tag tag = CodecUtil.serializeNBT(MerchantInfo.CODEC, this, Platform.getFrozenRegistry());
+        return CodecUtil.deserializeNBT(MerchantInfo.CODEC, tag, Platform.getFrozenRegistry());
     }
 
     @Getter

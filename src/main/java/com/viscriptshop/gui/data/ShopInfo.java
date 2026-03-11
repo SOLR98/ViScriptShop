@@ -58,19 +58,6 @@ public class ShopInfo implements IConfigurable, IPersistedSerializable {
             isQuickOpeningConfigurator.setTips("viscript_shop.data.shop.isQuickOpening.tip");
             father.addConfigurators(isQuickOpeningConfigurator);
         }
-        ArrayConfiguratorGroup<CategoryInfo> categoryConfigArrayConfiguratorGroup = new ArrayConfiguratorGroup<>("viscript_shop.data.shop.categoryInfos", false,
-                () -> new ArrayList<>(this.getCategoryInfos()),
-                (getter, setter) -> {
-                    CategoryInfo instance = getter.get();
-                    return instance != null ? instance.createDirectConfigurator() : new Configurator();
-                }, true);
-        categoryConfigArrayConfiguratorGroup.setAddDefault(CategoryInfo::new);
-        categoryConfigArrayConfiguratorGroup.setOnUpdate(list -> {
-            List<CategoryInfo> origin = this.getCategoryInfos();
-            origin.clear();
-            origin.addAll(list);
-        });
-        father.addConfigurators(categoryConfigArrayConfiguratorGroup);
     }
 
     private Tag writeCategoryInfo(List<CategoryInfo> value) {

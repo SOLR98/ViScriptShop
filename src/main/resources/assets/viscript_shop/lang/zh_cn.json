@@ -76,6 +76,9 @@
   "viscript_shop.button.cancel": "取消",
   "viscript_shop.button.delete": "删除",
   "viscript_shop.button.update": "编辑",
+  "viscript_shop.button.copy": "复制",
+  "viscript_shop.button.cut": "剪切",
+  "viscript_shop.button.paste": "粘贴",
   "viscript_shop.button.buy": "购买",
   "viscript_shop.button.ts": "暂存",
   "viscript_shop.button.clear": "清空",
@@ -98,6 +101,16 @@
   "viscript_shop.dialog.delete_category.info": "是否要删除当前分类信息？",
   "viscript_shop.dialog.delete_merchant.info": "是否要删除当前商品信息？",
   "viscript_shop.dialog.sort_merchant.info": "是否要将商品根据阶段值从小到大排序？",
+
+  "viscript_shop.editor.paste.error": "粘贴失败",
+  "viscript_shop.editor.paste.type_mismatch": "商品类型不匹配！无法粘贴不同类型的商品。",
+
+  "viscript_shop.editor.copy.success": "复制成功！",
+  "viscript_shop.editor.cut.success": "剪切成功！",
+  "viscript_shop.editor.setTradeType": "设置交易类型",
+  "viscript_shop.editor.setTradeType.success": "已将所有商品设置为：%s",
+
+  "viscript_shop.dialog.setTradeType.info": "确定要将当前分类下的所有商品设置为指定的交易类型吗？",
 
   "sidebar_button.viscript_shop.shop": "打开商店",
   "sidebar_button.viscript_shop.shop.tooltip": "选择商店名打开"

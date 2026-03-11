@@ -372,7 +372,7 @@ public class ShopUI extends UIElement {
         for (int i = 0; i < selectedCategory.getMerchants().size(); i++) {
             MerchantInfo merchantInfo = selectedCategory.getMerchants().get(i);
             //商品上锁样式：隐藏
-            if (currentShopInfo.getLockedMerchantVisibility().equals(ShopInfo.LockedMerchantVisibility.HIDDEN) && merchantInfo.getStage() > currentShopInfo.getStage()) {
+            if (currentShopInfo.getLockedMerchantVisibility().equals(ShopInfo.LockedMerchantVisibility.HIDDEN) && getMerchantLockReason(merchantInfo) != null) {
                 continue;
             }
             //搜索筛选 物品筛选和序号筛选
@@ -599,7 +599,7 @@ public class ShopUI extends UIElement {
             }
         }
         Button redButton = new Button().setText("-").setOnClick(event -> {
-            if (merchantInfo.getStage() <= currentShopInfo.getStage()) {
+            if (getMerchantLockReason(merchantInfo) == null) {
                 merchantInfo.setBuyCount(Math.max(0, (int) merchantInfo.getBuyCount() - 1));
                 reloadShoppingItem();
                 reloadInventoryItem();
@@ -623,13 +623,13 @@ public class ShopUI extends UIElement {
         });
         countConfigurator.inlineContainer.getStyle().backgroundTexture(LIGHT_BACKGROUND_RECT);
         Button addButton = new Button().setText("+").setOnClick(event -> {
-            if (merchantInfo.getStage() <= currentShopInfo.getStage()) {
+            if (getMerchantLockReason(merchantInfo) == null) {
                 merchantInfo.setBuyCount(Math.min(Integer.MAX_VALUE, (int) merchantInfo.getBuyCount() + 1));
                 reloadShoppingItem();
                 reloadInventoryItem();
             }
         });
-        if (merchantInfo.getStage() > currentShopInfo.getStage()) {
+        if (getMerchantLockReason(merchantInfo) != null) {
             countConfigurator.textField.setWheelDur(0);
             countConfigurator.textField.setActive(false);
         }
@@ -637,7 +637,10 @@ public class ShopUI extends UIElement {
             layout.width(16);
             layout.height(16);
         }).addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
-            event.hoverTooltips = new HoverTooltips(List.of(Component.translatable("viscript_shop.ui.stage.lock", merchantInfo.getStage())), null, null, null);
+            Component lockReason = getMerchantLockReason(merchantInfo);
+            if (lockReason != null) {
+                event.hoverTooltips = new HoverTooltips(List.of(lockReason), null, null, null);
+            }
         });
 
         merchant.addChildren(new UIElement().layout(layout -> {
@@ -647,9 +650,25 @@ public class ShopUI extends UIElement {
             layout.heightPercent(100);
         }).addChildren(redButton, countConfigurator, addButton));
 
-        if (merchantInfo.getStage() > currentShopInfo.getStage()) merchant.addChildren(LockIcon);
+        if (getMerchantLockReason(merchantInfo) != null) merchant.addChildren(LockIcon);
 
         return merchant;
+    }
+
+    /**
+     * 判断商品是否解锁
+     *
+     * @param merchantInfo 商品信息
+     * @return null表示已解锁，非null返回锁定原因的Component
+     */
+    private Component getMerchantLockReason(MerchantInfo merchantInfo) {
+        // 阶段判断
+        if (merchantInfo.getStage() > currentShopInfo.getStage()) {
+            return Component.translatable("viscript_shop.ui.stage.lock", merchantInfo.getStage());
+        }
+
+        // 所有条件都满足，返回null表示已解锁
+        return null;
     }
 
     public void setItemCount(ItemStack itemStack, int count) {
@@ -698,7 +717,7 @@ public class ShopUI extends UIElement {
         List<MerchantInfo> merchants = selectedCategory.getMerchants();
 
         for (MerchantInfo merchant : merchants) {
-            if (merchant.getStage() <= currentShopInfo.getStage()) {
+            if (getMerchantLockReason(merchant) == null) {
                 if (selectedCategory.getShopType() == CategoryInfo.ShopType.ITEM_FOR_ITEM) {
                     addItemStackIfUnique(items, merchant.getItemA());
                     addItemStackIfUnique(items, merchant.getItemB());
