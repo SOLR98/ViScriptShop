@@ -1,19 +1,19 @@
 package com.viscriptshop.compat;
 
 import com.lowdragmc.lowdraglib2.registry.annotation.LDLRegister;
-import com.wintercogs.beyonddimensions.Api.DataBase.DimensionsNet;
-import com.wintercogs.beyonddimensions.Api.DataBase.Stack.IStackKey;
-import com.wintercogs.beyonddimensions.Api.DataBase.Stack.ItemStackKey;
-import com.wintercogs.beyonddimensions.Api.DataBase.Stack.KeyAmount;
-import com.wintercogs.beyonddimensions.Api.DataBase.Storage.UnifiedStorage;
-import com.wintercogs.beyonddimensions.BeyondDimensions;
+import com.wintercogs.beyonddimensions.api.dimensionnet.DimensionsNet;
+import com.wintercogs.beyonddimensions.api.dimensionnet.UnifiedStorage;
+import com.wintercogs.beyonddimensions.api.ids.BDConstants;
+import com.wintercogs.beyonddimensions.api.storage.key.IStackKey;
+import com.wintercogs.beyonddimensions.api.storage.key.KeyAmount;
+import com.wintercogs.beyonddimensions.api.storage.key.impl.ItemStackKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 
 /**
  * 超越维度兼容维度背包
  */
-@LDLRegister(name = BeyondDimensions.MODID, registry = IContainerHelper.CONTAINER_HELPER_ID, modID = BeyondDimensions.MODID)
+@LDLRegister(name = BDConstants.MODID, registry = IContainerHelper.CONTAINER_HELPER_ID, modID = BDConstants.MODID)
 public class BeyondDimensionsHelper implements IContainerHelper {
     @Override
     public int getItemStackCount(ServerPlayer player, ItemStack item) {
@@ -22,7 +22,7 @@ public class BeyondDimensionsHelper implements IContainerHelper {
             UnifiedStorage storage = net.getUnifiedStorage();
             IStackKey<?> key = new ItemStackKey(item);
             KeyAmount keyAmount = storage.getStackByKey(key);
-            return (int) keyAmount.amount();
+            return Math.clamp(keyAmount.amount(), 0, Integer.MAX_VALUE);
         }
         return 0;
     }
@@ -38,6 +38,6 @@ public class BeyondDimensionsHelper implements IContainerHelper {
 
         KeyAmount extracted = storage.extract(key, count, false, false);
 
-        return count - (int) extracted.amount();
+        return count - Math.clamp(extracted.amount(), 0, Integer.MAX_VALUE);
     }
 }
