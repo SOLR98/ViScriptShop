@@ -11,6 +11,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
 import com.lowdragmc.lowdraglib2.gui.util.TreeBuilder;
 import com.viscriptshop.gui.ShopEditor;
+import com.viscriptshop.gui.components.DraggableUI;
 import com.viscriptshop.gui.components.MerchantFloatView;
 import com.viscriptshop.gui.data.CategoryInfo;
 import com.viscriptshop.gui.data.MerchantInfo;
@@ -20,6 +21,7 @@ import dev.vfyjxf.taffy.style.*;
 import net.minecraft.network.chat.Component;
 
 import java.util.Comparator;
+import java.util.List;
 
 public class ShopPreviewView extends View {
     public final ShopEditor editor;
@@ -31,8 +33,11 @@ public class ShopPreviewView extends View {
     // 剪贴板：用于跨分类复制/剪切/粘贴商品
     private static MerchantClipboard clipboard = null;
 
-    // 拖拽状态
-    private Integer selectedForMoveIndex = null;  // 选中的商品索引，用于移动
+    private DraggableUI<MerchantInfo> draggableMerchants = null;
+    private CategoryInfo lastRenderedCategory = null;
+    private CategoryInfo.ShopType lastRenderedShopType = null;
+    private int lastRenderedStage = Integer.MIN_VALUE;
+    private int lastRenderedSignature = 0;
 
     public ShopPreviewView(ShopEditor editor) {
         super("viscript_shop.editor.view.shopPreview");
@@ -70,7 +75,11 @@ public class ShopPreviewView extends View {
             layout.heightPercent(100);
         });
         head.addChildren(addButton, sortButton, setTradeTypeButton, pasteButton).addEventListener(UIEvents.TICK, event -> {
-            setTradeTypeButton.setDisplay(selectedCategory.getShopType().equals(CategoryInfo.ShopType.CURRENCY) ? TaffyDisplay.FLEX : TaffyDisplay.NONE);
+            if (selectedCategory == null) {
+                setTradeTypeButton.setDisplay(TaffyDisplay.NONE);
+            } else {
+                setTradeTypeButton.setDisplay(selectedCategory.getShopType().equals(CategoryInfo.ShopType.CURRENCY) ? TaffyDisplay.FLEX : TaffyDisplay.NONE);
+            }
         });
 
         this.scrollerView.layout(layout -> {
@@ -78,41 +87,87 @@ public class ShopPreviewView extends View {
             layout.flex(1);
         });
         this.scrollerView.viewContainer.layout(layout -> {
-            layout.flexDirection(FlexDirection.ROW);
-            layout.wrap(FlexWrap.WRAP);
-            layout.paddingAll(5);
-            layout.gapAll(5);
+            layout.flexDirection(FlexDirection.COLUMN);
+            layout.paddingAll(0);
+            layout.gapAll(0);
         });
 
         this.addChildren(head, scrollerView);
     }
 
     public void loadView() {
-        this.scrollerView.viewContainer.addEventListener(UIEvents.TICK, event -> reloadMerchants());
+        this.scrollerView.viewContainer.addEventListener(UIEvents.TICK, event -> tickReloadMerchants());
     }
 
-    public void reloadMerchants() {
+    private void tickReloadMerchants() {
         selectedCategory = editor.categoryView.getSelectedCategory();
-        if (selectedCategory != null && editor.getCurrentProject() instanceof ShopProject shopProject) {
-            head.setDisplay(TaffyDisplay.FLEX);
-            scrollerView.clearAllScrollViewChildren();
 
-            // 重新添加所有商品
-            for (int i = 0; i < selectedCategory.getMerchants().size(); i++) {
-                MerchantInfo merchantInfo = selectedCategory.getMerchants().get(i);
-                if (merchantInfo.getStage() != shopProject.shop.shopInfo.getStage()) continue;
-                int finalI = i;
-                scrollerView.addScrollViewChild(createMerchant(merchantInfo, i)
-                        .addEventListener(UIEvents.MOUSE_DOWN, event -> {
-                            showMerchantMenuTab(event, merchantInfo, finalI);
-                        })
-                );
-            }
+        if (selectedCategory == null || !(editor.getCurrentProject() instanceof ShopProject shopProject)) {
+            head.setDisplay(TaffyDisplay.NONE);
+            scrollerView.clearAllScrollViewChildren();
+            draggableMerchants = null;
+            lastRenderedCategory = null;
+            lastRenderedShopType = null;
+            lastRenderedStage = Integer.MIN_VALUE;
+            lastRenderedSignature = 0;
+            return;
+        }
+
+        head.setDisplay(TaffyDisplay.FLEX);
+
+        int stage = shopProject.shop.shopInfo.getStage();
+        CategoryInfo.ShopType shopType = selectedCategory.getShopType();
+        int signature = computeSignature(selectedCategory, stage);
+
+        boolean dragging = draggableMerchants != null && draggableMerchants.isDragging();
+        boolean needsRebuild = !dragging && (
+                selectedCategory != lastRenderedCategory ||
+                        shopType != lastRenderedShopType ||
+                        stage != lastRenderedStage ||
+                        signature != lastRenderedSignature
+        );
+
+        if (needsRebuild) {
+            rebuildMerchantsUI(stage);
+            lastRenderedCategory = selectedCategory;
+            lastRenderedShopType = shopType;
+            lastRenderedStage = stage;
+            lastRenderedSignature = signature;
         }
     }
 
-    public UIElement createMerchant(MerchantInfo merchantInfo, int i) {
+    private void rebuildMerchantsUI(int stage) {
+        scrollerView.clearAllScrollViewChildren();
+
+        List<MerchantInfo> stageMerchants = selectedCategory.getMerchants().stream()
+                .filter(m -> m.getStage() == stage)
+                .toList();
+
+        draggableMerchants = new DraggableUI<>(stageMerchants, newOrder -> {
+            applyStageMerchantOrder(stage, newOrder);
+            lastRenderedSignature = computeSignatureFromStageList(stage, selectedCategory.getShopType(), newOrder);
+        });
+
+        draggableMerchants.layout(layout -> {
+            layout.widthPercent(100);
+            layout.flexDirection(FlexDirection.ROW);
+            layout.wrap(FlexWrap.WRAP);
+            layout.paddingAll(5);
+            layout.gapAll(5);
+        });
+
+        for (MerchantInfo merchantInfo : stageMerchants) {
+            MerchantCard card = createMerchantCard(merchantInfo);
+            card.root.addEventListener(UIEvents.MOUSE_DOWN, event -> showMerchantMenuTab(event, merchantInfo));
+            draggableMerchants.addSortableCard(merchantInfo, card.root, card.dragHandle);
+        }
+
+        scrollerView.addScrollViewChild(draggableMerchants);
+    }
+
+    private MerchantCard createMerchantCard(MerchantInfo merchantInfo) {
         UIElement merchant;
+        UIElement dragHandle;
         switch (selectedCategory.getShopType()) {
             case ITEM_FOR_ITEM -> {
                 merchant = new UIElement().layout(layout -> {
@@ -123,14 +178,18 @@ public class ShopPreviewView extends View {
                     layout.flexDirection(FlexDirection.ROW);
                     layout.alignItems(AlignItems.CENTER);
                 });
-                // 检查是否被选中，如果是则高亮
-                if (selectedForMoveIndex != null && selectedForMoveIndex == i) {
-                    merchant.getStyle().backgroundTexture(Sprites.BORDER1_RT1);
-                }
-                ItemSlot itemASlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemA(), false, true).addEventListener(UIEvents.MOUSE_DOWN, event -> showMerchantMenuTab(event, merchantInfo, i));
-                ItemSlot itemBSlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemB(), false, true).addEventListener(UIEvents.MOUSE_DOWN, event -> showMerchantMenuTab(event, merchantInfo, i));
-                ItemSlot resultItemSlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemResult(), true, true).addEventListener(UIEvents.MOUSE_DOWN, event -> showMerchantMenuTab(event, merchantInfo, i));
-                merchant.addChildren(createDragHandle(merchantInfo, i), itemASlot, itemBSlot,
+                merchant.getStyle().backgroundTexture(Sprites.RECT_SOLID);
+
+                dragHandle = createDragHandle();
+
+                ItemSlot itemASlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemA(), false, true)
+                        .addEventListener(UIEvents.MOUSE_DOWN, event -> showMerchantMenuTab(event, merchantInfo));
+                ItemSlot itemBSlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemB(), false, true)
+                        .addEventListener(UIEvents.MOUSE_DOWN, event -> showMerchantMenuTab(event, merchantInfo));
+                ItemSlot resultItemSlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemResult(), true, true)
+                        .addEventListener(UIEvents.MOUSE_DOWN, event -> showMerchantMenuTab(event, merchantInfo));
+
+                merchant.addChildren(dragHandle, itemASlot, itemBSlot,
                         new UIElement().style(style -> style.backgroundTexture(Icons.RIGHT_ARROW_NO_BAR_S_LIGHT)).layout(layout -> {
                             layout.width(6);
                             layout.height(6);
@@ -138,7 +197,7 @@ public class ShopPreviewView extends View {
                         }),
                         resultItemSlot
                 );
-                return merchant;
+                return new MerchantCard(merchant, dragHandle);
             }
             case CURRENCY -> {
                 merchant = new UIElement().layout(layout -> {
@@ -148,12 +207,7 @@ public class ShopPreviewView extends View {
                     layout.justifyContent(AlignContent.CENTER);
                     layout.paddingAll(5);
                 });
-                // 检查是否被选中，如果是则高亮
-                if (selectedForMoveIndex != null && selectedForMoveIndex == i) {
-                    merchant.getStyle().backgroundTexture(Sprites.BORDER1_RT1);
-                } else {
-                    merchant.getStyle().backgroundTexture(Sprites.RECT_SOLID);
-                }
+                merchant.getStyle().backgroundTexture(Sprites.RECT_SOLID);
 
                 ItemSlot itemSlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemResult(), false, true)
                         .layout(layout -> {
@@ -184,39 +238,37 @@ public class ShopPreviewView extends View {
                             layout.widthPercent(100);
                         });
 
-                // 纵向布局，拖拽句柄放在顶部
-                merchant.addChildren(createDragHandleForColumn(merchantInfo, i), itemSlot, tradeLabel, priceLabel);
+                dragHandle = createDragHandleForColumn();
 
-                return merchant;
+                // 纵向布局，拖拽句柄放在顶部
+                merchant.addChildren(dragHandle, itemSlot, tradeLabel, priceLabel);
+
+                return new MerchantCard(merchant, dragHandle);
             }
             default -> {
-                return new UIElement();
+                merchant = new UIElement();
+                dragHandle = new UIElement();
+                return new MerchantCard(merchant, dragHandle);
             }
         }
     }
 
-    private UIElement createDragHandle(MerchantInfo merchantInfo, int index) {
+    private UIElement createDragHandle() {
         return new UIElement().layout(layout -> {
             layout.width(10);
             layout.heightPercent(100);
         }).style(style -> {
             style.backgroundTexture(Icons.ARROW_UP_DOWN);
-        }).addEventListener(UIEvents.MOUSE_DOWN, event -> {
-            selectSwapMerchantInfo(event, merchantInfo, index);
-            event.stopPropagation();
         });
     }
 
-    private UIElement createDragHandleForColumn(MerchantInfo merchantInfo, int index) {
+    private UIElement createDragHandleForColumn() {
         return new UIElement().layout(layout -> {
             layout.width(15);
             layout.height(10);
             layout.alignSelf(AlignItems.CENTER);
         }).style(style -> {
             style.backgroundTexture(Icons.ARROW_LEFT_RIGHT);
-        }).addEventListener(UIEvents.MOUSE_DOWN, event -> {
-            selectSwapMerchantInfo(event, merchantInfo, index);
-            event.stopPropagation();
         });
     }
 
@@ -224,7 +276,10 @@ public class ShopPreviewView extends View {
         selectedCategory.getMerchants().remove(index);
     }
 
-    private void showMerchantMenuTab(UIEvent event, MerchantInfo merchantInfo, int index) {
+    private void showMerchantMenuTab(UIEvent event, MerchantInfo merchantInfo) {
+        int index = findMerchantIndexByIdentity(merchantInfo);
+        if (index < 0) return;
+
         if (event.button == 1) {
             UIElement clickedElement = event.currentElement;
             float posX = clickedElement.getPositionX();
@@ -362,7 +417,6 @@ public class ShopPreviewView extends View {
         selectedCategory.getMerchants().forEach(merchant -> {
             merchant.setTradeType(tradeType);
         });
-        reloadMerchants();
         Dialog.showNotification(
                 Component.translatable("viscript_shop.editor.setTradeType.success",
                         Component.translatable(tradeType.getSerializedName())).getString(),
@@ -370,44 +424,50 @@ public class ShopPreviewView extends View {
         ).show(editor);
     }
 
-    private void selectSwapMerchantInfo(UIEvent event, MerchantInfo merchantInfo, int index) {
-        if (selectedForMoveIndex == null) {
-            selectedForMoveIndex = index;
-            reloadMerchants();
-        } else {
-            if (selectedForMoveIndex != index) {
-                moveMerchantData(selectedForMoveIndex, index);
+    private int findMerchantIndexByIdentity(MerchantInfo target) {
+        if (selectedCategory == null) return -1;
+        var merchants = selectedCategory.getMerchants();
+        for (int i = 0; i < merchants.size(); i++) {
+            if (merchants.get(i) == target) {
+                return i;
             }
-
-            clearSelection();
         }
-
-        event.stopPropagation();
+        return -1;
     }
 
-    /**
-     * 清除选中状态
-     */
-    private void clearSelection() {
-        selectedForMoveIndex = null;
-        reloadMerchants();
-    }
-
-    /**
-     * 移动商品数据
-     */
-    private void moveMerchantData(int fromIndex, int toIndex) {
+    private void applyStageMerchantOrder(int stage, List<MerchantInfo> newStageOrder) {
+        if (selectedCategory == null) return;
         var merchants = selectedCategory.getMerchants();
 
-        if (fromIndex < 0 || fromIndex >= merchants.size() ||
-                toIndex < 0 || toIndex >= merchants.size() ||
-                fromIndex == toIndex) {
-            return;
+        int stageIndex = 0;
+        for (int i = 0; i < merchants.size() && stageIndex < newStageOrder.size(); i++) {
+            MerchantInfo m = merchants.get(i);
+            if (m.getStage() == stage) {
+                merchants.set(i, newStageOrder.get(stageIndex++));
+            }
         }
+    }
 
-        // 移动元素
-        var merchant = merchants.remove(fromIndex);
-        merchants.add(toIndex, merchant);
+    private int computeSignature(CategoryInfo category, int stage) {
+        List<MerchantInfo> stageMerchants = category.getMerchants().stream()
+                .filter(m -> m.getStage() == stage)
+                .toList();
+        return computeSignatureFromStageList(stage, category.getShopType(), stageMerchants);
+    }
+
+    private int computeSignatureFromStageList(int stage, CategoryInfo.ShopType shopType, List<MerchantInfo> stageMerchants) {
+        int sig = 1;
+        sig = 31 * sig + stage;
+        sig = 31 * sig + (shopType == null ? 0 : shopType.ordinal());
+
+        for (MerchantInfo m : stageMerchants) {
+            sig = 31 * sig + System.identityHashCode(m);
+            sig = 31 * sig + m.hashCode();
+        }
+        return sig;
+    }
+
+    private record MerchantCard(UIElement root, UIElement dragHandle) {
     }
 
 }
