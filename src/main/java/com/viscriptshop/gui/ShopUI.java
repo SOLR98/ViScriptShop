@@ -8,6 +8,7 @@ import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.GridTemplate;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.*;
@@ -51,12 +52,19 @@ public class ShopUI extends UIElement {
     public ScrollerView merchantsView = new ScrollerView();
     public ScrollerView shoppingCarView = new ScrollerView();
     public ScrollerView inventoryView = new ScrollerView();
+    private UIElement centerPanel;
+    private UIElement headPanel;
     public SearchComponent<ItemStack> searchComponent;
+    private final Toggle currencyLayoutToggle;
 
     private final IGuiTexture DARK_BACKGROUND_RECT = Sprites.BORDER_RT0;
     private final IGuiTexture LIGHT_BACKGROUND_RECT = Sprites.RECT_RD_SOLID;
     private final SpriteTexture RIGHT_ARROW = SpriteTexture.of(ViscriptShop.formattedMod("textures/right_arrow.png"));
     private final SpriteTexture LOCK = SpriteTexture.of(ViscriptShop.formattedMod("textures/lock.png"));
+    private final SpriteTexture GRID = SpriteTexture.of(ViscriptShop.formattedMod("textures/grid.png"));
+    private final SpriteTexture LIST = SpriteTexture.of(ViscriptShop.formattedMod("textures/list.png"));
+    private static final float CURRENCY_GRID_CARD_WIDTH = 50f;
+    private static final float CURRENCY_GRID_GAP = 3f;
 
     //data
     //玩家身上对应物品的数量
@@ -77,6 +85,11 @@ public class ShopUI extends UIElement {
     @Getter
     @Setter
     private boolean searchMode = true;
+
+    @Getter
+    @Setter
+    private boolean currencyGridLayout = false;
+    private int currencyGridColumns = -1;
 
     public ShopUI(ShopInfo shopInfo, String title) {
         this.playerItems.clear();
@@ -172,6 +185,7 @@ public class ShopUI extends UIElement {
             layout.paddingVertical(3);
             layout.flexDirection(FlexDirection.COLUMN);
         });
+        this.centerPanel = center;
         center.getStyle().backgroundTexture(DARK_BACKGROUND_RECT);
         UIElement head = new UIElement().layout(layout -> {
             layout.widthPercent(100);
@@ -180,6 +194,7 @@ public class ShopUI extends UIElement {
             layout.justifyContent(AlignContent.SPACE_BETWEEN);
             layout.alignItems(AlignItems.CENTER);
         });
+        this.headPanel = head;
         Label centerTitle = (Label) new Label().setText("viscript_shop.ui.topTitle").textStyle(textStyle -> {
             textStyle.textAlignHorizontal(Horizontal.LEFT).textAlignVertical(Vertical.CENTER).adaptiveWidth(true);
         }).layout(layout -> {
@@ -218,6 +233,20 @@ public class ShopUI extends UIElement {
                     layout.height(16);
                 });
 
+        Toggle layoutToggle = (Toggle) new SceneToggleBuilder(this::isCurrencyGridLayout, this::setCurrencyGridLayout)
+                .icon(GRID, LIST)
+                .build()
+                .setOnToggleChanged(isOn -> {
+                    setCurrencyGridLayout(isOn);
+                    reloadMerchants();
+                })
+                .layout(layout -> {
+                    layout.width(16);
+                    layout.height(16);
+                });
+        this.currencyLayoutToggle = layoutToggle;
+        updateCurrencyLayoutToggleState();
+
         Label stageLabel = (Label) new Label().setText(Component.translatable("viscript_shop.ui.stage", this.currentShopInfo.getStage())).textStyle(textStyle -> {
             textStyle.textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER).adaptiveWidth(true);
         }).layout(layout -> {
@@ -229,7 +258,7 @@ public class ShopUI extends UIElement {
             layout.alignItems(AlignItems.CENTER);
             layout.flexDirection(FlexDirection.ROW);
             layout.gapAll(5);
-        }).addChildren(centerTitle, searchComponent, idInput, toggle), new UIElement().layout(layout -> {
+        }).addChildren(centerTitle, searchComponent, idInput, toggle, layoutToggle), new UIElement().layout(layout -> {
             layout.heightPercent(100);
             layout.alignItems(AlignItems.CENTER);
             layout.flexDirection(FlexDirection.ROW);
@@ -246,6 +275,7 @@ public class ShopUI extends UIElement {
             layout.flexDirection(FlexDirection.COLUMN);
             layout.gapAll(5);
         });
+        merchantsView.viewPort.addEventListener(UIEvents.LAYOUT_CHANGED, event -> updateCurrencyGridColumns());
 
         reloadMerchants();
 
@@ -367,6 +397,8 @@ public class ShopUI extends UIElement {
 
     public void reloadMerchants() {
         merchantsView.clearAllScrollViewChildren();
+        updateCurrencyLayoutToggleState();
+        configureMerchantsContainerLayout();
 
         // 重新添加所有商品
         for (int i = 0; i < selectedCategory.getMerchants().size(); i++) {
@@ -397,8 +429,88 @@ public class ShopUI extends UIElement {
                     }
                 }
             }
-            merchantsView.addScrollViewChild(createMerchant(merchantInfo, i));
+            if (isCurrencyGridActive()) {
+                merchantsView.addScrollViewChild(createCurrencyMerchantGrid(merchantInfo, i));
+            } else {
+                merchantsView.addScrollViewChild(createMerchant(merchantInfo, i));
+            }
         }
+    }
+
+    private boolean isCurrencyGridActive() {
+        return selectedCategory != null
+                && selectedCategory.getShopType() == CategoryInfo.ShopType.CURRENCY
+                && currencyGridLayout;
+    }
+
+    private void updateCurrencyLayoutToggleState() {
+        if (currencyLayoutToggle == null) return;
+
+        boolean show = selectedCategory != null && selectedCategory.getShopType() == CategoryInfo.ShopType.CURRENCY;
+        currencyLayoutToggle.setDisplay(show ? TaffyDisplay.FLEX : TaffyDisplay.NONE);
+        currencyLayoutToggle.getStyle().tooltips(Component.translatable(currencyGridLayout ? "viscript_shop.ui.layout.grid" : "viscript_shop.ui.layout.list"));
+        currencyLayoutToggle.setValue(currencyGridLayout, false);
+    }
+
+    private void configureMerchantsContainerLayout() {
+        configureCenterPanelPaddingForLayout();
+        if (isCurrencyGridActive()) {
+            merchantsView.viewContainer.layout(layout -> {
+                layout.display(TaffyDisplay.GRID);
+                layout.gridAutoFlow(GridAutoFlow.ROW);
+                layout.justifyItems(AlignItems.CENTER);
+                layout.alignItems(AlignItems.FLEX_START);
+                layout.justifyContent(AlignContent.CENTER);
+                layout.alignContent(AlignContent.FLEX_START);
+                layout.gapAll(CURRENCY_GRID_GAP);
+            });
+            updateCurrencyGridColumns();
+        } else {
+            merchantsView.viewContainer.layout(layout -> {
+                layout.display(TaffyDisplay.FLEX);
+                layout.flexDirection(FlexDirection.COLUMN);
+                layout.wrap(FlexWrap.NO_WRAP);
+                layout.gapAll(5);
+            });
+            currencyGridColumns = -1;
+        }
+    }
+
+    private void configureCenterPanelPaddingForLayout() {
+        if (centerPanel == null) return;
+
+        boolean grid = isCurrencyGridActive();
+        centerPanel.layout(layout -> {
+            layout.paddingHorizontal(grid ? 0 : 5);
+            layout.paddingVertical(3);
+        });
+        if (headPanel != null) {
+            headPanel.layout(layout -> layout.paddingHorizontal(grid ? 5 : 0));
+        }
+    }
+
+    private void updateCurrencyGridColumns() {
+        if (!isCurrencyGridActive()) return;
+        if (merchantsView == null || merchantsView.viewPort == null) return;
+
+        float available = merchantsView.viewPort.getContentWidth();
+        if (available <= 1f) return;
+
+        int cols = Math.max(1, (int) Math.floor((available + CURRENCY_GRID_GAP) / (CURRENCY_GRID_CARD_WIDTH + CURRENCY_GRID_GAP)));
+        while (cols > 1) {
+            float required = cols * CURRENCY_GRID_CARD_WIDTH + (cols - 1) * CURRENCY_GRID_GAP;
+            if (required <= available + 0.01f) break;
+            cols--;
+        }
+        if (cols == currencyGridColumns) return;
+        currencyGridColumns = cols;
+
+        List<TrackSizingFunction> tracks = new ArrayList<>(cols);
+        for (int i = 0; i < cols; i++) {
+            tracks.add(TrackSizingFunction.fixed(CURRENCY_GRID_CARD_WIDTH));
+        }
+        merchantsView.viewContainer.getLayout().gridTemplateColumns(new GridTemplate(tracks, List.of(), List.of()));
+        merchantsView.viewContainer.markTaffyStyleDirty();
     }
 
     public void reloadShoppingItem() {
@@ -652,6 +764,113 @@ public class ShopUI extends UIElement {
 
         if (getMerchantLockReason(merchantInfo) != null) merchant.addChildren(LockIcon);
 
+        return merchant;
+    }
+
+    public UIElement createCurrencyMerchantGrid(MerchantInfo merchantInfo, int index) {
+        UIElement merchant = new UIElement().layout(layout -> {
+            layout.width(CURRENCY_GRID_CARD_WIDTH);
+            layout.flexDirection(FlexDirection.COLUMN);
+            layout.alignItems(AlignItems.CENTER);
+            layout.justifyContent(AlignContent.FLEX_START);
+            layout.paddingAll(3);
+            layout.gapAll(2);
+            layout.positionType(TaffyPosition.RELATIVE);
+        });
+        merchant.getStyle().backgroundTexture(LIGHT_BACKGROUND_RECT);
+
+        Label id = (Label) new Label().setText(String.valueOf(index + 1)).textStyle(textStyle -> {
+            textStyle.textAlignHorizontal(Horizontal.LEFT).textAlignVertical(Vertical.CENTER);
+            textStyle.fontSize(8);
+        }).layout(layout -> {
+            layout.widthPercent(100);
+            layout.height(6);
+            layout.alignSelf(AlignItems.FLEX_START);
+        });
+
+        ItemSlot resultItemSlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemResult(), false, true)
+                .setId("itemResult" + index)
+                .layout(layout -> {
+                    layout.width(20);
+                    layout.height(20);
+                });
+
+        String tradeText = merchantInfo.getTradeType().getSerializedName();
+        Label tradeLabel = (Label) new Label()
+                .setText(Component.translatable(tradeText))
+                .textStyle(style -> style.textAlignHorizontal(Horizontal.CENTER).fontSize(6))
+                .layout(layout -> layout.widthPercent(100));
+
+        Label priceLabel = (Label) new Label()
+                .setText(Component.literal("◎" + getCountText(merchantInfo.getMoney())))
+                .textStyle(textStyle -> textStyle
+                        .textColor(0xFFFFAA00)
+                        .textAlignHorizontal(Horizontal.CENTER)
+                        .textAlignVertical(Vertical.CENTER)
+                        .fontSize(8)
+                )
+                .layout(layout -> {
+                    layout.widthPercent(100);
+                    layout.marginTop(1);
+                    layout.marginBottom(2);
+                })
+                .addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
+                    event.hoverTooltips = new HoverTooltips(List.of(Component.nullToEmpty(String.valueOf(merchantInfo.getMoney()))), null, null, null);
+                });
+
+        NumberConfigurator countConfigurator = new NumberConfigurator("", merchantInfo::getBuyCount, count -> {
+            merchantInfo.setBuyCount(count);
+            reloadShoppingItem();
+            reloadInventoryItem();
+        }, 0, true);
+        countConfigurator.setRange(0, Integer.MAX_VALUE);
+        countConfigurator.layout(layout -> layout.width(28));
+        countConfigurator.inlineContainer.getStyle().backgroundTexture(LIGHT_BACKGROUND_RECT);
+
+        if (getMerchantLockReason(merchantInfo) != null) {
+            countConfigurator.textField.setWheelDur(0);
+            countConfigurator.textField.setActive(false);
+        }
+
+        UIElement lockIcon = new UIElement().style(style -> style.backgroundTexture(LOCK)).layout(layout -> {
+            layout.width(12);
+            layout.height(12);
+            layout.positionType(TaffyPosition.ABSOLUTE);
+            layout.top(2);
+            layout.right(2);
+        }).addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
+            Component lockReason = getMerchantLockReason(merchantInfo);
+            if (lockReason != null) {
+                event.hoverTooltips = new HoverTooltips(List.of(lockReason), null, null, null);
+            }
+        });
+        lockIcon.setDisplay(getMerchantLockReason(merchantInfo) == null ? TaffyDisplay.NONE : TaffyDisplay.FLEX);
+
+        UIElement body = new UIElement().layout(layout -> {
+            layout.widthPercent(100);
+            layout.flexDirection(FlexDirection.COLUMN);
+            layout.alignItems(AlignItems.CENTER);
+            layout.justifyContent(AlignContent.CENTER);
+            layout.gapAll(3);
+        }).addChildren(resultItemSlot, tradeLabel, priceLabel);
+
+        UIElement controls = new UIElement().layout(layout -> {
+            layout.widthPercent(100);
+            layout.flexDirection(FlexDirection.ROW);
+            layout.alignItems(AlignItems.CENTER);
+            layout.justifyContent(AlignContent.CENTER);
+        });
+
+        UIElement qty = new UIElement().layout(layout -> {
+            layout.gapAll(2);
+            layout.flexDirection(FlexDirection.ROW);
+            layout.alignItems(AlignItems.CENTER);
+            layout.justifyContent(AlignContent.CENTER);
+        }).addChildren( countConfigurator);
+
+        controls.addChildren(qty);
+
+        merchant.addChildren(id, lockIcon, body, controls);
         return merchant;
     }
 

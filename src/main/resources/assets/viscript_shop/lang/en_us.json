@@ -71,6 +71,8 @@
   "viscript_shop.ui.no_shop": "No shop information available",
   "viscript_shop.ui.searchMode.item": "Search by Item",
   "viscript_shop.ui.searchMode.id": "Search by ID",
+  "viscript_shop.ui.layout.grid": "Grid layout",
+  "viscript_shop.ui.layout.list": "List layout",
 
   "viscript_shop.button.confirm": "Confirm",
   "viscript_shop.button.cancel": "Cancel",

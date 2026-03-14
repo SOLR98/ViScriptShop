@@ -71,6 +71,8 @@
   "viscript_shop.ui.no_shop": "无商店信息可选",
   "viscript_shop.ui.searchMode.item": "物品查询",
   "viscript_shop.ui.searchMode.id": "序号查询",
+  "viscript_shop.ui.layout.grid": "网格布局",
+  "viscript_shop.ui.layout.list": "列表布局",
 
   "viscript_shop.button.confirm": "确定",
   "viscript_shop.button.cancel": "取消",
