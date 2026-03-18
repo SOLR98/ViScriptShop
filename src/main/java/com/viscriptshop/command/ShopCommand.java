@@ -6,8 +6,13 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.viscriptshop.ViscriptShop;
+import com.viscriptshop.gui.data.CategoryInfo;
+import com.viscriptshop.gui.data.MerchantInfo;
 import com.viscriptshop.gui.data.Shop;
+import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.gui.data.ShopSavedData;
 import com.viscriptshop.util.ShopHelper;
 import com.viscriptshop.util.ViScriptShopServerUtil;
@@ -24,6 +29,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @LDLRegister(name = "shop", registry = ICommand.COMMAND_ID)
 public class ShopCommand implements ICommand {
@@ -47,6 +53,14 @@ public class ShopCommand implements ICommand {
                                     return builder.buildFuture();
                                 })
                                 .executes(this::openShop)
+                                .then(Commands.argument("categoryId", StringArgumentType.string())
+                                        .suggests(ShopCommand::suggestCategories)
+                                        .executes(this::openShopWithCategory)
+                                        .then(Commands.argument("merchantId", StringArgumentType.string())
+                                                .suggests(ShopCommand::suggestMerchants)
+                                                .executes(this::openShopWithMerchant)
+                                        )
+                                )
                         )
                 )
                 .then(Commands.literal("reload")
@@ -165,6 +179,35 @@ public class ShopCommand implements ICommand {
     }
 
     @SneakyThrows
+    private int openShopWithCategory(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
+        ServerPlayer player = source.getPlayer();
+        if (player != null) {
+            String shop = StringArgumentType.getString(context, "shop");
+            String categoryId = StringArgumentType.getString(context, "categoryId");
+            ViScriptShopServerUtil.serverOpenShop(player, shop, categoryId, null);
+            return 1;
+        } else {
+            throw playerOnlyException();
+        }
+    }
+
+    @SneakyThrows
+    private int openShopWithMerchant(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
+        ServerPlayer player = source.getPlayer();
+        if (player != null) {
+            String shop = StringArgumentType.getString(context, "shop");
+            String categoryId = StringArgumentType.getString(context, "categoryId");
+            String merchantId = StringArgumentType.getString(context, "merchantId");
+            ViScriptShopServerUtil.serverOpenShop(player, shop, categoryId, merchantId);
+            return 1;
+        } else {
+            throw playerOnlyException();
+        }
+    }
+
+    @SneakyThrows
     private int reloadShop(CommandContext<CommandSourceStack> context) {
         String shop = StringArgumentType.getString(context, "shop");
         ViScriptShopServerUtil.reloadOpenShop(shop);
@@ -196,5 +239,50 @@ public class ShopCommand implements ICommand {
             }
         }
         return shopFiles;
+    }
+
+    // 补全分类ID
+    private static CompletableFuture<Suggestions> suggestCategories(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        try {
+            String shopId = StringArgumentType.getString(context, "shop");
+            ShopInfo shopInfo = ViscriptShop.getShopSavedData().getShopInfo(shopId);
+            if (shopInfo == null) {
+                shopInfo = ShopHelper.getShop(shopId);
+            }
+            if (shopInfo != null) {
+                for (CategoryInfo category : shopInfo.getCategoryInfos()) {
+                    builder.suggest(category.getId());
+                }
+            }
+        } catch (IllegalArgumentException ignored) {
+            // shop参数还未填写，不提供建议
+        }
+        return builder.buildFuture();
+    }
+
+    // 补全商品ID
+    private static CompletableFuture<Suggestions> suggestMerchants(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        try {
+            String shopId = StringArgumentType.getString(context, "shop");
+            String categoryId = StringArgumentType.getString(context, "categoryId");
+
+            ShopInfo shopInfo = ViscriptShop.getShopSavedData().getShopInfo(shopId);
+            if (shopInfo == null) {
+                shopInfo = ShopHelper.getShop(shopId);
+            }
+            if (shopInfo != null) {
+                for (CategoryInfo category : shopInfo.getCategoryInfos()) {
+                    if (category.getId().equals(categoryId)) {
+                        for (MerchantInfo merchant : category.getMerchants()) {
+                            builder.suggest(merchant.getId());
+                        }
+                        break;
+                    }
+                }
+            }
+        } catch (IllegalArgumentException ignored) {
+            // 参数还未填写，不提供建议
+        }
+        return builder.buildFuture();
     }
 }

@@ -21,11 +21,11 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.ItemStack;
-import org.appliedenergistics.yoga.YogaDisplay;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @AllArgsConstructor
@@ -46,8 +46,13 @@ public class MerchantInfo implements IConfigurable, IPersistedSerializable {
     @Configurable(name = "viscript_shop.data.merchant.tradeType")
     private TradeType tradeType = TradeType.BUY;
     //通用参数
+    @Configurable(name = "viscript_shop.data.merchant.id")
+    private String id = UUID.randomUUID().toString();
     @Configurable(name = "viscript_shop.data.merchant.itemResult")
     private ItemStack itemResult = ItemStack.EMPTY;
+    @Configurable(name = "viscript_shop.data.merchant.stock",tips = "viscript_shop.data.merchant.stock.tips")
+    @ConfigNumber(range = {-1, Integer.MAX_VALUE}, wheel = 1)
+    private int stock = -1;
     @Configurable(name = "viscript_shop.data.merchant.xp")
     @ConfigNumber(range = {0, Integer.MAX_VALUE})
     private int xp = 0;

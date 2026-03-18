@@ -26,6 +26,11 @@ public class ViScriptShopServerUtil {
 
     @Info("服务端打开商店")
     public static void serverOpenShop(ServerPlayer player, String shopLocation) {
+        serverOpenShop(player, shopLocation, null, null);
+    }
+
+    @Info("服务端打开商店（带分类和商品参数）")
+    public static void serverOpenShop(ServerPlayer player, String shopLocation, String categoryId, String merchantId) {
         ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
         ShopInfo shopInfo = shopSavedData.getShopInfo(shopLocation);
         if (shopInfo == null) {
@@ -37,7 +42,9 @@ public class ViScriptShopServerUtil {
                 return;
             }
         }
-        RPCPacketDistributor.rpcToPlayer(player, S2CPayload.OPEN_SHOP_UI, shopInfo);
+        RPCPacketDistributor.rpcToPlayer(player, S2CPayload.OPEN_SHOP_UI, shopInfo,
+            categoryId != null ? categoryId : "",
+            merchantId != null ? merchantId : "");
     }
 
     @Info("重置商店信息")

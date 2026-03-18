@@ -92,11 +92,40 @@ public class ShopUI extends UIElement {
     private int currencyGridColumns = -1;
 
     public ShopUI(ShopInfo shopInfo, String title) {
+        this(shopInfo, title, null, null);
+    }
+
+    public ShopUI(ShopInfo shopInfo, String title, String categoryId, String merchantId) {
         this.playerItems.clear();
         this.currentShopInfo = ShopHelper.cacheShopInfo == null ? shopInfo : ShopHelper.cacheShopInfo;
         this.currentShopInfo.setStage(shopInfo.getStage());
         if (minecraft.player != null) {
-            selectedCategory = this.currentShopInfo.getCategoryInfos().getFirst();
+            // 根据 categoryId 查找对应分类
+            if (categoryId != null && !categoryId.isEmpty()) {
+                for (CategoryInfo category : this.currentShopInfo.getCategoryInfos()) {
+                    if (categoryId.equals(category.getId())) {
+                        selectedCategory = category;
+                        break;
+                    }
+                }
+            }
+            // 如果没找到指定分类，使用第一个分类
+            if (selectedCategory == null) {
+                selectedCategory = this.currentShopInfo.getCategoryInfos().getFirst();
+            }
+
+            // 根据 merchantId 查找对应商品的索引
+            if (merchantId != null && !merchantId.isEmpty()) {
+                for (int i = 0; i < selectedCategory.getMerchants().size(); i++) {
+                    MerchantInfo merchant = selectedCategory.getMerchants().get(i);
+                    if (merchantId.equals(merchant.getId())) {
+                        this.searchId = String.valueOf(i + 1);
+                        this.searchMode = false;
+                        break;
+                    }
+                }
+            }
+
             minecraft.player.connection.send(new GetItemCountC2SPayload(selectedCategory));
         }
         this.layout(layout -> {

@@ -46,7 +46,7 @@ public class DialogSelect extends Dialog {
 
         //bottom
         Button confirmButton = new Button()
-                .setOnClick(event -> RPCPacketDistributor.rpcToServer(C2SPayload.OPEN_SHOP_UI_C2S, selector.getValue()))
+                .setOnClick(event -> RPCPacketDistributor.rpcToServer(C2SPayload.OPEN_SHOP_UI_C2S, selector.getValue(), "", ""))
                 .setText("ldlib.gui.tips.confirm");
         confirmButton.setVisible(!map.isEmpty());
         this.addButton(confirmButton);

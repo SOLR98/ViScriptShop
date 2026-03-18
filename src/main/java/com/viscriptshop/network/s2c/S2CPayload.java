@@ -34,8 +34,8 @@ public class S2CPayload {
     }
 
     @RPCPacket(OPEN_SHOP_UI)
-    public static void openShopUI(RPCSender sender, ShopInfo shopInfo) {
-        ViScriptShopClientUtil.clientOpenShop(shopInfo);
+    public static void openShopUI(RPCSender sender, ShopInfo shopInfo, String categoryId, String merchantId) {
+        ViScriptShopClientUtil.clientOpenShop(shopInfo, categoryId, merchantId);
     }
 
     @RPCPacket(SEND_MESSAGE)

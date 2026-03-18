@@ -45,8 +45,13 @@ public class ViScriptShopClientUtil {
 
     @Info("客户端打开商店")
     public static void clientOpenShop(ShopInfo shopInfo) {
+        clientOpenShop(shopInfo, null, null);
+    }
+
+    @Info("客户端打开商店（带分类和商品参数）")
+    public static void clientOpenShop(ShopInfo shopInfo, String categoryId, String merchantId) {
         Minecraft minecraft = Minecraft.getInstance();
-        ShopUI shopUI = new ShopUI(shopInfo, shopInfo.getName().isEmpty() ? "viscript_shop.ui.title" : shopInfo.getName());
+        ShopUI shopUI = new ShopUI(shopInfo, shopInfo.getName().isEmpty() ? "viscript_shop.ui.title" : shopInfo.getName(), categoryId, merchantId);
         if (shopInfo.getCategoryInfos().isEmpty()) {
             ViscriptShop.LOGGER.error("不合规的商店信息：商店分类栏为空");
             return;

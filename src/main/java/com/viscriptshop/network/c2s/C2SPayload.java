@@ -79,8 +79,8 @@ public class C2SPayload {
     }
 
     @RPCPacket(OPEN_SHOP_UI_C2S)
-    public static void openShopUI(RPCSender sender, String shopFileName) {
-        ViScriptShopServerUtil.serverOpenShop(sender.asPlayer(), shopFileName);
+    public static void openShopUI(RPCSender sender, String shopFileName, String categoryId, String merchantId) {
+        ViScriptShopServerUtil.serverOpenShop(sender.asPlayer(), shopFileName, categoryId, merchantId);
     }
 
 

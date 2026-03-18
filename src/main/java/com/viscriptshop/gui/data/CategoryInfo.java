@@ -4,10 +4,8 @@ import com.lowdragmc.lowdraglib2.configurator.IConfigurable;
 import com.lowdragmc.lowdraglib2.configurator.accessors.ItemStackAccessor;
 import com.lowdragmc.lowdraglib2.configurator.annotation.ConfigSelector;
 import com.lowdragmc.lowdraglib2.configurator.annotation.Configurable;
-import com.lowdragmc.lowdraglib2.configurator.ui.ArrayConfiguratorGroup;
 import com.lowdragmc.lowdraglib2.configurator.ui.ConfiguratorGroup;
 import com.lowdragmc.lowdraglib2.configurator.ui.StringConfigurator;
-import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.ReadOnlyManaged;
@@ -25,6 +23,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 //分类信息
 @Data
@@ -34,6 +33,8 @@ public class CategoryInfo implements IConfigurable, IPersistedSerializable {
     public static final StreamCodec<ByteBuf, CategoryInfo> STREAM_CODEC;
     public static final Codec<CategoryInfo> CODEC;
 
+    @Configurable(name = "viscript_shop.data.category.id")
+    private String id = UUID.randomUUID().toString();
     @Configurable(name = "viscript_shop.data.category.shopType")
     private ShopType shopType = ShopType.ITEM_FOR_ITEM;
     @Configurable(name = "viscript_shop.data.category.iconType")
