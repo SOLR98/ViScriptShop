@@ -15,6 +15,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.*;
 import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
+import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
 import com.lowdragmc.lowdraglib2.utils.search.IResultHandler;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.event.neoforge.ShopClientEvent;
@@ -52,8 +53,8 @@ public class ShopUI extends UIElement {
     public ScrollerView merchantsView = new ScrollerView();
     public ScrollerView shoppingCarView = new ScrollerView();
     public ScrollerView inventoryView = new ScrollerView();
-    private UIElement centerPanel;
-    private UIElement headPanel;
+    private final UIElement centerPanel;
+    private final UIElement headPanel;
     public SearchComponent<ItemStack> searchComponent;
     private final Toggle currencyLayoutToggle;
 
@@ -126,7 +127,7 @@ public class ShopUI extends UIElement {
                 }
             }
 
-            minecraft.player.connection.send(new GetItemCountC2SPayload(selectedCategory));
+            RPCPacketDistributor.rpcToServer(GetItemCountC2SPayload.GET_ITEM_COUNT, selectedCategory);
         }
         this.layout(layout -> {
             layout.widthPercent(100);
@@ -385,7 +386,7 @@ public class ShopUI extends UIElement {
                 Message.warn("viscript_shop.message.shoppingCar.empty", this);
                 return;
             }
-            minecraft.player.connection.send(new BuyMerchantPayload(this.currentShopInfo, costSummary, gainSummary));
+            RPCPacketDistributor.rpcToServer(BuyMerchantPayload.BUY_MERCHANT, this.currentShopInfo, costSummary, gainSummary);
         }).layout(layout -> {
             layout.widthPercent(100);
         });
@@ -413,7 +414,7 @@ public class ShopUI extends UIElement {
                     value -> {
                         setSelectedCategory(value);
                         if (minecraft.player != null) {
-                            minecraft.player.connection.send(new GetItemCountC2SPayload(selectedCategory));
+                            RPCPacketDistributor.rpcToServer(GetItemCountC2SPayload.GET_ITEM_COUNT, selectedCategory);
                         }
                         reloadMerchants();
                     },

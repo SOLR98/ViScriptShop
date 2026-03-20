@@ -9,14 +9,17 @@ import com.lowdragmc.lowdraglib2.syncdata.rpc.RPCSender;
 import com.mojang.serialization.Codec;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.ShopEditor;
+import com.viscriptshop.gui.ShopUI;
 import com.viscriptshop.gui.components.DialogSelect;
 import com.viscriptshop.gui.components.Message;
+import com.viscriptshop.gui.data.AggregatedResources;
 import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.util.CodecUtil;
 import com.viscriptshop.util.ViScriptShopClientUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.Map;
 
@@ -27,6 +30,8 @@ public class S2CPayload {
     public static final String SEND_MESSAGE = MOD_ID + "send_message";
     public static final String SEND_EDITOR_DIALOG = MOD_ID + "send_editor_dialog";
     public static final String GET_SHOP_INFO_S2C = MOD_ID + "get_shop_info_s2c";
+    public static final String GET_ITEM_COUNT = MOD_ID + "get_item_count_s2c";
+    public static final String RELOAD_SHOP_UI = MOD_ID + "reload_shop_ui";
 
     @RPCPacket(OPEN_SHOP_EDITOR)
     public static void openShopEditor(RPCSender sender, CompoundTag tag) {
@@ -59,6 +64,33 @@ public class S2CPayload {
         if (Minecraft.getInstance().screen instanceof ModularUIScreen screen && screen.modularUI.ui.rootElement instanceof DialogSelect dialogSelect) {
             Codec<Map<String, String>> codec = Codec.unboundedMap(Codec.STRING, Codec.STRING);
             dialogSelect.reload(CodecUtil.deserializeNBT(codec, compoundTag, Platform.getFrozenRegistry()));
+        }
+    }
+
+    @RPCPacket(RELOAD_SHOP_UI)
+    public static void reloadShopUI(RPCSender sender, CompoundTag tag) {
+        if (Minecraft.getInstance().screen instanceof ModularUIScreen screen
+                && screen.modularUI.ui.rootElement instanceof ShopUI shopUI) {
+            var costItems = CodecUtil.deserializeMap(tag, ItemStack.OPTIONAL_CODEC, Codec.INT, Platform.getFrozenRegistry());
+            costItems.forEach(shopUI::removeItemCount);
+            shopUI.currentShopInfo.getCategoryInfos().forEach(categoryInfo -> {
+                categoryInfo.getMerchants().forEach(merchantInfo -> merchantInfo.setBuyCount(0));
+            });
+            shopUI.reloadInventoryItem();
+            shopUI.reloadShoppingItem();
+            shopUI.reloadSearchComponent();
+        }
+    }
+
+    @RPCPacket(GET_ITEM_COUNT)
+    public static void getItemCount(RPCSender sender, CompoundTag tag) {
+        Map<ItemStack, Integer> itemStacks = CodecUtil.deserializeMap(tag, ItemStack.OPTIONAL_CODEC, Codec.INT, Platform.getFrozenRegistry());
+        if (Minecraft.getInstance().screen instanceof ModularUIScreen screen
+                && screen.modularUI.ui.rootElement instanceof ShopUI shopUI) {
+            itemStacks.forEach(shopUI::setItemCount);
+            shopUI.reloadInventoryItem();
+            shopUI.reloadShoppingItem();
+            shopUI.reloadSearchComponent();
         }
     }
 }

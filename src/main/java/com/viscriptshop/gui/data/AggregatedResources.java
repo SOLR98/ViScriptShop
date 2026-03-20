@@ -1,9 +1,16 @@
 package com.viscriptshop.gui.data;
 
+import com.lowdragmc.lowdraglib2.Platform;
+import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
+import com.lowdragmc.lowdraglib2.utils.PersistedParser;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.viscriptshop.util.CodecUtil;
+import io.netty.buffer.ByteBuf;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.ItemStack;
@@ -20,25 +27,60 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AggregatedResources {
-    public static final StreamCodec<RegistryFriendlyByteBuf, AggregatedResources> STREAM_CODEC = StreamCodec.composite(
-            ByteBufCodecs.map(HashMap::new, ItemStack.OPTIONAL_STREAM_CODEC, ByteBufCodecs.VAR_INT),
-            AggregatedResources::getItems,
-            ByteBufCodecs.collection(ArrayList::new, ByteBufCodecs.STRING_UTF8),
-            AggregatedResources::getCommands,
-            ByteBufCodecs.INT,
-            AggregatedResources::getTotalMoney,
-            ByteBufCodecs.INT,
-            AggregatedResources::getTotalXp,
-            AggregatedResources::new
-    );
+    public static final StreamCodec<ByteBuf, AggregatedResources> STREAM_CODEC;
+    public static final Codec<AggregatedResources> CODEC;
 
     private Map<ItemStack, Integer> items = new HashMap<>();
     private List<String> commands = new ArrayList<>();
     private int totalMoney = 0;
     private int totalXp = 0;
+    private List<PurchaseEntry> purchaseEntries = new ArrayList<>();
+
+    static {
+        CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                CodecUtil.createMapCodec(ItemStack.OPTIONAL_CODEC, Codec.INT, Platform.getFrozenRegistry())
+                        .optionalFieldOf("items", new HashMap<>())
+                        .forGetter(AggregatedResources::getItems),
+                Codec.STRING.listOf()
+                        .optionalFieldOf("commands", new ArrayList<>())
+                        .forGetter(AggregatedResources::getCommands),
+                Codec.INT.optionalFieldOf("totalMoney", 0)
+                        .forGetter(AggregatedResources::getTotalMoney),
+                Codec.INT.optionalFieldOf("totalXp", 0)
+                        .forGetter(AggregatedResources::getTotalXp),
+                PurchaseEntry.CODEC.listOf()
+                        .optionalFieldOf("purchaseEntries", new ArrayList<>())
+                        .forGetter(AggregatedResources::getPurchaseEntries)
+        ).apply(instance, AggregatedResources::new));
+
+        STREAM_CODEC = ByteBufCodecs.fromCodec(CODEC);
+    }
+
+    /**
+     * 购买条目，记录具体购买了哪个商品多少数量
+     */
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class PurchaseEntry implements IPersistedSerializable {
+        public static final StreamCodec<ByteBuf, PurchaseEntry> STREAM_CODEC;
+        public static final Codec<PurchaseEntry> CODEC;
+
+        @Persisted
+        private String categoryId;
+        @Persisted
+        private String merchantId;
+        @Persisted
+        private int buyCount;
+
+        static {
+            CODEC = PersistedParser.createCodec(PurchaseEntry::new);
+            STREAM_CODEC = ByteBufCodecs.fromCodec(CODEC);
+        }
+    }
 
     public boolean isEmpty() {
-        return items.isEmpty() && totalMoney == 0 && totalXp == 0 && commands.isEmpty();
+        return purchaseEntries.isEmpty();
     }
 
     /**
@@ -120,6 +162,9 @@ public class AggregatedResources {
                 int count = (int) merchant.getBuyCount();
                 if (count <= 0) continue;
 
+                // 记录购买条目
+                cost.getPurchaseEntries().add(new PurchaseEntry(categoryInfo.getId(), merchant.getId(), count));
+
                 switch (categoryInfo.getShopType()) {
                     case ITEM_FOR_ITEM -> {
                         // 以物换物商店：成本是 itemA 和 itemB
@@ -152,6 +197,10 @@ public class AggregatedResources {
             for (MerchantInfo merchant : categoryInfo.getMerchants()) {
                 int count = (int) merchant.getBuyCount();
                 if (count <= 0) continue;
+
+                // 记录购买条目（只需要记录一次即可）
+                gain.getPurchaseEntries().add(new PurchaseEntry(categoryInfo.getId(), merchant.getId(), count));
+
                 //通用收益
                 gain.addXp(merchant.getXp(), count);
                 gain.addCommand(merchant.getCommand());

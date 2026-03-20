@@ -7,6 +7,8 @@ import com.lowdragmc.lowdraglib2.syncdata.accessor.direct.CustomDirectAccessor;
 import com.mojang.logging.LogUtils;
 import com.viscriptshop.command.ICommand;
 import com.viscriptshop.compat.ModComPat;
+import com.viscriptshop.gui.data.AggregatedResources;
+import com.viscriptshop.gui.data.CategoryInfo;
 import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.gui.data.ShopSavedData;
 import lombok.Getter;
@@ -43,6 +45,18 @@ public class ViscriptShop {
         AccessorRegistries.registerAccessor(CustomDirectAccessor.builder(ShopInfo.class)
                 .codec(ShopInfo.CODEC)
                 .streamCodec(ShopInfo.STREAM_CODEC)
+                .codecMark()
+                .build()
+        );
+        AccessorRegistries.registerAccessor(CustomDirectAccessor.builder(CategoryInfo.class)
+                .codec(CategoryInfo.CODEC)
+                .streamCodec(CategoryInfo.STREAM_CODEC)
+                .codecMark()
+                .build()
+        );
+        AccessorRegistries.registerAccessor(CustomDirectAccessor.builder(AggregatedResources.class)
+                .codec(AggregatedResources.CODEC)
+                .streamCodec(AggregatedResources.STREAM_CODEC)
                 .codecMark()
                 .build()
         );

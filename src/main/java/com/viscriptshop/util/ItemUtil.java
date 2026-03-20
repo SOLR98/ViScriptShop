@@ -15,8 +15,6 @@ public class ItemUtil {
     public static void removeItemForPlayer(ServerPlayer player, ItemStack itemStack, int count) {
         for (AutoRegistry.Holder<LDLRegister, IContainerHelper, Supplier<IContainerHelper>> containerHelperSupplierHolder : ViScriptShopRegistries.ContainerHelper) {
             IContainerHelper iContainerHelper = containerHelperSupplierHolder.value().get();
-            System.out.println("删除物品类型:" + iContainerHelper);
-            System.out.println("删除物品数量:" + count);
             if (count > 0) {
                 count = iContainerHelper.removeItemStackByCount(player, itemStack, count);
             }
@@ -30,8 +28,6 @@ public class ItemUtil {
         if (player != null) {
             for (AutoRegistry.Holder<LDLRegister, IContainerHelper, Supplier<IContainerHelper>> containerHelperSupplierHolder : ViScriptShopRegistries.ContainerHelper) {
                 IContainerHelper iContainerHelper = containerHelperSupplierHolder.value().get();
-//                System.out.println("获取物品类型:" + iContainerHelper);
-//                System.out.println("获取物品数量:" + count);
                 count += iContainerHelper.getItemStackCount(player, item);
             }
         }

@@ -35,7 +35,7 @@ public class Message extends UIElement {
             layout.setWidth(TaffyDimension.AUTO);
             layout.heightPercent(8);
             layout.paddingAll(5);
-            layout.paddingTop(3);
+            layout.top(10);
             layout.justifyContent(AlignContent.CENTER);
             layout.alignItems(AlignItems.CENTER);
         }).style(style -> style.backgroundTexture(Sprites.BORDER));
