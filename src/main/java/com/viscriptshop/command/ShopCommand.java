@@ -9,11 +9,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.viscriptshop.ViscriptShop;
-import com.viscriptshop.gui.data.CategoryInfo;
-import com.viscriptshop.gui.data.MerchantInfo;
-import com.viscriptshop.gui.data.Shop;
-import com.viscriptshop.gui.data.ShopInfo;
-import com.viscriptshop.gui.data.ShopSavedData;
+import com.viscriptshop.gui.data.*;
 import com.viscriptshop.util.ShopHelper;
 import com.viscriptshop.util.ViScriptShopServerUtil;
 import lombok.SneakyThrows;
@@ -85,6 +81,42 @@ public class ShopCommand implements ICommand {
                                 })
                                 .then(Commands.argument("stage", IntegerArgumentType.integer())
                                         .executes(this::setStageShop)
+                                )
+                        )
+                )
+                .then(Commands.literal("setStock")
+                        .then(Commands.argument("shop", StringArgumentType.string())
+                                .suggests((context, builder) -> {
+                                    ViscriptShop.getShopSavedData().shopInfoMap.forEach((key, value) -> {
+                                        builder.suggest(key);
+                                    });
+                                    return builder.buildFuture();
+                                })
+                                .then(Commands.argument("categoryId", StringArgumentType.string())
+                                        .suggests(ShopCommand::suggestCategories)
+                                        .then(Commands.argument("merchantId", StringArgumentType.string())
+                                                .suggests(ShopCommand::suggestMerchants)
+                                                .then(Commands.argument("stock", IntegerArgumentType.integer())
+                                                        .executes(this::setMerchantStock)
+                                                )
+                                        )
+                                )
+                        )
+                )
+                .then(Commands.literal("remove")
+                        .then(Commands.argument("shop", StringArgumentType.string())
+                                .suggests((context, builder) -> {
+                                    ViscriptShop.getShopSavedData().shopInfoMap.forEach((key, value) -> {
+                                        builder.suggest(key);
+                                    });
+                                    return builder.buildFuture();
+                                })
+                                .then(Commands.argument("categoryId", StringArgumentType.string())
+                                        .suggests(ShopCommand::suggestCategories)
+                                        .then(Commands.argument("merchantId", StringArgumentType.string())
+                                                .suggests(ShopCommand::suggestMerchants)
+                                                .executes(this::removeMerchant)
+                                        )
                                 )
                         )
                 )
@@ -221,6 +253,41 @@ public class ShopCommand implements ICommand {
         int stage = IntegerArgumentType.getInteger(context, "stage");
         ViScriptShopServerUtil.setStageShop(shop, stage);
         context.getSource().sendSuccess(() -> Component.translatable("command.viscript_shop.setStage.shop", stage), true);
+        return 1;
+    }
+
+    @SneakyThrows
+    private int setMerchantStock(CommandContext<CommandSourceStack> context) {
+        String shop = StringArgumentType.getString(context, "shop");
+        String categoryId = StringArgumentType.getString(context, "categoryId");
+        String merchantId = StringArgumentType.getString(context, "merchantId");
+        int stock = IntegerArgumentType.getInteger(context, "stock");
+
+        boolean success = ViScriptShopServerUtil.setMerchantStock(shop, categoryId, merchantId, stock);
+
+        if (!success) {
+            context.getSource().sendFailure(Component.translatable("command.viscript_shop.error.shop_not_found", shop));
+            return 0;
+        }
+
+        context.getSource().sendSuccess(() -> Component.translatable("command.viscript_shop.setStock.success", merchantId, stock), true);
+        return 1;
+    }
+
+    @SneakyThrows
+    private int removeMerchant(CommandContext<CommandSourceStack> context) {
+        String shop = StringArgumentType.getString(context, "shop");
+        String categoryId = StringArgumentType.getString(context, "categoryId");
+        String merchantId = StringArgumentType.getString(context, "merchantId");
+
+        boolean success = ViScriptShopServerUtil.removeMerchant(shop, categoryId, merchantId);
+
+        if (!success) {
+            context.getSource().sendFailure(Component.translatable("command.viscript_shop.error.shop_not_found", shop));
+            return 0;
+        }
+
+        context.getSource().sendSuccess(() -> Component.translatable("command.viscript_shop.remove.success", merchantId), true);
         return 1;
     }
 

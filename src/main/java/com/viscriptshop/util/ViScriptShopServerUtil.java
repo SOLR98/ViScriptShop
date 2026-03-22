@@ -42,9 +42,9 @@ public class ViScriptShopServerUtil {
                 return;
             }
         }
-        RPCPacketDistributor.rpcToPlayer(player, S2CPayload.OPEN_SHOP_UI, shopInfo,
-            categoryId != null ? categoryId : "",
-            merchantId != null ? merchantId : "");
+        RPCPacketDistributor.rpcToPlayer(player, S2CPayload.OPEN_SHOP_UI, shopLocation, shopInfo,
+                categoryId != null ? categoryId : "",
+                merchantId != null ? merchantId : "");
     }
 
     @Info("重置商店信息")
@@ -73,6 +73,72 @@ public class ViScriptShopServerUtil {
         ShopInfo shopInfo = shopSavedData.getShopInfo(shop);
         shopInfo.setStage(stage);
         shopSavedData.setShopInfo(shop, shopInfo);
+    }
+
+    @Info("设置商店商品库存")
+    public static boolean setMerchantStock(String shopLocation, String categoryId, String merchantId, int stock) {
+        ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
+        ShopInfo shopInfo = shopSavedData.getShopInfo(shopLocation);
+
+        if (shopInfo == null) {
+            shopInfo = ShopHelper.getShop(shopLocation);
+            if (shopInfo != null) {
+                shopSavedData.setShopInfo(shopLocation, shopInfo);
+            }
+        }
+
+        if (shopInfo == null) {
+            return false;
+        }
+
+        // 查找并设置库存
+        for (var category : shopInfo.getCategoryInfos()) {
+            if (category.getId().equals(categoryId)) {
+                for (var merchant : category.getMerchants()) {
+                    if (merchant.getId().equals(merchantId)) {
+                        merchant.setStock(stock);
+                        // 保存到文件和内存
+                        shopSavedData.setShopInfo(shopLocation, shopInfo);
+                        ShopHelper.clearCache();
+                        return true;
+                    }
+                }
+                break;
+            }
+        }
+        return false;
+    }
+
+    @Info("删除商店商品")
+    public static boolean removeMerchant(String shopLocation, String categoryId, String merchantId) {
+        ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
+        ShopInfo shopInfo = shopSavedData.getShopInfo(shopLocation);
+
+        if (shopInfo == null) {
+            shopInfo = ShopHelper.getShop(shopLocation);
+            if (shopInfo != null) {
+                shopSavedData.setShopInfo(shopLocation, shopInfo);
+            }
+        }
+
+        if (shopInfo == null) {
+            return false;
+        }
+
+        // 查找并删除商品
+        for (var category : shopInfo.getCategoryInfos()) {
+            if (category.getId().equals(categoryId)) {
+                boolean removed = category.getMerchants().removeIf(merchant -> merchant.getId().equals(merchantId));
+                if (removed) {
+                    // 保存到文件和内存
+                    shopSavedData.setShopInfo(shopLocation, shopInfo);
+                    ShopHelper.clearCache();
+                    return true;
+                }
+                break;
+            }
+        }
+        return false;
     }
 
     @Info("获取玩家钱")

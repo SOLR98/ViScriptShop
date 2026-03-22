@@ -2,9 +2,7 @@ package com.viscriptshop.gui.data;
 
 import com.lowdragmc.lowdraglib2.configurator.IConfigurable;
 import com.lowdragmc.lowdraglib2.configurator.annotation.Configurable;
-import com.lowdragmc.lowdraglib2.configurator.ui.ArrayConfiguratorGroup;
 import com.lowdragmc.lowdraglib2.configurator.ui.BooleanConfigurator;
-import com.lowdragmc.lowdraglib2.configurator.ui.Configurator;
 import com.lowdragmc.lowdraglib2.configurator.ui.ConfiguratorGroup;
 import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
@@ -17,8 +15,6 @@ import io.netty.buffer.ByteBuf;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
-import net.minecraft.nbt.IntTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.StringRepresentable;
@@ -42,7 +38,6 @@ public class ShopInfo implements IConfigurable, IPersistedSerializable {
     @Configurable(name = "viscript_shop.data.shop.lockedMerchantVisibility")
     private LockedMerchantVisibility lockedMerchantVisibility = LockedMerchantVisibility.SHOW_WITH_LOCK;
     @Persisted
-    @ReadOnlyManaged(serializeMethod = "writeCategoryInfo", deserializeMethod = "readCategoryInfo")
     private List<CategoryInfo> categoryInfos = new ArrayList<>();
 
     static {
@@ -58,18 +53,6 @@ public class ShopInfo implements IConfigurable, IPersistedSerializable {
             isQuickOpeningConfigurator.setTips("viscript_shop.data.shop.isQuickOpening.tip");
             father.addConfigurators(isQuickOpeningConfigurator);
         }
-    }
-
-    private Tag writeCategoryInfo(List<CategoryInfo> value) {
-        return IntTag.valueOf(value.size());
-    }
-
-    private List<CategoryInfo> readCategoryInfo(IntTag tag) {
-        List<CategoryInfo> list = new ArrayList<>();
-        for (int i = 0; i < tag.getAsInt(); i++) {
-            list.add(new CategoryInfo());
-        }
-        return list;
     }
 
     @SkipPersistedValue(field = "isQuickOpening")

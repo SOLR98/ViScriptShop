@@ -7,10 +7,7 @@ import com.lowdragmc.lowdraglib2.syncdata.accessor.direct.CustomDirectAccessor;
 import com.mojang.logging.LogUtils;
 import com.viscriptshop.command.ICommand;
 import com.viscriptshop.compat.ModComPat;
-import com.viscriptshop.gui.data.AggregatedResources;
-import com.viscriptshop.gui.data.CategoryInfo;
-import com.viscriptshop.gui.data.ShopInfo;
-import com.viscriptshop.gui.data.ShopSavedData;
+import com.viscriptshop.gui.data.*;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.Minecraft;
@@ -51,6 +48,12 @@ public class ViscriptShop {
         AccessorRegistries.registerAccessor(CustomDirectAccessor.builder(CategoryInfo.class)
                 .codec(CategoryInfo.CODEC)
                 .streamCodec(CategoryInfo.STREAM_CODEC)
+                .codecMark()
+                .build()
+        );
+        AccessorRegistries.registerAccessor(CustomDirectAccessor.builder(MerchantInfo.class)
+                .codec(MerchantInfo.CODEC)
+                .streamCodec(MerchantInfo.STREAM_CODEC)
                 .codecMark()
                 .build()
         );

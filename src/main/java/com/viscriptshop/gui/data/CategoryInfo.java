@@ -13,8 +13,6 @@ import com.lowdragmc.lowdraglib2.utils.PersistedParser;
 import com.mojang.serialization.Codec;
 import io.netty.buffer.ByteBuf;
 import lombok.*;
-import net.minecraft.nbt.IntTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.StringRepresentable;
@@ -47,7 +45,6 @@ public class CategoryInfo implements IConfigurable, IPersistedSerializable {
     @Configurable(name = "viscript_shop.data.category.name")
     private String name = "";
     @Persisted
-    @ReadOnlyManaged(serializeMethod = "writeMerchantInfo", deserializeMethod = "readMerchantInfo")
     private List<MerchantInfo> merchants = new ArrayList<>();
 
     static {
@@ -65,18 +62,6 @@ public class CategoryInfo implements IConfigurable, IPersistedSerializable {
                 group.addConfigurator(new StringConfigurator("viscript_shop.data.category.iconTexture", this::getIconTexture, this::setIconTexture, iconTexture, true).setResourceLocation(true));
             }
         }
-    }
-
-    private Tag writeMerchantInfo(List<MerchantInfo> value) {
-        return IntTag.valueOf(value.size());
-    }
-
-    private List<MerchantInfo> readMerchantInfo(IntTag tag) {
-        List<MerchantInfo> list = new ArrayList<>();
-        for (int i = 0; i < tag.getAsInt(); i++) {
-            list.add(new MerchantInfo());
-        }
-        return list;
     }
 
     @Getter

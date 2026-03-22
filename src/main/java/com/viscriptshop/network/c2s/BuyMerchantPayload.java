@@ -5,19 +5,16 @@ import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacket;
 import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
 import com.lowdragmc.lowdraglib2.syncdata.rpc.RPCSender;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.serialization.Codec;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.event.neoforge.ShopServerEvent;
 import com.viscriptshop.gui.components.Message;
 import com.viscriptshop.gui.data.AggregatedResources;
 import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.network.s2c.S2CPayload;
-import com.viscriptshop.util.CodecUtil;
 import com.viscriptshop.util.ItemUtil;
 import com.viscriptshop.util.ViScriptShopServerUtil;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -31,11 +28,41 @@ public class BuyMerchantPayload {
     public static final String BUY_MERCHANT = C2SPayload.MOD_ID + "buy_merchant";
 
     @RPCPacket(BUY_MERCHANT)
-    public static void buyMerchant(RPCSender sender, ShopInfo shopInfo, AggregatedResources cost, AggregatedResources gain) {
+    public static void buyMerchant(RPCSender sender, String shopLocation, AggregatedResources cost, AggregatedResources gain) {
         ServerPlayer player = sender.asPlayer();
         if (player == null) return;
+        ShopInfo shopInfo = ViScriptShopServerUtil.getShopInfo(shopLocation);
 
         if (NeoForge.EVENT_BUS.post(new ShopServerEvent.BuyPre(player, shopInfo, cost, gain)).isCanceled()) return;
+
+        // 检查库存是否充足
+        for (var purchaseEntry : gain.getPurchaseEntries()) {
+            var categoryInfo = shopInfo.getCategoryInfos().stream()
+                    .filter(c -> c.getId().equals(purchaseEntry.getCategoryId()))
+                    .findFirst()
+                    .orElse(null);
+            if (categoryInfo == null) continue;
+
+            var merchantInfo = categoryInfo.getMerchants().stream()
+                    .filter(m -> m.getId().equals(purchaseEntry.getMerchantId()))
+                    .findFirst()
+                    .orElse(null);
+            if (merchantInfo == null) continue;
+
+            int stock = merchantInfo.getStock();
+            int buyCount = purchaseEntry.getBuyCount();
+
+            if (stock >= 0 && buyCount > stock) {
+                // 发送错误消息
+                RPCPacketDistributor.rpcToPlayer(player, S2CPayload.SEND_MESSAGE, Message.Type.ERROR,
+                        Component.translatable("viscript_shop.message.shoppingCart.out_of_stock"));
+                RPCPacketDistributor.rpcToPlayer(player, S2CPayload.UPDATE_OUT_OF_STOCK,
+                        purchaseEntry.getCategoryId(), purchaseEntry.getMerchantId(), stock);
+                // 库存不足
+                NeoForge.EVENT_BUS.post(new ShopServerEvent.BuyFail(player, shopInfo, cost, gain));
+                return;
+            }
+        }
 
         // 判断数量是否足够
         Map<ItemStack, Integer> costItems = cost.getItems();
@@ -57,6 +84,35 @@ public class BuyMerchantPayload {
 
         RPCPacketDistributor.rpcToPlayer(player, S2CPayload.SEND_MESSAGE, Message.Type.SUCCESS, Component.translatable("viscript_shop.message.buySuccess"));
         NeoForge.EVENT_BUS.post(new ShopServerEvent.BuySuccess(player, shopInfo, cost, gain));
+
+        // 扣减库存
+        for (var purchaseEntry : gain.getPurchaseEntries()) {
+            var categoryInfo = shopInfo.getCategoryInfos().stream()
+                    .filter(c -> c.getId().equals(purchaseEntry.getCategoryId()))
+                    .findFirst()
+                    .orElse(null);
+            if (categoryInfo == null) continue;
+
+            var merchantInfo = categoryInfo.getMerchants().stream()
+                    .filter(m -> m.getId().equals(purchaseEntry.getMerchantId()))
+                    .findFirst()
+                    .orElse(null);
+            if (merchantInfo == null) continue;
+
+            int stock = merchantInfo.getStock();
+            if (stock >= 0) {
+                // 扣减库存（库存不会小于0）
+                merchantInfo.setStock(Math.max(0, stock - purchaseEntry.getBuyCount()));
+            }
+        }
+
+        // 保存数据到文件
+        if (!shopLocation.isEmpty()) {
+            var shopSavedData = ViscriptShop.getShopSavedData();
+            if (shopSavedData != null) {
+                shopSavedData.setShopInfo(shopLocation, shopInfo);
+            }
+        }
 
         // 删除物品
         for (ItemStack itemStack : costItems.keySet()) {
@@ -87,8 +143,7 @@ public class BuyMerchantPayload {
         }
 
         // 重新加载 UI
-        CompoundTag tag = CodecUtil.serializeMap(costItems, ItemStack.OPTIONAL_CODEC, Codec.INT, Platform.getFrozenRegistry());
-        RPCPacketDistributor.rpcToPlayer(player, S2CPayload.RELOAD_SHOP_UI, tag);
+        RPCPacketDistributor.rpcToPlayer(player, S2CPayload.RELOAD_SHOP_UI, shopInfo, cost);
     }
 
     public static void executeCommands(ServerPlayer player, String value) {

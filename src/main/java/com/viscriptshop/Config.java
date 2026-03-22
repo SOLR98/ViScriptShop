@@ -11,6 +11,10 @@ public class Config {
     //是否使用MagicCoins的货币来替换本模组的货币
     public static ModConfigSpec.BooleanValue isReplaceMoneyToMagicCoin = null;
 
+    //是否启用旧版本数据迁移（.shop文件）
+    //当确认所有.shop文件都是最新版本后，可以关闭此选项以提升性能
+    public static ModConfigSpec.BooleanValue enableLegacyDataMigration = null;
+
     static {
         ModConfigSpec.Builder CONFIG_BUILDER = new ModConfigSpec.Builder();
         CONFIG_BUILDER.push("config");
@@ -20,6 +24,7 @@ public class Config {
         if (ViscriptShop.isMagicCoinsLoaded()) {
             isReplaceMoneyToMagicCoin = CONFIG_BUILDER.define("isReplaceMoneyToMagicCoin", false);
         }
+        enableLegacyDataMigration = CONFIG_BUILDER.define("enableLegacyDataMigration", true);
         CONFIG_BUILDER.pop();
         CONFIG_SPEC = CONFIG_BUILDER.build();
     }

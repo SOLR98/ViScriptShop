@@ -91,44 +91,12 @@ public class MerchantInfo implements IConfigurable, IPersistedSerializable {
         return group;
     }
 
-    public MerchantInfo itemA(ItemStack itemA) {
-        this.itemA = itemA;
-        return this;
-    }
-
-    public MerchantInfo itemB(ItemStack itemB) {
-        this.itemB = itemB;
-        return this;
-    }
-
-    public MerchantInfo itemResult(ItemStack itemResult) {
-        this.itemResult = itemResult;
-        return this;
-    }
-
-    public MerchantInfo money(int money) {
-        this.money = money;
-        return this;
-    }
-
-    public MerchantInfo tradeType(TradeType tradeType) {
-        this.tradeType = tradeType;
-        return this;
-    }
-
-    public MerchantInfo xp(int xp) {
-        this.xp = xp;
-        return this;
-    }
-
-    public MerchantInfo stage(int stage) {
-        this.stage = stage;
-        return this;
-    }
-
     public MerchantInfo copy() {
         Tag tag = CodecUtil.serializeNBT(MerchantInfo.CODEC, this, Platform.getFrozenRegistry());
-        return CodecUtil.deserializeNBT(MerchantInfo.CODEC, tag, Platform.getFrozenRegistry());
+        MerchantInfo copy = CodecUtil.deserializeNBT(MerchantInfo.CODEC, tag, Platform.getFrozenRegistry());
+        // 生成新的UUID，确保ID唯一性
+        copy.setId(UUID.randomUUID().toString());
+        return copy;
     }
 
     @Getter

@@ -35,6 +35,7 @@ import com.viscriptshop.util.ViScriptShopClientUtil;
 import dev.vfyjxf.taffy.style.*;
 import lombok.Getter;
 import lombok.Setter;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -72,6 +73,8 @@ public class ShopUI extends UIElement {
     public Map<ItemStack, Integer> playerItems = new HashMap<>();
     //打开的商店信息
     public ShopInfo currentShopInfo;
+    //商店文件位置（用于购买后保存数据）
+    private String shopLocation;
     //玩家选择的商店信息
     @Getter
     @Setter
@@ -92,11 +95,12 @@ public class ShopUI extends UIElement {
     private boolean currencyGridLayout = false;
     private int currencyGridColumns = -1;
 
-    public ShopUI(ShopInfo shopInfo, String title) {
-        this(shopInfo, title, null, null);
+    public ShopUI(String shopLocation, ShopInfo shopInfo, String title) {
+        this(shopLocation, shopInfo, title, null, null);
     }
 
-    public ShopUI(ShopInfo shopInfo, String title, String categoryId, String merchantId) {
+    public ShopUI(String shopLocation, ShopInfo shopInfo, String title, String categoryId, String merchantId) {
+        this.shopLocation = shopLocation;
         this.playerItems.clear();
         this.currentShopInfo = ShopHelper.cacheShopInfo == null ? shopInfo : ShopHelper.cacheShopInfo;
         this.currentShopInfo.setStage(shopInfo.getStage());
@@ -386,7 +390,7 @@ public class ShopUI extends UIElement {
                 Message.warn("viscript_shop.message.shoppingCar.empty", this);
                 return;
             }
-            RPCPacketDistributor.rpcToServer(BuyMerchantPayload.BUY_MERCHANT, this.currentShopInfo, costSummary, gainSummary);
+            RPCPacketDistributor.rpcToServer(BuyMerchantPayload.BUY_MERCHANT, this.shopLocation, costSummary, gainSummary);
         }).layout(layout -> {
             layout.widthPercent(100);
         });
@@ -740,19 +744,34 @@ public class ShopUI extends UIElement {
                 merchant.addChildren(uiElement);
             }
         }
-        Button redButton = new Button().setText("-").setOnClick(event -> {
-            if (getMerchantLockReason(merchantInfo) == null) {
-                merchantInfo.setBuyCount(Math.max(0, (int) merchantInfo.getBuyCount() - 1));
+        final Button[] buttonHolder = new Button[2];
+
+        buttonHolder[0] = new Button().setText("-").setOnClick(event -> {
+            if ((int) merchantInfo.getBuyCount() > 0) {
+                merchantInfo.setBuyCount((int) merchantInfo.getBuyCount() - 1);
                 reloadShoppingItem();
                 reloadInventoryItem();
+                updateStockButtons(merchantInfo, buttonHolder[0], buttonHolder[1]);
             }
         });
+
+        buttonHolder[1] = new Button().setText("+").setOnClick(event -> {
+            int stock = merchantInfo.getStock();
+            int maxCount = stock >= 0 ? stock : Integer.MAX_VALUE;
+            if ((int) merchantInfo.getBuyCount() < maxCount) {
+                merchantInfo.setBuyCount((int) merchantInfo.getBuyCount() + 1);
+                reloadShoppingItem();
+                reloadInventoryItem();
+                updateStockButtons(merchantInfo, buttonHolder[0], buttonHolder[1]);
+            }
+        });
+
         NumberConfigurator countConfigurator = new NumberConfigurator("", merchantInfo::getBuyCount, count -> {
             merchantInfo.setBuyCount(count);
             reloadShoppingItem();
             reloadInventoryItem();
+            updateStockButtons(merchantInfo, buttonHolder[0], buttonHolder[1]);
         }, 0, true);
-        countConfigurator.setRange(0, Integer.MAX_VALUE);
         countConfigurator.layout(layout -> {
             switch (selectedCategory.getShopType()) {
                 case ITEM_FOR_ITEM -> {
@@ -764,16 +783,25 @@ public class ShopUI extends UIElement {
             }
         });
         countConfigurator.inlineContainer.getStyle().backgroundTexture(LIGHT_BACKGROUND_RECT);
-        Button addButton = new Button().setText("+").setOnClick(event -> {
-            if (getMerchantLockReason(merchantInfo) == null) {
-                merchantInfo.setBuyCount(Math.min(Integer.MAX_VALUE, (int) merchantInfo.getBuyCount() + 1));
-                reloadShoppingItem();
-                reloadInventoryItem();
-            }
-        });
+
+        // 应用库存限制
+        applyStockRestrictions(merchantInfo, countConfigurator, buttonHolder[0], buttonHolder[1]);
+
         if (getMerchantLockReason(merchantInfo) != null) {
             countConfigurator.textField.setWheelDur(0);
             countConfigurator.textField.setActive(false);
+            buttonHolder[0].setActive(false);
+            buttonHolder[1].setActive(false);
+        }
+
+        // 添加库存悬浮提示或遮罩
+        int stock = merchantInfo.getStock();
+        if (stock > 0) {
+            // 库存 > 0：添加悬浮提示显示库存
+            addStockTooltip(merchant, stock);
+        } else if (stock == 0) {
+            // 库存 = 0：添加半透明遮罩
+            merchant.addChildren(createStockOverlay());
         }
         UIElement LockIcon = new UIElement().style(style -> style.backgroundTexture(LOCK)).layout(layout -> {
             layout.width(16);
@@ -790,7 +818,7 @@ public class ShopUI extends UIElement {
             layout.flexDirection(FlexDirection.ROW);
             layout.alignItems(AlignItems.CENTER);
             layout.heightPercent(100);
-        }).addChildren(redButton, countConfigurator, addButton));
+        }).addChildren(buttonHolder[0], countConfigurator, buttonHolder[1]));
 
         if (getMerchantLockReason(merchantInfo) != null) merchant.addChildren(LockIcon);
 
@@ -853,13 +881,35 @@ public class ShopUI extends UIElement {
             reloadShoppingItem();
             reloadInventoryItem();
         }, 0, true);
-        countConfigurator.setRange(0, Integer.MAX_VALUE);
         countConfigurator.layout(layout -> layout.width(28));
         countConfigurator.inlineContainer.getStyle().backgroundTexture(LIGHT_BACKGROUND_RECT);
+
+        // 应用库存限制
+        int stock = merchantInfo.getStock();
+        if (stock >= 0) {
+            // 有限库存
+            countConfigurator.setRange(0, stock);
+            if (stock == 0) {
+                countConfigurator.textField.setWheelDur(0);
+                countConfigurator.textField.setActive(false);
+            }
+        } else {
+            // 无限库存
+            countConfigurator.setRange(0, Integer.MAX_VALUE);
+        }
 
         if (getMerchantLockReason(merchantInfo) != null) {
             countConfigurator.textField.setWheelDur(0);
             countConfigurator.textField.setActive(false);
+        }
+
+        // 添加库存悬浮提示或遮罩
+        if (stock > 0) {
+            // 库存 > 0：添加悬浮提示显示库存
+            addStockTooltip(merchant, stock);
+        } else if (stock == 0) {
+            // 库存 = 0：添加半透明遮罩
+            merchant.addChildren(createStockOverlay());
         }
 
         UIElement lockIcon = new UIElement().style(style -> style.backgroundTexture(LOCK)).layout(layout -> {
@@ -896,7 +946,7 @@ public class ShopUI extends UIElement {
             layout.flexDirection(FlexDirection.ROW);
             layout.alignItems(AlignItems.CENTER);
             layout.justifyContent(AlignContent.CENTER);
-        }).addChildren( countConfigurator);
+        }).addChildren(countConfigurator);
 
         controls.addChildren(qty);
 
@@ -918,6 +968,91 @@ public class ShopUI extends UIElement {
 
         // 所有条件都满足，返回null表示已解锁
         return null;
+    }
+
+    /**
+     * 创建库存遮罩层（当库存为0时显示）
+     */
+    private UIElement createStockOverlay() {
+        UIElement overlay = new UIElement().layout(layout -> {
+            layout.widthPercent(100);
+            layout.heightPercent(100);
+            layout.positionType(TaffyPosition.ABSOLUTE);
+            layout.top(0);
+            layout.left(0);
+        });
+        overlay.getStyle().backgroundTexture(new ColorRectTexture(0x80000000)); // 半透明黑色
+        overlay.addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
+            event.hoverTooltips = new HoverTooltips(
+                    List.of(Component.translatable("viscript_shop.message.stock.out").withStyle(ChatFormatting.RED)),
+                    null, null, null
+            );
+        });
+        return overlay;
+    }
+
+    /**
+     * 创建库存悬浮提示（当库存>0时显示）
+     */
+    private void addStockTooltip(UIElement element, int stock) {
+        element.addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
+            event.hoverTooltips = new HoverTooltips(
+                    List.of(Component.translatable("viscript_shop.message.stock.available", stock).withStyle(ChatFormatting.YELLOW)),
+                    null, null, null
+            );
+        });
+    }
+
+    /**
+     * 应用库存限制到输入框和按钮
+     */
+    private void applyStockRestrictions(MerchantInfo merchantInfo, NumberConfigurator countConfigurator, Button removeButton, Button addButton) {
+        int stock = merchantInfo.getStock();
+
+        // 库存 < 0：无限库存，不限制
+        if (stock < 0) {
+            countConfigurator.setRange(0, Integer.MAX_VALUE);
+            return;
+        }
+
+        // 库存 = 0：禁用所有控件
+        if (stock == 0) {
+            countConfigurator.setRange(0, 0);
+            countConfigurator.textField.setWheelDur(0);
+            countConfigurator.textField.setActive(false);
+            if (removeButton != null) removeButton.setActive(false);
+            if (addButton != null) addButton.setActive(false);
+            return;
+        }
+
+        // 库存 > 0：设置范围并控制按钮状态
+        countConfigurator.setRange(0, stock);
+
+        // 根据当前购买数量更新按钮状态
+        updateStockButtons(merchantInfo, removeButton, addButton);
+    }
+
+    /**
+     * 更新按钮状态（根据库存和当前购买数量）
+     */
+    private void updateStockButtons(MerchantInfo merchantInfo, Button removeButton, Button addButton) {
+        int stock = merchantInfo.getStock();
+        int currentCount = (int) merchantInfo.getBuyCount();
+
+        if (stock < 0) {
+            // 无限库存，按钮始终可用（除非其他锁定原因）
+            if (removeButton != null) removeButton.setActive(true);
+            if (addButton != null) addButton.setActive(true);
+            return;
+        }
+
+        if (removeButton != null) {
+            removeButton.setActive(currentCount > 0);
+        }
+
+        if (addButton != null) {
+            addButton.setActive(currentCount < stock);
+        }
     }
 
     public void setItemCount(ItemStack itemStack, int count) {

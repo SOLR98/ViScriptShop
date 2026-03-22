@@ -2,8 +2,10 @@ package com.viscriptshop.util;
 
 import com.lowdragmc.lowdraglib2.LDLib2;
 import com.lowdragmc.lowdraglib2.Platform;
+import com.viscriptshop.Config;
 import com.viscriptshop.gui.data.Shop;
 import com.viscriptshop.gui.data.ShopInfo;
+import com.viscriptshop.gui.project.ShopProject;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
@@ -50,6 +52,12 @@ public class ShopHelper {
         } catch (IOException e) {
             compoundTag = new CompoundTag();
         }
+
+        // .shop文件没有版本信息，如果启用兼容则默认当作1.0版本处理
+        if (Config.enableLegacyDataMigration != null && Config.enableLegacyDataMigration.get()) {
+            compoundTag = ShopProject.migrateShopData(compoundTag, 1);
+        }
+
         ShopInfo shopInfo = new ShopInfo();
         shopInfo.deserializeNBT(Platform.getFrozenRegistry(), compoundTag);
         CACHE.put(shopLocation, shopInfo);

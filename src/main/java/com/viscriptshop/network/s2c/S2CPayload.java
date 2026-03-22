@@ -32,6 +32,7 @@ public class S2CPayload {
     public static final String GET_SHOP_INFO_S2C = MOD_ID + "get_shop_info_s2c";
     public static final String GET_ITEM_COUNT = MOD_ID + "get_item_count_s2c";
     public static final String RELOAD_SHOP_UI = MOD_ID + "reload_shop_ui";
+    public static final String UPDATE_OUT_OF_STOCK = MOD_ID + "update_out_of_stock";
 
     @RPCPacket(OPEN_SHOP_EDITOR)
     public static void openShopEditor(RPCSender sender, CompoundTag tag) {
@@ -39,8 +40,8 @@ public class S2CPayload {
     }
 
     @RPCPacket(OPEN_SHOP_UI)
-    public static void openShopUI(RPCSender sender, ShopInfo shopInfo, String categoryId, String merchantId) {
-        ViScriptShopClientUtil.clientOpenShop(shopInfo, categoryId, merchantId);
+    public static void openShopUI(RPCSender sender, String shopLocation, ShopInfo shopInfo, String categoryId, String merchantId) {
+        ViScriptShopClientUtil.clientOpenShop(shopLocation, shopInfo, categoryId, merchantId);
     }
 
     @RPCPacket(SEND_MESSAGE)
@@ -68,17 +69,49 @@ public class S2CPayload {
     }
 
     @RPCPacket(RELOAD_SHOP_UI)
-    public static void reloadShopUI(RPCSender sender, CompoundTag tag) {
+    public static void reloadShopUI(RPCSender sender, ShopInfo shopInfo, AggregatedResources cost) {
         if (Minecraft.getInstance().screen instanceof ModularUIScreen screen
                 && screen.modularUI.ui.rootElement instanceof ShopUI shopUI) {
-            var costItems = CodecUtil.deserializeMap(tag, ItemStack.OPTIONAL_CODEC, Codec.INT, Platform.getFrozenRegistry());
-            costItems.forEach(shopUI::removeItemCount);
-            shopUI.currentShopInfo.getCategoryInfos().forEach(categoryInfo -> {
-                categoryInfo.getMerchants().forEach(merchantInfo -> merchantInfo.setBuyCount(0));
-            });
+            String selectedCategoryId = shopUI.getSelectedCategory() != null ? shopUI.getSelectedCategory().getId() : null;
+
+            shopUI.currentShopInfo = shopInfo;
+
+            if (selectedCategoryId != null) {
+                shopUI.currentShopInfo.getCategoryInfos().stream()
+                        .filter(c -> c.getId().equals(selectedCategoryId))
+                        .findFirst()
+                        .ifPresent(shopUI::setSelectedCategory);
+            }
+
+            // 清除玩家的物品计数
+            cost.getItems().forEach(shopUI::removeItemCount);
+
+            shopUI.reloadMerchants();
             shopUI.reloadInventoryItem();
             shopUI.reloadShoppingItem();
             shopUI.reloadSearchComponent();
+        }
+    }
+
+    @RPCPacket(UPDATE_OUT_OF_STOCK)
+    public static void updateOutOfStock(RPCSender sender, String categoryId, String merchantId, int stock) {
+        if (Minecraft.getInstance().screen instanceof ModularUIScreen screen
+                && screen.modularUI.ui.rootElement instanceof ShopUI shopUI) {
+            // 找到对应的分类和商品
+            shopUI.currentShopInfo.getCategoryInfos().stream()
+                    .filter(c -> c.getId().equals(categoryId))
+                    .findFirst().flatMap(categoryInfo -> categoryInfo.getMerchants().stream()
+                            .filter(m -> m.getId().equals(merchantId))
+                            .findFirst()).ifPresent(merchantInfo -> {
+                        // 将库存不足的商品的buyCount设置为0
+                        merchantInfo.setBuyCount(0);
+                        // 更新库存显示
+                        merchantInfo.setStock(stock);
+                        // 刷新UI
+                        shopUI.reloadMerchants();
+                        shopUI.reloadShoppingItem();
+                        shopUI.reloadInventoryItem();
+                    });
         }
     }
 
