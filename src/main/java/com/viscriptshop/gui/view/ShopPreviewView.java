@@ -174,6 +174,7 @@ public class ShopPreviewView extends View {
                     layout.width(100);
                     layout.gapAll(5);
                     layout.marginLeft(5);
+                    layout.paddingAll(3);
                     layout.justifyContent(AlignContent.CENTER);
                     layout.flexDirection(FlexDirection.ROW);
                     layout.alignItems(AlignItems.CENTER);
@@ -186,7 +187,7 @@ public class ShopPreviewView extends View {
                         .addEventListener(UIEvents.MOUSE_DOWN, event -> showMerchantMenuTab(event, merchantInfo));
                 ItemSlot itemBSlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemB(), false, true)
                         .addEventListener(UIEvents.MOUSE_DOWN, event -> showMerchantMenuTab(event, merchantInfo));
-                ItemSlot resultItemSlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemResult(), true, true)
+                ItemSlot resultItemSlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemResult(), false, true)
                         .addEventListener(UIEvents.MOUSE_DOWN, event -> showMerchantMenuTab(event, merchantInfo));
 
                 merchant.addChildren(dragHandle, itemASlot, itemBSlot,
