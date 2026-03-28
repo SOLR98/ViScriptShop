@@ -64,7 +64,7 @@ public class ShopCommand implements ICommand {
                         .then(Commands.argument("shop", StringArgumentType.string())
                                 .suggests((context, builder) -> {
                                     ViscriptShop.getShopSavedData().shopInfoMap.forEach((key, value) -> {
-                                        builder.suggest(key);
+                                        builder.suggest("\"" + key + "\"");
                                     });
                                     return builder.buildFuture();
                                 })
@@ -75,7 +75,7 @@ public class ShopCommand implements ICommand {
                         .then(Commands.argument("shop", StringArgumentType.string())
                                 .suggests((context, builder) -> {
                                     ViscriptShop.getShopSavedData().shopInfoMap.forEach((key, value) -> {
-                                        builder.suggest(key);
+                                        builder.suggest("\"" + key + "\"");
                                     });
                                     return builder.buildFuture();
                                 })
@@ -88,7 +88,7 @@ public class ShopCommand implements ICommand {
                         .then(Commands.argument("shop", StringArgumentType.string())
                                 .suggests((context, builder) -> {
                                     ViscriptShop.getShopSavedData().shopInfoMap.forEach((key, value) -> {
-                                        builder.suggest(key);
+                                        builder.suggest("\"" + key + "\"");
                                     });
                                     return builder.buildFuture();
                                 })
@@ -107,7 +107,7 @@ public class ShopCommand implements ICommand {
                         .then(Commands.argument("shop", StringArgumentType.string())
                                 .suggests((context, builder) -> {
                                     ViscriptShop.getShopSavedData().shopInfoMap.forEach((key, value) -> {
-                                        builder.suggest(key);
+                                        builder.suggest("\"" + key + "\"");
                                     });
                                     return builder.buildFuture();
                                 })

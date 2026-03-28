@@ -61,6 +61,12 @@ public class ViScriptShopServerUtil {
         return shopInfo;
     }
 
+    @Info("设置商品信息")
+    public static void getShopInfo(String shop, ShopInfo shopInfo) {
+        ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
+        shopSavedData.setShopInfo(shop, shopInfo);
+    }
+
     @Info("添加商店商品")
     public static void addShopMerchant(String shop, int categoryIndex, MerchantInfo merchantInfo) {
         ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
