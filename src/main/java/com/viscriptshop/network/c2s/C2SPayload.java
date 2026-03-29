@@ -71,7 +71,7 @@ public class C2SPayload {
             ShopInfo shopInfo = ViScriptShopServerUtil.getShopInfo(fileName);
             if (shopInfo.isQuickOpening()) {
                 String name = shopInfo.getName();
-                shopInfos.put(fileName, name.isEmpty() ? "viscript_shop.ui.title" : name);
+                shopInfos.put(fileName.substring(1, fileName.length() - 1), name.isEmpty() ? "viscript_shop.ui.title" : name);
             }
         });
         Codec<Map<String, String>> codec = Codec.unboundedMap(Codec.STRING, Codec.STRING);
