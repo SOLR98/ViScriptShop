@@ -62,7 +62,7 @@ public class ViScriptShopServerUtil {
     }
 
     @Info("设置商品信息")
-    public static void getShopInfo(String shop, ShopInfo shopInfo) {
+    public static void setShopInfo(String shop, ShopInfo shopInfo) {
         ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
         shopSavedData.setShopInfo(shop, shopInfo);
     }
