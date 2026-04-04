@@ -70,8 +70,6 @@
   "viscript_shop.configurator.item.count": "数量",
   "viscript_shop.selectItemDialog.title": "选择物品",
   "viscript_shop.ui.title": "商店",
-  "viscript_shop.ui.balance": "余额",
-  "viscript_shop.ui.topTitle": "货架",
   "viscript_shop.ui.stage": "阶段%s",
   "viscript_shop.ui.stage.lock": "阶段%s解锁",
   "viscript_shop.ui.shoppingCar": "购物车",

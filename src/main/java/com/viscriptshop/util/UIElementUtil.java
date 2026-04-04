@@ -118,7 +118,7 @@ public class UIElementUtil {
         UIElement category = new UIElement().layout(layout -> {
             layout.widthPercent(100);
             layout.height(18);
-            layout.gapAll(5);
+            layout.gapAll(2);
             layout.flexDirection(FlexDirection.ROW);
             layout.alignItems(AlignItems.CENTER);
             layout.marginBottom(5);

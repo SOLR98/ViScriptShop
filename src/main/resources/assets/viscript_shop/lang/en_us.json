@@ -70,8 +70,6 @@
   "viscript_shop.configurator.item.count": "Amount",
   "viscript_shop.selectItemDialog.title": "Select Item",
   "viscript_shop.ui.title": "Shop",
-  "viscript_shop.ui.balance": "Balance",
-  "viscript_shop.ui.topTitle": "Shelves",
   "viscript_shop.ui.stage": "Stage %s",
   "viscript_shop.ui.stage.lock": "Unlocks at Stage %s",
   "viscript_shop.ui.shoppingCar": "Cart",

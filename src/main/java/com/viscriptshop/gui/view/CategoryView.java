@@ -4,6 +4,7 @@ import com.lowdragmc.lowdraglib2.editor.ui.View;
 import com.lowdragmc.lowdraglib2.gui.ColorPattern;
 import com.lowdragmc.lowdraglib2.gui.texture.ColorRectTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.Icons;
+import com.lowdragmc.lowdraglib2.gui.texture.SDFRectTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Dialog;
@@ -63,8 +64,8 @@ public class CategoryView extends View {
                     categoryInfo,
                     categoryInfo.equals(this.selectedCategory),
                     this::setSelectedCategory,
-                    new ColorRectTexture(ColorPattern.T_BLACK.color),
-                    new ColorRectTexture(ColorPattern.T_WHITE.color)
+                    SDFRectTexture.of(ColorPattern.T_BLACK.color).setRadius(3),
+                    SDFRectTexture.of(ColorPattern.T_WHITE.color).setRadius(3)
             ).layout(layout -> {
                 layout.flex(11);
                 layout.marginRight(10);
