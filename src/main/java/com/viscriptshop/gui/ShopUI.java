@@ -11,7 +11,6 @@ import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.*;
 import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
-import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
 import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
 import com.lowdragmc.lowdraglib2.utils.search.IResultHandler;
 import com.viscriptshop.ViscriptShop;
@@ -58,10 +57,10 @@ public class ShopUI extends UIElement {
     private final Toggle currencyLayoutToggle;
 
     //主题样式
-    private final IGuiTexture LIGHT_BACKGROUND_RECT = Sprites.RECT_RD_SOLID;
+    private final IGuiTexture LIST_BACKGROUND = SpriteTexture.of(ViscriptShop.formattedMod("textures/gui/trade_bar.png"));
+    private final IGuiTexture GRID_BACKGROUND = SpriteTexture.of(ViscriptShop.formattedMod("textures/gui/verticle_trade_bar.png"));
     private final SpriteTexture RIGHT_ARROW = SpriteTexture.of(ViscriptShop.formattedMod("textures/right_arrow.png"));
     private final SpriteTexture LOCK = SpriteTexture.of(ViscriptShop.formattedMod("textures/lock.png"));
-    private final SpriteTexture SEARCH_BAR = SpriteTexture.of(ViscriptShop.formattedMod("textures/gui/search_bar.png"));
     private final SpriteTexture COIN = SpriteTexture.of(ViscriptShop.formattedMod("textures/coin.png"));
     private static final float CURRENCY_GRID_CARD_WIDTH = 50f;
     private static final float CURRENCY_GRID_GAP = 3f;
@@ -198,7 +197,7 @@ public class ShopUI extends UIElement {
             layout.alignItems(AlignItems.CENTER);
             layout.flexDirection(FlexDirection.ROW);
         }).addChildren(
-                new UIElement().layout(layout->{
+                new UIElement().layout(layout -> {
                     layout.widthPercent(21);
                     layout.justifyContent(AlignContent.CENTER);
                     layout.alignItems(AlignItems.CENTER);
@@ -222,7 +221,7 @@ public class ShopUI extends UIElement {
         //中
         UIElement center = new UIElement().layout(layout -> {
             layout.widthPercent(55);
-            layout.heightPercent(103);
+            layout.heightPercent(102);
             layout.flexDirection(FlexDirection.COLUMN);
         });
         this.centerPanel = center;
@@ -238,7 +237,7 @@ public class ShopUI extends UIElement {
         UIElement searchIcon = new UIElement().layout(layout -> {
             layout.marginLeft(5);
             layout.width(22);
-            layout.heightPercent(85);
+            layout.heightPercent(86);
             layout.flexShrink(0);
         }).style(style -> style.backgroundTexture(SpriteTexture.of(ViscriptShop.formattedMod("textures/gui/search_icon.png"))));
         //物品输入框
@@ -249,7 +248,9 @@ public class ShopUI extends UIElement {
         searchComponent.layout(layout -> {
             layout.width(70);
             layout.heightPercent(85);
+            layout.paddingLeft(4);
         });
+        SpriteTexture SEARCH_BAR = SpriteTexture.of(ViscriptShop.formattedMod("textures/gui/search_bar.png"));
         searchComponent.getStyle().backgroundTexture(SEARCH_BAR);
         searchComponent.searchStyle(style -> style.focusOverlay(IGuiTexture.EMPTY));
         //序号输入框
@@ -259,7 +260,7 @@ public class ShopUI extends UIElement {
                 reloadMerchants();
             }
         }, searchId, true)
-                .layout(layout -> layout.width(20).heightPercent(85).justifyContent(AlignContent.CENTER))
+                .layout(layout -> layout.width(70).heightPercent(85).justifyContent(AlignContent.CENTER).paddingLeft(4))
                 .setDisplay(TaffyDisplay.NONE);
         idInput.getStyle().backgroundTexture(SEARCH_BAR);
         idInput.textField.getStyle().backgroundTexture(IGuiTexture.EMPTY);
@@ -304,7 +305,8 @@ public class ShopUI extends UIElement {
         Label stageLabel = (Label) new Label().setText(Component.translatable("viscript_shop.ui.stage", this.currentShopInfo.getStage())).textStyle(textStyle -> {
             textStyle.textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER).adaptiveWidth(true);
         }).layout(layout -> {
-            layout.paddingHorizontal(4);
+            layout.marginTop(2.2f);
+            layout.paddingHorizontal(6);
             layout.heightPercent(85);
             layout.marginRight(10);
         }).style(style -> style.backgroundTexture(SpriteTexture.of(ViscriptShop.formattedMod("textures/gui/level_bar.png"))));
@@ -376,7 +378,6 @@ public class ShopUI extends UIElement {
 
         UIElement shoppingCar = new UIElement().layout(layout -> {
             layout.widthPercent(100);
-            ;
             layout.heightPercent(39);
         }).style(style -> style.backgroundTexture(SpriteTexture.of(ViscriptShop.formattedMod("textures/gui/shopping_cart_background.png"))));
 
@@ -437,8 +438,8 @@ public class ShopUI extends UIElement {
             layout.widthPercent(100);
         });
 
-        rightBottom.addChildren(new Label().setText("viscript_shop.ui.shoppingCar").textStyle(textStyle -> textStyle.adaptiveHeight(true)), shoppingCar,
-                new Label().setText("viscript_shop.ui.inventory").textStyle(textStyle -> textStyle.adaptiveHeight(true)), inventoryView,
+        rightBottom.addChildren(new Label().setText("viscript_shop.ui.shoppingCar").textStyle(textStyle -> textStyle.adaptiveHeight(true)).layout(layout -> layout.marginLeft(3)), shoppingCar,
+                new Label().setText("viscript_shop.ui.inventory").textStyle(textStyle -> textStyle.adaptiveHeight(true)).layout(layout -> layout.marginLeft(3)), inventoryView,
                 new UIElement().layout(layout -> {
                     layout.marginTop(5);
                     layout.marginBottom(2);
@@ -712,7 +713,7 @@ public class ShopUI extends UIElement {
             layout.paddingHorizontal(4);
             layout.alignItems(AlignItems.CENTER);
         });
-        merchant.getStyle().backgroundTexture(LIGHT_BACKGROUND_RECT);
+        merchant.getStyle().backgroundTexture(LIST_BACKGROUND);
         Label id = (Label) new Label().setText(String.valueOf(index + 1)).textStyle(textStyle -> {
             textStyle.textAlignHorizontal(Horizontal.LEFT).textAlignVertical(Vertical.CENTER);
             textStyle.fontSize(6);
@@ -815,7 +816,7 @@ public class ShopUI extends UIElement {
                 }
             }
         });
-        countConfigurator.inlineContainer.getStyle().backgroundTexture(LIGHT_BACKGROUND_RECT);
+        countConfigurator.inlineContainer.getStyle().backgroundTexture(LIST_BACKGROUND);
 
         // 应用库存限制
         applyStockRestrictions(merchantInfo, countConfigurator, buttonHolder[0], buttonHolder[1]);
@@ -868,7 +869,7 @@ public class ShopUI extends UIElement {
             layout.gapAll(2);
             layout.positionType(TaffyPosition.RELATIVE);
         });
-        merchant.getStyle().backgroundTexture(LIGHT_BACKGROUND_RECT);
+        merchant.getStyle().backgroundTexture(GRID_BACKGROUND);
 
         Label id = (Label) new Label().setText(String.valueOf(index + 1)).textStyle(textStyle -> {
             textStyle.textAlignHorizontal(Horizontal.LEFT).textAlignVertical(Vertical.CENTER);
@@ -915,7 +916,7 @@ public class ShopUI extends UIElement {
             reloadInventoryItem();
         }, 0, true);
         countConfigurator.layout(layout -> layout.width(28));
-        countConfigurator.inlineContainer.getStyle().backgroundTexture(LIGHT_BACKGROUND_RECT);
+        countConfigurator.inlineContainer.getStyle().backgroundTexture(GRID_BACKGROUND);
 
         // 应用库存限制
         int stock = merchantInfo.getStock();
