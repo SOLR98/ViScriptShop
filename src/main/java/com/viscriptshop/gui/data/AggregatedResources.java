@@ -11,6 +11,7 @@ import io.netty.buffer.ByteBuf;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.ItemStack;
@@ -27,7 +28,7 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AggregatedResources {
-    public static final StreamCodec<ByteBuf, AggregatedResources> STREAM_CODEC;
+    public static final StreamCodec<RegistryFriendlyByteBuf, AggregatedResources> STREAM_CODEC;
     public static final Codec<AggregatedResources> CODEC;
 
     private Map<ItemStack, Integer> items = new HashMap<>();
@@ -53,7 +54,7 @@ public class AggregatedResources {
                         .forGetter(AggregatedResources::getPurchaseEntries)
         ).apply(instance, AggregatedResources::new));
 
-        STREAM_CODEC = ByteBufCodecs.fromCodec(CODEC);
+        STREAM_CODEC = ByteBufCodecs.fromCodecWithRegistries(CODEC);
     }
 
     /**

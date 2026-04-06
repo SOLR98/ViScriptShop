@@ -11,12 +11,12 @@ import com.lowdragmc.lowdraglib2.utils.PersistedParser;
 import com.mojang.serialization.Codec;
 import com.viscriptshop.util.CodecUtil;
 import dev.vfyjxf.taffy.style.TaffyDisplay;
-import io.netty.buffer.ByteBuf;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.StringRepresentable;
@@ -31,7 +31,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MerchantInfo implements IConfigurable, IPersistedSerializable {
-    public static final StreamCodec<ByteBuf, MerchantInfo> STREAM_CODEC;
+    public static final StreamCodec<RegistryFriendlyByteBuf, MerchantInfo> STREAM_CODEC;
     public static final Codec<MerchantInfo> CODEC;
 
     //以物换物商店
@@ -50,7 +50,7 @@ public class MerchantInfo implements IConfigurable, IPersistedSerializable {
     private String id = UUID.randomUUID().toString();
     @Configurable(name = "viscript_shop.data.merchant.itemResult")
     private ItemStack itemResult = ItemStack.EMPTY;
-    @Configurable(name = "viscript_shop.data.merchant.stock",tips = "viscript_shop.data.merchant.stock.tips")
+    @Configurable(name = "viscript_shop.data.merchant.stock", tips = "viscript_shop.data.merchant.stock.tips")
     @ConfigNumber(range = {-1, Integer.MAX_VALUE}, wheel = 1)
     private int stock = -1;
     @Configurable(name = "viscript_shop.data.merchant.xp")
@@ -66,7 +66,7 @@ public class MerchantInfo implements IConfigurable, IPersistedSerializable {
 
     static {
         CODEC = PersistedParser.createCodec(MerchantInfo::new);
-        STREAM_CODEC = ByteBufCodecs.fromCodec(CODEC);
+        STREAM_CODEC = ByteBufCodecs.fromCodecWithRegistries(CODEC);
     }
 
     public Configurator createConfigurator(CategoryInfo.ShopType shopType) {

@@ -8,11 +8,10 @@ import com.lowdragmc.lowdraglib2.configurator.ui.ConfiguratorGroup;
 import com.lowdragmc.lowdraglib2.configurator.ui.StringConfigurator;
 import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
-import com.lowdragmc.lowdraglib2.syncdata.annotation.ReadOnlyManaged;
 import com.lowdragmc.lowdraglib2.utils.PersistedParser;
 import com.mojang.serialization.Codec;
-import io.netty.buffer.ByteBuf;
 import lombok.*;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.StringRepresentable;
@@ -28,7 +27,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CategoryInfo implements IConfigurable, IPersistedSerializable {
-    public static final StreamCodec<ByteBuf, CategoryInfo> STREAM_CODEC;
+    public static final StreamCodec<RegistryFriendlyByteBuf, CategoryInfo> STREAM_CODEC;
     public static final Codec<CategoryInfo> CODEC;
 
     @Configurable(name = "viscript_shop.data.category.id")
@@ -49,7 +48,7 @@ public class CategoryInfo implements IConfigurable, IPersistedSerializable {
 
     static {
         CODEC = PersistedParser.createCodec(CategoryInfo::new);
-        STREAM_CODEC = ByteBufCodecs.fromCodec(CODEC);
+        STREAM_CODEC = ByteBufCodecs.fromCodecWithRegistries(CODEC);
     }
 
     @SneakyThrows
