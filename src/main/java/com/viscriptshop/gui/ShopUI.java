@@ -179,6 +179,7 @@ public class ShopUI extends UIElement {
 
         categoryView.layout(layout -> {
             layout.widthPercent(100);
+            layout.flex(1);
         }).addEventListener(UIEvents.TICK, event -> {
             reloadCategoryList();
         });
