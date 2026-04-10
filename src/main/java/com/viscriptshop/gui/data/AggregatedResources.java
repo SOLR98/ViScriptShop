@@ -84,6 +84,14 @@ public class AggregatedResources {
         return purchaseEntries.isEmpty();
     }
 
+    public long getTotalItemCount() {
+        long total = 0L;
+        for (int count : items.values()) {
+            total += count;
+        }
+        return total;
+    }
+
     /**
      * 将一个 ItemStack 合并到汇总中。
      *

@@ -17,6 +17,7 @@
   "viscript_shop.configuration.showFtbLibraryButton": "Enable FTB Library button to open shops",
   "viscript_shop.configuration.isReplaceMoneyToMagicCoin": "Whether to replace this mod's currency with the currency from MagicCoins",
   "viscript_shop.configuration.enableLegacyDataMigration": "Enable legacy data migration for .shop files. Disable to improve performance, but old version files will not load",
+  "viscript_shop.configuration.maxShopUiGiveItemsPerPurchase": "Maximum items granted in one shop UI purchase (-1 = unlimited)",
 
   "viscript_shop.data.shop.name": "Shop Name",
   "viscript_shop.data.shop.name.tip": "Leave blank if you want a dynamic shop name. Use commands to set the shop name.",
@@ -101,6 +102,7 @@
   "viscript_shop.message.stock.out": "This item is out of stock",
   "viscript_shop.message.shoppingCart.out_of_stock": "Too slow! Items in your cart have been snapped up",
   "viscript_shop.message.stock.available": "Stock: %s",
+  "viscript_shop.message.buy.too_many_items": "This purchase gives too many items. Maximum allowed: %s",
   "viscript_shop.message.buySuccess": "Purchase successful",
   "viscript_shop.message.noMerchant": "No merchandise to save",
   "viscript_shop.message.uploadFile.error": "File upload failed",

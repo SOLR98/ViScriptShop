@@ -13,7 +13,11 @@ public class Config {
 
     //是否启用旧版本数据迁移（.shop文件）
     //当确认所有.shop文件都是最新版本后，可以关闭此选项以提升性能
-    public static ModConfigSpec.BooleanValue enableLegacyDataMigration = null;
+    public static ModConfigSpec.BooleanValue enableLegacyDataMigration;
+
+    // 商店UI单次购买最多给予玩家多少个物品
+    // -1 表示不限制
+    public static ModConfigSpec.IntValue maxShopUiGiveItemsPerPurchase;
 
     static {
         ModConfigSpec.Builder CONFIG_BUILDER = new ModConfigSpec.Builder();
@@ -25,6 +29,7 @@ public class Config {
             isReplaceMoneyToMagicCoin = CONFIG_BUILDER.define("isReplaceMoneyToMagicCoin", false);
         }
         enableLegacyDataMigration = CONFIG_BUILDER.define("enableLegacyDataMigration", true);
+        maxShopUiGiveItemsPerPurchase = CONFIG_BUILDER.defineInRange("maxShopUiGiveItemsPerPurchase", -1, -1, Integer.MAX_VALUE);
         CONFIG_BUILDER.pop();
         CONFIG_SPEC = CONFIG_BUILDER.build();
     }

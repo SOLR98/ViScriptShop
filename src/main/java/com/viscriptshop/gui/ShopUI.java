@@ -13,6 +13,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
 import com.lowdragmc.lowdraglib2.utils.search.IResultHandler;
+import com.viscriptshop.Config;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.event.neoforge.ShopClientEvent;
 import com.viscriptshop.gui.components.Message;
@@ -432,6 +433,11 @@ public class ShopUI extends UIElement {
             AggregatedResources gainSummary = AggregatedResources.getGainSummary(this.currentShopInfo);
             if (costSummary.isEmpty() || gainSummary.isEmpty()) {
                 Message.warn("viscript_shop.message.shoppingCar.empty", this);
+                return;
+            }
+            int maxShopUiGiveItemsPerPurchase = Config.maxShopUiGiveItemsPerPurchase.get();
+            if (maxShopUiGiveItemsPerPurchase >= 0 && gainSummary.getTotalItemCount() > maxShopUiGiveItemsPerPurchase) {
+                Message.error(Component.translatable("viscript_shop.message.buy.too_many_items", maxShopUiGiveItemsPerPurchase).getString(), this);
                 return;
             }
             RPCPacketDistributor.rpcToServer(BuyMerchantPayload.BUY_MERCHANT, this.shopLocation, costSummary, gainSummary);

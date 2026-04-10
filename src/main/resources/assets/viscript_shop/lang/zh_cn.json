@@ -17,6 +17,7 @@
   "viscript_shop.configuration.showFtbLibraryButton": "是否打开FTB Library的按钮来允许打开商店",
   "viscript_shop.configuration.isReplaceMoneyToMagicCoin": "是否使用MagicCoins的货币来替换本模组的货币",
   "viscript_shop.configuration.enableLegacyDataMigration": "是否启用旧版本数据迁移（.shop文件）。关闭可提升性能，但会导致旧版本文件无法加载",
+  "viscript_shop.configuration.maxShopUiGiveItemsPerPurchase": "商店UI单次购买最多给予玩家的物品数量（-1为不限制）",
 
   "viscript_shop.data.shop.name": "商店名",
   "viscript_shop.data.shop.name.tip": "如需动态商店名的话此处不要填，请通过指令设置商店名",
@@ -101,6 +102,7 @@
   "viscript_shop.message.stock.out": "该商品已被售尽",
   "viscript_shop.message.shoppingCart.out_of_stock": "手慢了！购物车中有商品已被抢购一空",
   "viscript_shop.message.stock.available": "库存：%s",
+  "viscript_shop.message.buy.too_many_items": "本次购买给予的物品数量超过限制，最多允许%s个",
   "viscript_shop.message.buySuccess": "已成功购买",
   "viscript_shop.message.noMerchant": "无可以保存的商品",
   "viscript_shop.message.uploadFile.error": "上传文件失败",
