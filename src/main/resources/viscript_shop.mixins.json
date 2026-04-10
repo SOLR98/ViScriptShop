@@ -7,6 +7,7 @@
     "ItemStackAccessorMixin"
   ],
   "client": [
+    "FtbLibraryClientMixin"
   ],
   "injectors": {
     "defaultRequire": 1

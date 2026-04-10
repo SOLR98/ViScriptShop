@@ -1,22 +1,16 @@
 package com.viscriptshop.util;
 
-import com.lowdragmc.lowdraglib2.Platform;
-import com.lowdragmc.lowdraglib2.editor.ui.Editor;
-import com.lowdragmc.lowdraglib2.editor.ui.EditorWindow;
 import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import com.viscriptshop.Config;
 import com.viscriptshop.ShopRegistries;
 import com.viscriptshop.ViscriptShop;
-import com.viscriptshop.gui.ShopEditor;
 import com.viscriptshop.gui.ShopUI;
 import com.viscriptshop.gui.data.ShopInfo;
-import com.viscriptshop.gui.project.ShopProject;
 import dev.latvian.mods.kubejs.typings.Info;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.sirgrantd.sg_economy.api.SGEconomyApi;
 
