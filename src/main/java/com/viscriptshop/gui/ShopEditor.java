@@ -2,6 +2,7 @@ package com.viscriptshop.gui;
 
 import com.lowdragmc.lowdraglib2.editor.project.IProject;
 import com.lowdragmc.lowdraglib2.editor.ui.Editor;
+import com.lowdragmc.lowdraglib2.editor.ui.EditorWindow;
 import com.lowdragmc.lowdraglib2.gui.factory.PlayerUIMenuType;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
@@ -51,6 +52,6 @@ public class ShopEditor extends Editor implements PlayerUIMenuType.PlayerUIHolde
 
     @Override
     public ModularUI createUI(Player player) {
-        return new ModularUI(UI.of(this), player);
+        return new ModularUI(UI.of(EditorWindow.open(ShopEditor.SHOP_ID, ShopEditor::new)), player);
     }
 }

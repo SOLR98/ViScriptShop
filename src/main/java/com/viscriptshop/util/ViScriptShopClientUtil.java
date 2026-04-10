@@ -21,33 +21,6 @@ import net.minecraft.network.chat.Component;
 import net.sirgrantd.sg_economy.api.SGEconomyApi;
 
 public class ViScriptShopClientUtil {
-    @Info("客户端打开商店编辑器")
-    public static void clientOpenNpcEditor(CompoundTag tag) {
-        Minecraft minecraft = Minecraft.getInstance();
-        EditorWindow editorWindow = EditorWindow.open(ShopEditor.SHOP_ID, ShopEditor::new);
-        ModularUI ui = new ModularUI(UI.of(editorWindow));
-        if (!Platform.isDevEnv()) ui.shouldCloseOnEsc(false).shouldCloseOnKeyInventory(false);
-        minecraft.setScreen(new ModularUIScreen(ui, Component.empty()));
-
-        Editor editor = editorWindow.getCurrentEditor();
-        if (editor == null) return;
-        if (tag != null && !tag.isEmpty()) {
-            var project = (ShopProject) ShopProject.PROVIDER.projectCreator.get();
-            project.initNewProject();
-            try {
-                project.shop.deserializeNBT(Platform.getFrozenRegistry(), tag);
-                editor.loadProject(project, null);
-                return;
-            } catch (Exception ignored) {
-            }
-        }
-    }
-
-    @Info("客户端打开商店")
-    public static void clientOpenShop(String shopLocation, ShopInfo shopInfo) {
-        clientOpenShop(shopLocation, shopInfo, null, null);
-    }
-
     @Info("客户端打开商店（带分类和商品参数）")
     public static void clientOpenShop(String shopLocation, ShopInfo shopInfo, String categoryId, String merchantId) {
         Minecraft minecraft = Minecraft.getInstance();

@@ -1,7 +1,9 @@
 package com.viscriptshop.network.s2c;
 
 import com.lowdragmc.lowdraglib2.Platform;
+import com.lowdragmc.lowdraglib2.editor.ui.Editor;
 import com.lowdragmc.lowdraglib2.editor.ui.EditorWindow;
+import com.lowdragmc.lowdraglib2.gui.holder.ModularUIContainerScreen;
 import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Dialog;
 import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacket;
@@ -37,7 +39,9 @@ public class S2CPayload {
 
     @RPCPacket(SHOP_INFO_PROJECT)
     public static void openShopEditor(RPCSender sender, ShopInfo shopInfo) {
-        if (Minecraft.getInstance().screen instanceof ModularUIScreen screen && screen.modularUI.ui.rootElement instanceof ShopEditor editor) {
+        if (Minecraft.getInstance().screen instanceof ModularUIContainerScreen screen && screen.getMenu().getModularUI().ui.rootElement instanceof EditorWindow editorWindow) {
+            Editor editor = editorWindow.getCurrentEditor();
+            if (editor == null) return;
             var project = (ShopProject) ShopProject.PROVIDER.projectCreator.get();
             project.initNewProject();
             try {
