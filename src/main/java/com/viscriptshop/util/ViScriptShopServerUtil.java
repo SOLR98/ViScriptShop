@@ -1,16 +1,16 @@
 package com.viscriptshop.util;
 
-import com.lowdragmc.lowdraglib2.Platform;
+import com.lowdragmc.lowdraglib2.gui.factory.PlayerUIMenuType;
 import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
 import com.viscriptshop.Config;
 import com.viscriptshop.ShopRegistries;
 import com.viscriptshop.ViscriptShop;
+import com.viscriptshop.gui.ShopEditor;
 import com.viscriptshop.gui.data.MerchantInfo;
 import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.gui.data.ShopSavedData;
 import com.viscriptshop.network.s2c.S2CPayload;
 import dev.latvian.mods.kubejs.typings.Info;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.sirgrantd.sg_economy.api.SGEconomyApi;
 
@@ -19,9 +19,8 @@ public class ViScriptShopServerUtil {
     @Info("服务端打开商店编辑器")
     public static void serverOpenShopEditor(ServerPlayer player, String shop) {
         ShopInfo shopInfo = ShopHelper.getShop(shop);
-        CompoundTag tag = new CompoundTag();
-        if (shopInfo != null) tag = shopInfo.serializeNBT(Platform.getFrozenRegistry());
-        RPCPacketDistributor.rpcToPlayer(player, S2CPayload.OPEN_SHOP_EDITOR, tag);
+        PlayerUIMenuType.openUI(player, ShopEditor.SHOP_ID);
+        RPCPacketDistributor.rpcToPlayer(player, S2CPayload.SHOP_INFO_PROJECT, shopInfo);
     }
 
     @Info("服务端打开商店")

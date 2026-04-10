@@ -1,5 +1,6 @@
 package com.viscriptshop;
 
+import com.lowdragmc.lowdraglib2.gui.factory.PlayerUIMenuType;
 import com.lowdragmc.lowdraglib2.registry.AutoRegistry;
 import com.lowdragmc.lowdraglib2.registry.annotation.LDLRegister;
 import com.lowdragmc.lowdraglib2.syncdata.AccessorRegistries;
@@ -7,6 +8,7 @@ import com.lowdragmc.lowdraglib2.syncdata.accessor.direct.CustomDirectAccessor;
 import com.mojang.logging.LogUtils;
 import com.viscriptshop.command.ICommand;
 import com.viscriptshop.compat.ModComPat;
+import com.viscriptshop.gui.ShopEditor;
 import com.viscriptshop.gui.data.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -63,6 +65,7 @@ public class ViscriptShop {
                 .codecMark()
                 .build()
         );
+        PlayerUIMenuType.register(ShopEditor.SHOP_ID, player -> new ShopEditor());
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.CONFIG_SPEC, String.format("%s_config.toml", MOD_ID));
         if (dist == Dist.CLIENT) {
             modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);

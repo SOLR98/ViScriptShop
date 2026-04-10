@@ -14,6 +14,7 @@ import com.viscriptshop.gui.components.DialogSelect;
 import com.viscriptshop.gui.components.Message;
 import com.viscriptshop.gui.data.AggregatedResources;
 import com.viscriptshop.gui.data.ShopInfo;
+import com.viscriptshop.gui.project.ShopProject;
 import com.viscriptshop.util.CodecUtil;
 import com.viscriptshop.util.ViScriptShopClientUtil;
 import net.minecraft.client.Minecraft;
@@ -25,7 +26,7 @@ import java.util.Map;
 
 public class S2CPayload {
     public static final String MOD_ID = ViscriptShop.MOD_ID + ":";
-    public static final String OPEN_SHOP_EDITOR = MOD_ID + "open_shop_editor";
+    public static final String SHOP_INFO_PROJECT = MOD_ID + "shop_info_project";
     public static final String OPEN_SHOP_UI = MOD_ID + "open_shop_ui";
     public static final String SEND_MESSAGE = MOD_ID + "send_message";
     public static final String SEND_EDITOR_DIALOG = MOD_ID + "send_editor_dialog";
@@ -34,9 +35,17 @@ public class S2CPayload {
     public static final String RELOAD_SHOP_UI = MOD_ID + "reload_shop_ui";
     public static final String UPDATE_OUT_OF_STOCK = MOD_ID + "update_out_of_stock";
 
-    @RPCPacket(OPEN_SHOP_EDITOR)
-    public static void openShopEditor(RPCSender sender, CompoundTag tag) {
-        ViScriptShopClientUtil.clientOpenNpcEditor(tag);
+    @RPCPacket(SHOP_INFO_PROJECT)
+    public static void openShopEditor(RPCSender sender, ShopInfo shopInfo) {
+        if (Minecraft.getInstance().screen instanceof ModularUIScreen screen && screen.modularUI.ui.rootElement instanceof ShopEditor editor) {
+            var project = (ShopProject) ShopProject.PROVIDER.projectCreator.get();
+            project.initNewProject();
+            try {
+                project.shop.shopInfo = shopInfo;
+                editor.loadProject(project, null);
+            } catch (Exception ignored) {
+            }
+        }
     }
 
     @RPCPacket(OPEN_SHOP_UI)
