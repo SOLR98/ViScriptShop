@@ -167,6 +167,8 @@ dependencies {
     //Magic Coins
     implementation "curse.maven:magic-coins-597281:7605721"
     implementation "curse.maven:sg-economy-api-1446971:7604579"
+    //jech
+    implementation "curse.maven:just-enough-characters-250702:7320033"
 }
 
 tasks.withType(ProcessResources).configureEach {

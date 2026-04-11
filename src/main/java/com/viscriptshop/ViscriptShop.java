@@ -106,6 +106,11 @@ public class ViscriptShop {
         return isModLoaded("jei");
     }
 
+    //Just Enough Characters
+    public static boolean isJECharactersLoaded() {
+        return isModLoaded("jecharacters");
+    }
+
     //FtbLibrary
     public static boolean isFtbLibraryLoaded() {
         return isModLoaded("ftblibrary");

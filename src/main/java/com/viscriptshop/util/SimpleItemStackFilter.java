@@ -1,5 +1,6 @@
 package com.viscriptshop.util;
 
+import com.viscriptshop.compat.JechHelper;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
@@ -9,6 +10,8 @@ import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
+
+import java.util.Locale;
 
 /**
  * 简单的 ItemStack 筛选器
@@ -74,27 +77,26 @@ public class SimpleItemStackFilter {
             return matchesItemId(stack, searchTerm.substring(3));
         }
 
-        // 默认检查物品名称（支持模糊匹配）
-        return matchesItemName(stack, searchTerm);
+        // 默认检查可读文本字段（名称、附魔、药水、描述）以及物品ID
+        return matchesItemName(stack, searchTerm) ||
+                matchesEnchantment(stack, searchTerm) ||
+                matchesPotionEffect(stack, searchTerm) ||
+                matchesLore(stack, searchTerm) ||
+                matchesItemId(stack, searchTerm);
     }
 
     /**
      * 检查物品ID是否匹配
      */
     private static boolean matchesItemId(ItemStack stack, String itemId) {
-        String actualId = getItemId(stack);
-        return actualId.equalsIgnoreCase(itemId) || actualId.contains(itemId.toLowerCase());
+        return containsPlainText(getItemId(stack), itemId);
     }
 
     /**
      * 检查物品名称是否匹配（支持模糊匹配）
      */
     private static boolean matchesItemName(ItemStack stack, String searchTerm) {
-        String itemName = stack.getHoverName().getString().toLowerCase();
-        String searchLower = searchTerm.toLowerCase();
-
-        return itemName.contains(searchLower) ||
-                itemName.equalsIgnoreCase(searchLower);
+        return containsReadableText(stack.getHoverName().getString(), searchTerm);
     }
 
     /**
@@ -117,11 +119,11 @@ public class SimpleItemStackFilter {
 
             // 获取附魔ID
             String enchantId = getEnchantmentId(enchantmentHolder);
-            String enchantDisplayName = Enchantment.getFullname(enchantmentHolder, level).getString().toLowerCase();
+            String enchantDisplayName = Enchantment.getFullname(enchantmentHolder, level).getString();
 
             // 检查名称是否匹配
-            boolean nameMatches = enchantId.contains(enchantName) ||
-                    enchantDisplayName.contains(enchantName);
+            boolean nameMatches = containsPlainText(enchantId, enchantName) ||
+                    containsReadableText(enchantDisplayName, enchantName);
 
             if (nameMatches) {
                 // 如果没有指定等级，或者等级匹配
@@ -154,11 +156,11 @@ public class SimpleItemStackFilter {
             String effectId = effectHolder.unwrapKey()
                     .map(key -> key.location().toString())
                     .orElse("")
-                    .toLowerCase();
+                    ;
 
-            String localizedName = cleanText(Component.translatable(effectHolder.value().getDescriptionId()).getString()).toLowerCase();
+            String localizedName = Component.translatable(effectHolder.value().getDescriptionId()).getString();
 
-            if (effectId.contains(effectName) || localizedName.contains(effectName)) {
+            if (containsPlainText(effectId, effectName) || containsReadableText(localizedName, effectName)) {
                 if (requiredLevel == -1) {
                     return true;
                 }
@@ -170,8 +172,7 @@ public class SimpleItemStackFilter {
             }
         }
 
-        String itemName = cleanText(stack.getHoverName().getString()).toLowerCase();
-        return itemName.contains(effectName);
+        return containsReadableText(stack.getHoverName().getString(), effectName);
     }
 
     /**
@@ -185,13 +186,8 @@ public class SimpleItemStackFilter {
             return false;
         }
 
-        String loreLower = loreCondition.toLowerCase();
-
         for (var loreComponent : loreLines.lines()) {
-            String loreText = loreComponent.getString();
-            String cleanLore = cleanText(loreText);
-
-            if (cleanLore.toLowerCase().contains(loreLower)) {
+            if (containsReadableText(loreComponent.getString(), loreCondition)) {
                 return true;
             }
         }
@@ -243,5 +239,43 @@ public class SimpleItemStackFilter {
     private static String cleanText(String text) {
         // 移除 §x 格式的颜色代码
         return text.replaceAll("§[0-9a-fk-or]", "");
+    }
+
+    private static boolean containsReadableText(String source, String searchTerm) {
+        String normalizedSource = normalizeText(source);
+        String normalizedSearch = normalizeText(searchTerm);
+
+        if (normalizedSearch.isEmpty()) {
+            return true;
+        }
+        if (normalizedSource.isEmpty()) {
+            return false;
+        }
+        if (normalizedSource.contains(normalizedSearch)) {
+            return true;
+        }
+
+        return JechHelper.containsIgnoreCase(normalizedSource, normalizedSearch);
+    }
+
+    private static boolean containsPlainText(String source, String searchTerm) {
+        String normalizedSource = normalizeText(source);
+        String normalizedSearch = normalizeText(searchTerm);
+
+        if (normalizedSearch.isEmpty()) {
+            return true;
+        }
+        if (normalizedSource.isEmpty()) {
+            return false;
+        }
+
+        return normalizedSource.contains(normalizedSearch);
+    }
+
+    private static String normalizeText(String text) {
+        if (text == null) {
+            return "";
+        }
+        return cleanText(text).toLowerCase(Locale.ROOT).trim();
     }
 }
