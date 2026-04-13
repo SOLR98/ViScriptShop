@@ -77,12 +77,8 @@ public class SimpleItemStackFilter {
             return matchesItemId(stack, searchTerm.substring(3));
         }
 
-        // 默认检查可读文本字段（名称、附魔、药水、描述）以及物品ID
-        return matchesItemName(stack, searchTerm) ||
-                matchesEnchantment(stack, searchTerm) ||
-                matchesPotionEffect(stack, searchTerm) ||
-                matchesLore(stack, searchTerm) ||
-                matchesItemId(stack, searchTerm);
+        // 默认检查物品名称
+        return matchesItemName(stack, searchTerm);
     }
 
     /**
