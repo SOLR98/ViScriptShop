@@ -76,17 +76,8 @@ public class ViScriptShopServerUtil {
     public static void setQuickOpening(String shop, boolean quickOpening) {
         ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
         ShopInfo shopInfo = shopSavedData.getShopInfo(shop);
-
-        if (shopInfo == null) {
-            shopInfo = ShopHelper.getShop(shop);
-            if (shopInfo == null) {
-                return;
-            }
-        }
-
         shopInfo.setQuickOpening(quickOpening);
         shopSavedData.setShopInfo(shop, shopInfo);
-        ShopHelper.clearCache();
     }
 
     @Info("设置当前商店的阶段值")
