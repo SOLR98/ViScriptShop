@@ -269,6 +269,12 @@ public class ShopCommand implements ICommand {
     private int setStageShop(CommandContext<CommandSourceStack> context) {
         String shop = StringArgumentType.getString(context, "shop");
         int stage = IntegerArgumentType.getInteger(context, "stage");
+
+        if (ViScriptShopServerUtil.getShopInfo(shop) == null) {
+            context.getSource().sendFailure(Component.translatable("command.viscript_shop.error.shop_not_found", shop));
+            return 0;
+        }
+
         ViScriptShopServerUtil.setStageShop(shop, stage);
         context.getSource().sendSuccess(() -> Component.translatable("command.viscript_shop.setStage.shop", stage), true);
         return 1;
@@ -345,10 +351,7 @@ public class ShopCommand implements ICommand {
     private static CompletableFuture<Suggestions> suggestCategories(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         try {
             String shopId = StringArgumentType.getString(context, "shop");
-            ShopInfo shopInfo = ViscriptShop.getShopSavedData().getShopInfo(shopId);
-            if (shopInfo == null) {
-                shopInfo = ShopHelper.getShop(shopId);
-            }
+            ShopInfo shopInfo = ViScriptShopServerUtil.getShopInfo(shopId);
             if (shopInfo != null) {
                 for (CategoryInfo category : shopInfo.getCategoryInfos()) {
                     builder.suggest(category.getId());
@@ -366,10 +369,7 @@ public class ShopCommand implements ICommand {
             String shopId = StringArgumentType.getString(context, "shop");
             String categoryId = StringArgumentType.getString(context, "categoryId");
 
-            ShopInfo shopInfo = ViscriptShop.getShopSavedData().getShopInfo(shopId);
-            if (shopInfo == null) {
-                shopInfo = ShopHelper.getShop(shopId);
-            }
+            ShopInfo shopInfo = ViScriptShopServerUtil.getShopInfo(shopId);
             if (shopInfo != null) {
                 for (CategoryInfo category : shopInfo.getCategoryInfos()) {
                     if (category.getId().equals(categoryId)) {

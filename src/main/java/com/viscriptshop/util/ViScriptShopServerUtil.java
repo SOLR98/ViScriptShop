@@ -14,6 +14,8 @@ import dev.latvian.mods.kubejs.typings.Info;
 import net.minecraft.server.level.ServerPlayer;
 import net.sirgrantd.sg_economy.api.SGEconomyApi;
 
+import javax.annotation.Nullable;
+
 public class ViScriptShopServerUtil {
 
     @Info("服务端打开商店编辑器")
@@ -30,16 +32,10 @@ public class ViScriptShopServerUtil {
 
     @Info("服务端打开商店（带分类和商品参数）")
     public static void serverOpenShop(ServerPlayer player, String shopLocation, String categoryId, String merchantId) {
-        ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
-        ShopInfo shopInfo = shopSavedData.getShopInfo(shopLocation);
+        ShopInfo shopInfo = getOrInitSavedShopInfo(shopLocation);
         if (shopInfo == null) {
-            shopInfo = ShopHelper.getShop(shopLocation);
-            if (shopInfo != null) {
-                shopSavedData.setShopInfo(shopLocation, shopInfo);
-            } else {
-                ViscriptShop.LOGGER.error("shop location {} not found", shopLocation);
-                return;
-            }
+            ViscriptShop.LOGGER.error("shop location {} not found", shopLocation);
+            return;
         }
         RPCPacketDistributor.rpcToPlayer(player, S2CPayload.OPEN_SHOP_UI, shopLocation, shopInfo,
                 categoryId != null ? categoryId : "",
@@ -52,11 +48,31 @@ public class ViScriptShopServerUtil {
         shopSavedData.resetShopInfo(shop);
     }
 
-    @Info("获取商店的信息，先从savedData里获取，如果不存在再从服务端文件中获取")
+    @Nullable
+    @Info("仅从savedData获取商店信息，不会读取服务端文件")
+    public static ShopInfo getSavedShopInfo(String shop) {
+        return ViscriptShop.getShopSavedData().getShopInfo(shop);
+    }
+
+    @Nullable
+    @Info("获取商店信息，优先从savedData读取，不存在时回退到服务端文件")
     public static ShopInfo getShopInfo(String shop) {
+        ShopInfo shopInfo = getSavedShopInfo(shop);
+        if (shopInfo == null) shopInfo = ShopHelper.getShop(shop);
+        return shopInfo;
+    }
+
+    @Nullable
+    @Info("获取可写的存档级商店信息，如果savedData中不存在则从服务端文件加载并写入savedData")
+    public static ShopInfo getOrInitSavedShopInfo(String shop) {
         ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
         ShopInfo shopInfo = shopSavedData.getShopInfo(shop);
-        if (shopInfo == null) shopInfo = ShopHelper.getShop(shop);
+        if (shopInfo == null) {
+            shopInfo = ShopHelper.getShop(shop);
+            if (shopInfo != null) {
+                shopSavedData.setShopInfo(shop, shopInfo);
+            }
+        }
         return shopInfo;
     }
 
@@ -68,38 +84,34 @@ public class ViScriptShopServerUtil {
 
     @Info("添加商店商品")
     public static void addShopMerchant(String shop, int categoryIndex, MerchantInfo merchantInfo) {
-        ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
-        shopSavedData.addShopMerchant(shop, categoryIndex, merchantInfo);
+        ShopInfo shopInfo = getOrInitSavedShopInfo(shop);
+        if (shopInfo == null) return;
+
+        shopInfo.getCategoryInfos().get(categoryIndex).getMerchants().add(merchantInfo);
+        setShopInfo(shop, shopInfo);
     }
 
     @Info("设置FtbLibrary是否显示该商店，可以用于上锁和解锁商店来推进进度，当然只有FtbLibrary的时候这个设置才有意义")
     public static void setQuickOpening(String shop, boolean quickOpening) {
-        ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
-        ShopInfo shopInfo = shopSavedData.getShopInfo(shop);
+        ShopInfo shopInfo = getOrInitSavedShopInfo(shop);
+        if (shopInfo == null) return;
+
         shopInfo.setQuickOpening(quickOpening);
-        shopSavedData.setShopInfo(shop, shopInfo);
+        setShopInfo(shop, shopInfo);
     }
 
     @Info("设置当前商店的阶段值")
     public static void setStageShop(String shop, int stage) {
-        ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
-        ShopInfo shopInfo = shopSavedData.getShopInfo(shop);
+        ShopInfo shopInfo = getOrInitSavedShopInfo(shop);
+        if (shopInfo == null) return;
+
         shopInfo.setStage(stage);
-        shopSavedData.setShopInfo(shop, shopInfo);
+        setShopInfo(shop, shopInfo);
     }
 
     @Info("设置商店商品库存")
     public static boolean setMerchantStock(String shopLocation, String categoryId, String merchantId, int stock) {
-        ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
-        ShopInfo shopInfo = shopSavedData.getShopInfo(shopLocation);
-
-        if (shopInfo == null) {
-            shopInfo = ShopHelper.getShop(shopLocation);
-            if (shopInfo != null) {
-                shopSavedData.setShopInfo(shopLocation, shopInfo);
-            }
-        }
-
+        ShopInfo shopInfo = getOrInitSavedShopInfo(shopLocation);
         if (shopInfo == null) {
             return false;
         }
@@ -110,8 +122,8 @@ public class ViScriptShopServerUtil {
                 for (var merchant : category.getMerchants()) {
                     if (merchant.getId().equals(merchantId)) {
                         merchant.setStock(stock);
-                        // 保存到文件和内存
-                        shopSavedData.setShopInfo(shopLocation, shopInfo);
+                        // 保存到存档数据并清理文件缓存
+                        setShopInfo(shopLocation, shopInfo);
                         ShopHelper.clearCache();
                         return true;
                     }
@@ -124,16 +136,7 @@ public class ViScriptShopServerUtil {
 
     @Info("删除商店商品")
     public static boolean removeMerchant(String shopLocation, String categoryId, String merchantId) {
-        ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
-        ShopInfo shopInfo = shopSavedData.getShopInfo(shopLocation);
-
-        if (shopInfo == null) {
-            shopInfo = ShopHelper.getShop(shopLocation);
-            if (shopInfo != null) {
-                shopSavedData.setShopInfo(shopLocation, shopInfo);
-            }
-        }
-
+        ShopInfo shopInfo = getOrInitSavedShopInfo(shopLocation);
         if (shopInfo == null) {
             return false;
         }
@@ -143,8 +146,8 @@ public class ViScriptShopServerUtil {
             if (category.getId().equals(categoryId)) {
                 boolean removed = category.getMerchants().removeIf(merchant -> merchant.getId().equals(merchantId));
                 if (removed) {
-                    // 保存到文件和内存
-                    shopSavedData.setShopInfo(shopLocation, shopInfo);
+                    // 保存到存档数据并清理文件缓存
+                    setShopInfo(shopLocation, shopInfo);
                     ShopHelper.clearCache();
                     return true;
                 }
