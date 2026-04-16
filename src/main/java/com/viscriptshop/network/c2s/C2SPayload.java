@@ -68,7 +68,7 @@ public class C2SPayload {
     public static void getShopInfo(RPCSender sender) {
         Map<String, String> shopInfos = new HashMap<>();
         ShopCommand.getServerShopFiles().forEach(fileName -> {
-            ShopInfo shopInfo = ViScriptShopServerUtil.getShopInfo(fileName);
+            ShopInfo shopInfo = ViScriptShopServerUtil.getShopInfo(fileName.substring(1, fileName.length() - 1));
             if (shopInfo.isQuickOpening()) {
                 String name = shopInfo.getName();
                 shopInfos.put(fileName.substring(1, fileName.length() - 1), name.isEmpty() ? "viscript_shop.ui.title" : name);

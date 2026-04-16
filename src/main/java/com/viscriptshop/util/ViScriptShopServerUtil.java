@@ -72,6 +72,23 @@ public class ViScriptShopServerUtil {
         shopSavedData.addShopMerchant(shop, categoryIndex, merchantInfo);
     }
 
+    @Info("设置FtbLibrary是否显示该商店，可以用于上锁和解锁商店来推进进度，当然只有FtbLibrary的时候这个设置才有意义")
+    public static void setQuickOpening(String shop, boolean quickOpening) {
+        ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
+        ShopInfo shopInfo = shopSavedData.getShopInfo(shop);
+
+        if (shopInfo == null) {
+            shopInfo = ShopHelper.getShop(shop);
+            if (shopInfo == null) {
+                return;
+            }
+        }
+
+        shopInfo.setQuickOpening(quickOpening);
+        shopSavedData.setShopInfo(shop, shopInfo);
+        ShopHelper.clearCache();
+    }
+
     @Info("设置当前商店的阶段值")
     public static void setStageShop(String shop, int stage) {
         ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();

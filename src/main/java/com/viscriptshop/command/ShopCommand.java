@@ -3,6 +3,7 @@ package com.viscriptshop.command;
 import com.lowdragmc.lowdraglib2.LDLib2;
 import com.lowdragmc.lowdraglib2.registry.annotation.LDLRegister;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -31,7 +32,7 @@ import java.util.concurrent.CompletableFuture;
 public class ShopCommand implements ICommand {
     @Override
     public void register(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext buildContext, Commands.CommandSelection commandSelection) {
-        dispatcher.register(Commands.literal(ViscriptShop.MOD_ID).requires(commandSourceStack -> commandSourceStack.hasPermission(Commands.LEVEL_OWNERS))
+        var root = Commands.literal(ViscriptShop.MOD_ID).requires(commandSourceStack -> commandSourceStack.hasPermission(Commands.LEVEL_OWNERS))
                 .then(Commands.literal("editor")
                         .executes(context -> openEditor(context, ""))
                         .then(Commands.argument("shop", StringArgumentType.string())
@@ -174,8 +175,25 @@ public class ShopCommand implements ICommand {
                                         )
                                 )
                         )
-                )
-        );
+                );
+
+        if (ViscriptShop.isFtbLibraryLoaded()) {
+            root.then(Commands.literal("setQuickOpening")
+                    .then(Commands.argument("shop", StringArgumentType.string())
+                            .suggests((context, builder) -> {
+                                ViscriptShop.getShopSavedData().shopInfoMap.forEach((key, value) -> {
+                                    builder.suggest("\"" + key + "\"");
+                                });
+                                return builder.buildFuture();
+                            })
+                            .then(Commands.argument("quickOpening", BoolArgumentType.bool())
+                                    .executes(this::setQuickOpeningShop)
+                            )
+                    )
+            );
+        }
+
+        dispatcher.register(root);
     }
 
     private int reload(CommandContext<CommandSourceStack> context) {
@@ -253,6 +271,21 @@ public class ShopCommand implements ICommand {
         int stage = IntegerArgumentType.getInteger(context, "stage");
         ViScriptShopServerUtil.setStageShop(shop, stage);
         context.getSource().sendSuccess(() -> Component.translatable("command.viscript_shop.setStage.shop", stage), true);
+        return 1;
+    }
+
+    @SneakyThrows
+    private int setQuickOpeningShop(CommandContext<CommandSourceStack> context) {
+        String shop = StringArgumentType.getString(context, "shop");
+        boolean quickOpening = BoolArgumentType.getBool(context, "quickOpening");
+
+        if (ViScriptShopServerUtil.getShopInfo(shop) == null) {
+            context.getSource().sendFailure(Component.translatable("command.viscript_shop.error.shop_not_found", shop));
+            return 0;
+        }
+
+        ViScriptShopServerUtil.setQuickOpening(shop, quickOpening);
+        context.getSource().sendSuccess(() -> Component.translatable("command.viscript_shop.setQuickOpening.shop", shop, quickOpening), true);
         return 1;
     }
 

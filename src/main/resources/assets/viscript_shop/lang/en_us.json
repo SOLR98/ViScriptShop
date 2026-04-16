@@ -4,6 +4,7 @@
   "command.viscript_shop.reload": "All shops reloaded successfully",
   "command.viscript_shop.reload.shop": "The shop information has been reset",
   "command.viscript_shop.setStage.shop": "The stage of this shop has been set to %s",
+  "command.viscript_shop.setQuickOpening.shop": "Set QuickOpening of shop %s to %s",
   "command.viscript_shop.money.add": "Added %s◎ to %s, the player's balance is %s◎",
   "command.viscript_shop.money.remove": "Deducted %s%s◎, the player's balance is %s◎",
   "command.viscript_shop.money.get": "%s's balance is %s◎",
