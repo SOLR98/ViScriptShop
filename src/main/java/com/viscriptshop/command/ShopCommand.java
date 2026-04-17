@@ -32,8 +32,9 @@ import java.util.concurrent.CompletableFuture;
 public class ShopCommand implements ICommand {
     @Override
     public void register(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext buildContext, Commands.CommandSelection commandSelection) {
-        var root = Commands.literal(ViscriptShop.MOD_ID).requires(commandSourceStack -> commandSourceStack.hasPermission(Commands.LEVEL_OWNERS))
+        var root = Commands.literal(ViscriptShop.MOD_ID).requires(commandSourceStack -> commandSourceStack.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(Commands.literal("editor")
+                        .requires(commandSourceStack -> commandSourceStack.hasPermission(Commands.LEVEL_OWNERS))
                         .executes(context -> openEditor(context, ""))
                         .then(Commands.argument("shop", StringArgumentType.string())
                                 .suggests((context, builder) -> {
