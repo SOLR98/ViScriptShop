@@ -39,16 +39,17 @@ public class S2CPayload {
 
     @RPCPacket(SHOP_INFO_PROJECT)
     public static void openShopEditor(RPCSender sender, ShopInfo shopInfo) {
-        if (Minecraft.getInstance().screen instanceof ModularUIContainerScreen screen && screen.getMenu().getModularUI().ui.rootElement instanceof EditorWindow editorWindow) {
-            Editor editor = editorWindow.getCurrentEditor();
-            if (editor == null) return;
-            var project = (ShopProject) ShopProject.PROVIDER.projectCreator.get();
-            project.initNewProject();
-            try {
-                project.shop.shopInfo = shopInfo;
-                editor.loadProject(project, null);
-            } catch (Exception ignored) {
-            }
+        EditorWindow editorWindow = getCurrentEditorWindow();
+        if (editorWindow == null) return;
+
+        Editor editor = editorWindow.getCurrentEditor();
+        if (editor == null) return;
+        var project = (ShopProject) ShopProject.PROVIDER.projectCreator.get();
+        project.initNewProject();
+        try {
+            project.shop.shopInfo = shopInfo;
+            editor.loadProject(project, null);
+        } catch (Exception ignored) {
         }
     }
 
@@ -66,11 +67,21 @@ public class S2CPayload {
 
     @RPCPacket(SEND_EDITOR_DIALOG)
     public static void sendEditorDialog(RPCSender sender, Component title, Component content) {
-        if (sender.isServer() && Minecraft.getInstance().screen instanceof ModularUIScreen uiScreen) {
-            if (uiScreen.modularUI.ui.rootElement instanceof EditorWindow window && window.getCurrentEditor() instanceof ShopEditor editor) {
-                Dialog.showNotification(title.getString(), content.getString(), null).show(editor);
-            }
+        if (sender.isServer() && getCurrentEditorWindow() instanceof EditorWindow window && window.getCurrentEditor() instanceof ShopEditor editor) {
+            Dialog.showNotification(title.getString(), content.getString(), null).show(editor);
         }
+    }
+
+    private static EditorWindow getCurrentEditorWindow() {
+        if (Minecraft.getInstance().screen instanceof ModularUIContainerScreen screen
+                && screen.getMenu().getModularUI().ui.rootElement instanceof EditorWindow editorWindow) {
+            return editorWindow;
+        }
+        if (Minecraft.getInstance().screen instanceof ModularUIScreen screen
+                && screen.modularUI.ui.rootElement instanceof EditorWindow editorWindow) {
+            return editorWindow;
+        }
+        return null;
     }
 
     @RPCPacket(GET_SHOP_INFO_S2C)

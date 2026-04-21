@@ -2,10 +2,6 @@ package com.viscriptshop.gui;
 
 import com.lowdragmc.lowdraglib2.editor.project.IProject;
 import com.lowdragmc.lowdraglib2.editor.ui.Editor;
-import com.lowdragmc.lowdraglib2.editor.ui.EditorWindow;
-import com.lowdragmc.lowdraglib2.gui.factory.PlayerUIMenuType;
-import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
-import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import com.mojang.blaze3d.MethodsReturnNonnullByDefault;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.project.ShopProject;
@@ -13,7 +9,6 @@ import com.viscriptshop.gui.view.CategoryView;
 import com.viscriptshop.gui.view.ShopPreviewView;
 import dev.vfyjxf.taffy.style.TaffyDisplay;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -21,7 +16,7 @@ import java.io.File;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class ShopEditor extends Editor implements PlayerUIMenuType.PlayerUIHolder {
+public class ShopEditor extends Editor {
     public final static ResourceLocation SHOP_ID = ViscriptShop.id("editor");
 
     public final CategoryView categoryView = new CategoryView(this);
@@ -48,10 +43,5 @@ public class ShopEditor extends Editor implements PlayerUIMenuType.PlayerUIHolde
             categoryView.loadView();
             shopPreviewView.loadView();
         }
-    }
-
-    @Override
-    public ModularUI createUI(Player player) {
-        return new ModularUI(UI.of(EditorWindow.open(ShopEditor.SHOP_ID, ShopEditor::new)), player);
     }
 }

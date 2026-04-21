@@ -1,6 +1,9 @@
 package com.viscriptshop;
 
+import com.lowdragmc.lowdraglib2.editor.ui.EditorWindow;
 import com.lowdragmc.lowdraglib2.gui.factory.PlayerUIMenuType;
+import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
+import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import com.lowdragmc.lowdraglib2.registry.AutoRegistry;
 import com.lowdragmc.lowdraglib2.registry.annotation.LDLRegister;
 import com.lowdragmc.lowdraglib2.syncdata.AccessorRegistries;
@@ -65,7 +68,13 @@ public class ViscriptShop {
                 .codecMark()
                 .build()
         );
-        PlayerUIMenuType.register(ShopEditor.SHOP_ID, player -> new ShopEditor());
+        PlayerUIMenuType.register(ShopEditor.SHOP_ID, ignored -> player -> {
+            if (player.level().isClientSide) {
+                return new ModularUI(UI.of(EditorWindow.open(ShopEditor.SHOP_ID, ShopEditor::new)))
+                        .shouldCloseOnKeyInventory(false);
+            }
+            return new ModularUI(UI.empty());
+        });
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.CONFIG_SPEC, String.format("%s_config.toml", MOD_ID));
         if (dist == Dist.CLIENT) {
             modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
