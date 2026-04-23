@@ -11,6 +11,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.*;
 import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
+import com.lowdragmc.lowdraglib2.math.Size;
 import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
 import com.lowdragmc.lowdraglib2.utils.search.IResultHandler;
 import com.viscriptshop.Config;
@@ -457,6 +458,39 @@ public class ShopUI extends UIElement {
         right.addChildren(rightTop, rightBottom);
 
         root.addChildren(left, center, right);
+    }
+
+    @Override
+    public void initScreen(int screenWidth, int screenHeight) {
+        super.initScreen(screenWidth, screenHeight);
+        applyAutoGuiScaleTransform();
+    }
+
+    public static Size getAutoGuiScaledSize(Size screenSize) {
+        float scale = getAutoGuiScaleFactor();
+        if (scale <= 0f) return screenSize;
+
+        return Size.of(
+                Math.max(1, Math.round(screenSize.getWidth() / scale)),
+                Math.max(1, Math.round(screenSize.getHeight() / scale))
+        );
+    }
+
+    private void applyAutoGuiScaleTransform() {
+        float scale = getAutoGuiScaleFactor();
+        // 让固定尺寸控件在任意 GUI Scale 下都保持 Auto 缩放时的视觉大小。
+        transform(transform -> transform.pivot(0.5f, 0.5f).scale(scale));
+    }
+
+    private static float getAutoGuiScaleFactor() {
+        Minecraft minecraft = Minecraft.getInstance();
+
+        var window = minecraft.getWindow();
+        double currentScale = window.getGuiScale();
+        if (currentScale <= 0d) return 1f;
+
+        int autoScale = window.calculateScale(0, minecraft.isEnforceUnicode());
+        return Math.max(1f, (float) (autoScale / currentScale));
     }
 
     public void reloadCategoryList() {

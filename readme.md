@@ -5,7 +5,7 @@
 
 模组前置：ldlib2
 
-模组联动：KubeJS，精妙背包，超越维度，FTB Library，JEI，LightmansCurrency，汇流来世，Magic Coins
+模组联动：KubeJS，精妙背包，超越维度，FTB Library，JEI，LightmansCurrency，汇流来世，Magic Coins，jech
 
 模组wiki：https://doc.mafuyu.moe/wiki/ViScriptShop
 
