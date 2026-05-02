@@ -16,8 +16,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import net.minecraft.nbt.Tag;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.ItemStack;
@@ -31,7 +30,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MerchantInfo implements IConfigurable, IPersistedSerializable {
-    public static final StreamCodec<RegistryFriendlyByteBuf, MerchantInfo> STREAM_CODEC;
+    public static final StreamCodec<ByteBuf, MerchantInfo> STREAM_CODEC;
     public static final Codec<MerchantInfo> CODEC;
 
     //以物换物商店
@@ -66,7 +65,7 @@ public class MerchantInfo implements IConfigurable, IPersistedSerializable {
 
     static {
         CODEC = PersistedParser.createCodec(MerchantInfo::new);
-        STREAM_CODEC = ByteBufCodecs.fromCodecWithRegistries(CODEC);
+        STREAM_CODEC = PersistedParser.createStreamCodec(MerchantInfo::new);
     }
 
     public Configurator createConfigurator(CategoryInfo.ShopType shopType) {
