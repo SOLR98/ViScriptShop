@@ -1,18 +1,13 @@
 package com.viscriptshop.gui.data;
 
-import com.lowdragmc.lowdraglib2.Platform;
 import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib2.utils.PersistedParser;
 import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
-import com.viscriptshop.util.CodecUtil;
 import io.netty.buffer.ByteBuf;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.ItemStack;
 
@@ -23,38 +18,29 @@ import java.util.Map;
 
 /**
  * 汇总购物车中所需支付或获得的物品、货币和经验值。
+ * 使用 LDLib2 原生的 @Persisted + MapAccessor 进行序列化，包括 Map<ItemStack, Integer>。
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AggregatedResources {
-    public static final StreamCodec<RegistryFriendlyByteBuf, AggregatedResources> STREAM_CODEC;
+public class AggregatedResources implements IPersistedSerializable {
+    public static final StreamCodec<ByteBuf, AggregatedResources> STREAM_CODEC;
     public static final Codec<AggregatedResources> CODEC;
 
+    @Persisted
     private Map<ItemStack, Integer> items = new HashMap<>();
+    @Persisted
     private List<String> commands = new ArrayList<>();
+    @Persisted
     private int totalMoney = 0;
+    @Persisted
     private int totalXp = 0;
+    @Persisted
     private List<PurchaseEntry> purchaseEntries = new ArrayList<>();
 
     static {
-        CODEC = RecordCodecBuilder.create(instance -> instance.group(
-                CodecUtil.createMapCodec(ItemStack.OPTIONAL_CODEC, Codec.INT, Platform.getFrozenRegistry())
-                        .optionalFieldOf("items", new HashMap<>())
-                        .forGetter(AggregatedResources::getItems),
-                Codec.STRING.listOf()
-                        .optionalFieldOf("commands", new ArrayList<>())
-                        .forGetter(AggregatedResources::getCommands),
-                Codec.INT.optionalFieldOf("totalMoney", 0)
-                        .forGetter(AggregatedResources::getTotalMoney),
-                Codec.INT.optionalFieldOf("totalXp", 0)
-                        .forGetter(AggregatedResources::getTotalXp),
-                PurchaseEntry.CODEC.listOf()
-                        .optionalFieldOf("purchaseEntries", new ArrayList<>())
-                        .forGetter(AggregatedResources::getPurchaseEntries)
-        ).apply(instance, AggregatedResources::new));
-
-        STREAM_CODEC = ByteBufCodecs.fromCodecWithRegistries(CODEC);
+        CODEC = PersistedParser.createCodec(AggregatedResources::new);
+        STREAM_CODEC = PersistedParser.createStreamCodec(AggregatedResources::new);
     }
 
     /**
@@ -76,7 +62,7 @@ public class AggregatedResources {
 
         static {
             CODEC = PersistedParser.createCodec(PurchaseEntry::new);
-            STREAM_CODEC = ByteBufCodecs.fromCodec(CODEC);
+            STREAM_CODEC = PersistedParser.createStreamCodec(PurchaseEntry::new);
         }
     }
 

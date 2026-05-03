@@ -68,6 +68,12 @@ public class ViscriptShop {
                 .codecMark()
                 .build()
         );
+        AccessorRegistries.registerAccessor(CustomDirectAccessor.builder(AggregatedResources.PurchaseEntry.class)
+                .codec(AggregatedResources.PurchaseEntry.CODEC)
+                .streamCodec(AggregatedResources.PurchaseEntry.STREAM_CODEC)
+                .codecMark()
+                .build()
+        );
         PlayerUIMenuType.register(ShopEditor.SHOP_ID, ignored -> player -> {
             if (player.level().isClientSide) {
                 return new ModularUI(UI.of(EditorWindow.open(ShopEditor.SHOP_ID, ShopEditor::new)))
