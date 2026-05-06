@@ -906,7 +906,7 @@ public class ShopUI extends UIElement {
             layout.flexDirection(FlexDirection.COLUMN);
             layout.alignItems(AlignItems.CENTER);
             layout.justifyContent(AlignContent.FLEX_START);
-            layout.paddingAll(3);
+            layout.paddingAll(5);
             layout.gapAll(2);
             layout.positionType(TaffyPosition.RELATIVE);
         });
