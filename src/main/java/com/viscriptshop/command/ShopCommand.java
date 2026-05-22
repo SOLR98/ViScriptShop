@@ -81,6 +81,7 @@ public class ShopCommand implements ICommand {
                         )
                         .then(Commands.literal("remove")
                                 .then(Commands.argument("flag", StringArgumentType.string())
+                                        .suggests(ShopCommand::suggestStageFlags)
                                         .executes(this::removeStageFlag)
                                 )
                         )
@@ -413,6 +414,15 @@ public class ShopCommand implements ICommand {
             }
         } catch (IllegalArgumentException ignored) {
             // 参数还未填写，不提供建议
+        }
+        return builder.buildFuture();
+    }
+
+    // 补全当前执行玩家已拥有的阶段标记
+    private static CompletableFuture<Suggestions> suggestStageFlags(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        ServerPlayer player = context.getSource().getPlayer();
+        if (player != null) {
+            ViScriptShopServerUtil.getStageFlags(player).forEach(builder::suggest);
         }
         return builder.buildFuture();
     }

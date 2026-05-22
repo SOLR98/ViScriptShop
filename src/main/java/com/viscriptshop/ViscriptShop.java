@@ -56,6 +56,12 @@ public class ViscriptShop {
                 .codecMark()
                 .build()
         );
+        AccessorRegistries.registerAccessor(CustomDirectAccessor.builder(MerchantFlagGroup.class)
+                .codec(MerchantFlagGroup.CODEC)
+                .streamCodec(MerchantFlagGroup.STREAM_CODEC)
+                .codecMark()
+                .build()
+        );
         AccessorRegistries.registerAccessor(CustomDirectAccessor.builder(MerchantInfo.class)
                 .codec(MerchantInfo.CODEC)
                 .streamCodec(MerchantInfo.STREAM_CODEC)

@@ -10,6 +10,7 @@ import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.event.neoforge.ShopServerEvent;
 import com.viscriptshop.gui.components.Message;
 import com.viscriptshop.gui.data.AggregatedResources;
+import com.viscriptshop.gui.data.MerchantFlagGroup;
 import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.network.s2c.S2CPayload;
 import com.viscriptshop.util.ItemUtil;
@@ -23,7 +24,6 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 
-import java.util.List;
 import java.util.Map;
 
 public class BuyMerchantPayload {
@@ -54,10 +54,9 @@ public class BuyMerchantPayload {
             int stock = merchantInfo.getStock();
             int buyCount = purchaseEntry.getBuyCount();
 
-            List<String> missingFlags = ViScriptShopServerUtil.getMissingStageFlags(player, merchantInfo.getFlags());
-            if (!missingFlags.isEmpty()) {
+            if (!MerchantFlagGroup.canAccess(merchantInfo.getFlagGroupMode(), merchantInfo.getFlagGroups(), ViScriptShopServerUtil.getStageFlags(player))) {
                 RPCPacketDistributor.rpcToPlayer(player, S2CPayload.SEND_MESSAGE, Message.Type.ERROR,
-                        Component.translatable("viscript_shop.message.stage_flags.missing", String.join(", ", missingFlags)));
+                        Component.translatable("viscript_shop.message.stage_flags.missing"));
                 NeoForge.EVENT_BUS.post(new ShopServerEvent.BuyFail(player, shopInfo, cost, gain));
                 return;
             }

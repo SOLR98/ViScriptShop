@@ -6,9 +6,11 @@ import com.lowdragmc.lowdraglib2.configurator.annotation.ConfigNumber;
 import com.lowdragmc.lowdraglib2.configurator.annotation.Configurable;
 import com.lowdragmc.lowdraglib2.configurator.ui.Configurator;
 import com.lowdragmc.lowdraglib2.configurator.ui.ConfiguratorGroup;
+import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
 import com.lowdragmc.lowdraglib2.utils.PersistedParser;
 import com.mojang.serialization.Codec;
+import com.viscriptshop.gui.components.MerchantFlagGroupsConfigurator;
 import com.viscriptshop.util.CodecUtil;
 import dev.vfyjxf.taffy.style.TaffyDisplay;
 import lombok.AllArgsConstructor;
@@ -57,8 +59,10 @@ public class MerchantInfo implements IConfigurable, IPersistedSerializable {
     private int xp = 0;
     @Configurable(name = "viscript_shop.data.merchant.command", tips = "viscript_shop.data.merchant.command.tip")
     private String command = "";
-    @Configurable(name = "viscript_shop.data.merchant.flags", tips = "viscript_shop.data.merchant.flags.tip")
-    private List<String> flags = new ArrayList<>();
+    @Persisted
+    private MerchantFlagGroup.GroupMatchMode flagGroupMode = MerchantFlagGroup.GroupMatchMode.OR;
+    @Persisted
+    private List<MerchantFlagGroup> flagGroups = new ArrayList<>();
     //ui用参数
     private Number buyCount = 0;
 
@@ -86,7 +90,28 @@ public class MerchantInfo implements IConfigurable, IPersistedSerializable {
             case CURRENCY -> currencyConfigurators.forEach(group::addConfigurator);
         }
         commonConfigurators.forEach(group::addConfigurator);
+        group.addConfigurator(new MerchantFlagGroupsConfigurator(this));
         return group;
+    }
+
+    @Deprecated
+    public List<String> getFlags() {
+        if (flagGroups.size() == 1 && flagGroups.getFirst().getMode() == MerchantFlagGroup.MatchMode.AND) {
+            return flagGroups.getFirst().getFlags();
+        }
+        List<String> flags = new ArrayList<>();
+        for (MerchantFlagGroup group : flagGroups) {
+            flags.addAll(group.normalizedFlags());
+        }
+        return flags;
+    }
+
+    @Deprecated
+    public void setFlags(List<String> flags) {
+        flagGroups.clear();
+        if (flags != null && !flags.isEmpty()) {
+            flagGroups.add(new MerchantFlagGroup(MerchantFlagGroup.MatchMode.AND, new ArrayList<>(flags)));
+        }
     }
 
     public MerchantInfo copy() {

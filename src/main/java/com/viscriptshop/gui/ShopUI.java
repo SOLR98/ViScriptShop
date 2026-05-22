@@ -24,6 +24,7 @@ import com.viscriptshop.gui.components.theme.ShopButton;
 import com.viscriptshop.gui.components.theme.ShopScrollerView;
 import com.viscriptshop.gui.data.AggregatedResources;
 import com.viscriptshop.gui.data.CategoryInfo;
+import com.viscriptshop.gui.data.MerchantFlagGroup;
 import com.viscriptshop.gui.data.MerchantInfo;
 import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.network.c2s.BuyMerchantPayload;
@@ -515,7 +516,7 @@ public class ShopUI extends UIElement {
         for (int i = 0; i < selectedCategory.getMerchants().size(); i++) {
             MerchantInfo merchantInfo = selectedCategory.getMerchants().get(i);
             //商品上锁样式：隐藏
-            if (currentShopInfo.getLockedMerchantVisibility().equals(ShopInfo.LockedMerchantVisibility.HIDDEN) && getMerchantLockReason(merchantInfo) != null) {
+            if (currentShopInfo.getLockedMerchantVisibility().equals(ShopInfo.LockedMerchantVisibility.HIDDEN) && isMerchantLocked(merchantInfo)) {
                 continue;
             }
             //搜索筛选 物品筛选和序号筛选
@@ -853,7 +854,7 @@ public class ShopUI extends UIElement {
         // 应用库存限制
         applyStockRestrictions(merchantInfo, countConfigurator, buttonHolder[0], buttonHolder[1]);
 
-        if (getMerchantLockReason(merchantInfo) != null) {
+        if (isMerchantLocked(merchantInfo)) {
             countConfigurator.textField.setWheelDur(0);
             countConfigurator.textField.setActive(false);
             buttonHolder[0].setActive(false);
@@ -873,9 +874,9 @@ public class ShopUI extends UIElement {
             layout.width(16);
             layout.height(16);
         }).addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
-            Component lockReason = getMerchantLockReason(merchantInfo);
-            if (lockReason != null) {
-                event.hoverTooltips = new HoverTooltips(List.of(lockReason), null, null, null);
+            List<Component> lockReasons = getMerchantLockReasons(merchantInfo);
+            if (!lockReasons.isEmpty()) {
+                event.hoverTooltips = new HoverTooltips(lockReasons, null, null, null);
             }
         });
 
@@ -886,7 +887,7 @@ public class ShopUI extends UIElement {
             layout.heightPercent(100);
         }).addChildren(buttonHolder[0], countConfigurator, buttonHolder[1]));
 
-        if (getMerchantLockReason(merchantInfo) != null) merchant.addChildren(LockIcon);
+        if (isMerchantLocked(merchantInfo)) merchant.addChildren(LockIcon);
 
         return merchant;
     }
@@ -964,7 +965,7 @@ public class ShopUI extends UIElement {
             countConfigurator.setRange(0, Integer.MAX_VALUE);
         }
 
-        if (getMerchantLockReason(merchantInfo) != null) {
+        if (isMerchantLocked(merchantInfo)) {
             countConfigurator.textField.setWheelDur(0);
             countConfigurator.textField.setActive(false);
         }
@@ -985,12 +986,12 @@ public class ShopUI extends UIElement {
             layout.top(2);
             layout.right(2);
         }).addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
-            Component lockReason = getMerchantLockReason(merchantInfo);
-            if (lockReason != null) {
-                event.hoverTooltips = new HoverTooltips(List.of(lockReason), null, null, null);
+            List<Component> lockReasons = getMerchantLockReasons(merchantInfo);
+            if (!lockReasons.isEmpty()) {
+                event.hoverTooltips = new HoverTooltips(lockReasons, null, null, null);
             }
         });
-        lockIcon.setDisplay(getMerchantLockReason(merchantInfo) == null ? TaffyDisplay.NONE : TaffyDisplay.FLEX);
+        lockIcon.setDisplay(isMerchantLocked(merchantInfo) ? TaffyDisplay.FLEX : TaffyDisplay.NONE);
 
         UIElement body = new UIElement().layout(layout -> {
             layout.widthPercent(100);
@@ -1026,31 +1027,16 @@ public class ShopUI extends UIElement {
      * @param merchantInfo 商品信息
      * @return null表示已解锁，非null返回锁定原因的Component
      */
-    private Component getMerchantLockReason(MerchantInfo merchantInfo) {
-        if (minecraft.player == null) {
-            return null;
-        }
-
-        List<String> missingFlags = getMissingFlags(merchantInfo.getFlags(), ViScriptShopClientUtil.getStageFlags(minecraft.player));
-        if (!missingFlags.isEmpty()) {
-            return Component.translatable("viscript_shop.ui.flags.lock", String.join(", ", missingFlags));
-        }
-
-        // 所有条件都满足，返回null表示已解锁
-        return null;
+    private boolean isMerchantLocked(MerchantInfo merchantInfo) {
+        return !getMerchantLockReasons(merchantInfo).isEmpty();
     }
 
-    private List<String> getMissingFlags(List<String> requiredFlags, List<String> playerFlags) {
-        if (requiredFlags == null || requiredFlags.isEmpty()) {
+    private List<Component> getMerchantLockReasons(MerchantInfo merchantInfo) {
+        if (minecraft.player == null) {
             return List.of();
         }
-        List<String> missingFlags = new ArrayList<>();
-        for (String flag : requiredFlags) {
-            if (!flag.isEmpty() && !playerFlags.contains(flag)) {
-                missingFlags.add(flag);
-            }
-        }
-        return missingFlags;
+
+        return MerchantFlagGroup.getLockTooltips(merchantInfo.getFlagGroupMode(), merchantInfo.getFlagGroups(), ViScriptShopClientUtil.getStageFlags(minecraft.player));
     }
 
     /**
@@ -1184,7 +1170,7 @@ public class ShopUI extends UIElement {
         List<MerchantInfo> merchants = selectedCategory.getMerchants();
 
         for (MerchantInfo merchant : merchants) {
-            if (getMerchantLockReason(merchant) == null) {
+            if (!isMerchantLocked(merchant)) {
                 if (selectedCategory.getShopType() == CategoryInfo.ShopType.ITEM_FOR_ITEM) {
                     addItemStackIfUnique(items, merchant.getItemA());
                     addItemStackIfUnique(items, merchant.getItemB());

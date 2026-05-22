@@ -1,5 +1,6 @@
 package com.viscriptshop.gui.data;
 
+import com.viscriptshop.gui.project.ShopProject;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.saveddata.SavedData;
@@ -48,7 +49,7 @@ public class ShopSavedData extends SavedData {
         ShopSavedData shopSavedData = new ShopSavedData();
         for (String shop : nbt.getAllKeys()) {
             ShopInfo shopInfo = new ShopInfo();
-            shopInfo.deserializeNBT(provider, nbt.getCompound(shop));
+            shopInfo.deserializeNBT(provider, ShopProject.migrateShopData(nbt.getCompound(shop), 1));
             shopSavedData.shopInfoMap.put(shop, shopInfo);
         }
         return shopSavedData;

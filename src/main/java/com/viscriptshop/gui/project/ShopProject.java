@@ -159,9 +159,9 @@ public class ShopProject implements IProject {
     }
 
     /**
-     * 版本兼容方法：将2.0版本的数字阶段迁移到3.0版本的flag阶段
+     * 版本兼容方法：将2.0版本的数字阶段迁移到3.0版本的条件组阶段
      * 2.0版本：ShopInfo.stage控制商店阶段，MerchantInfo.stage控制商品阶段
-     * 3.0版本：商店不再保存阶段，商品使用flags列表；旧数字阶段大于0时转成同名字符串flag
+     * 3.0版本：商店不再保存阶段，商品使用flagGroups；旧数字阶段大于0时转成同名字符串flag
      */
     private static CompoundTag migrateV2ToV3(CompoundTag shopTag) {
         CompoundTag migratedTag = shopTag.copy();
@@ -171,7 +171,7 @@ public class ShopProject implements IProject {
         if (categoryInfosTag instanceof ListTag categoryList) {
             for (var category : categoryList) {
                 if (category instanceof CompoundTag categoryCompound) {
-                    migrateMerchantStages(categoryCompound);
+                    migrateMerchantStageGroups(categoryCompound);
                 }
             }
         }
@@ -197,37 +197,52 @@ public class ShopProject implements IProject {
         }
     }
 
-    private static void migrateMerchantStages(CompoundTag categoryCompound) {
+    private static void migrateMerchantStageGroups(CompoundTag categoryCompound) {
         if (!(categoryCompound.get("merchants") instanceof ListTag merchants)) {
             return;
         }
 
         for (var merchant : merchants) {
-            if (!(merchant instanceof CompoundTag merchantCompound) || !merchantCompound.contains("stage", Tag.TAG_INT)) {
-                continue;
-            }
-            int stage = merchantCompound.getInt("stage");
-            merchantCompound.remove("stage");
-            if (stage <= 0) {
+            if (!(merchant instanceof CompoundTag merchantCompound)) {
                 continue;
             }
 
             ListTag flags = merchantCompound.contains("flags", Tag.TAG_LIST)
-                    ? merchantCompound.getList("flags", Tag.TAG_STRING)
+                    ? merchantCompound.getList("flags", Tag.TAG_STRING).copy()
                     : new ListTag();
-            String stageFlag = String.valueOf(stage);
-            boolean exists = false;
-            for (int i = 0; i < flags.size(); i++) {
-                if (stageFlag.equals(flags.getString(i))) {
-                    exists = true;
-                    break;
+            if (merchantCompound.contains("stage", Tag.TAG_INT)) {
+                int stage = merchantCompound.getInt("stage");
+                merchantCompound.remove("stage");
+                if (stage > 0) {
+                    addFlagIfAbsent(flags, String.valueOf(stage));
                 }
             }
-            if (!exists) {
-                flags.add(StringTag.valueOf(stageFlag));
+
+            merchantCompound.remove("flags");
+            if (merchantCompound.contains("flagGroups", Tag.TAG_LIST) || flags.isEmpty()) {
+                continue;
             }
-            merchantCompound.put("flags", flags);
+
+            merchantCompound.put("flagGroups", createAndFlagGroups(flags));
         }
+    }
+
+    private static void addFlagIfAbsent(ListTag flags, String flag) {
+        for (int i = 0; i < flags.size(); i++) {
+            if (flag.equals(flags.getString(i))) {
+                return;
+            }
+        }
+        flags.add(StringTag.valueOf(flag));
+    }
+
+    private static ListTag createAndFlagGroups(ListTag flags) {
+        CompoundTag group = new CompoundTag();
+        group.putString("mode", "viscript_shop.data.flag_group.mode.and");
+        group.put("flags", flags);
+        ListTag flagGroups = new ListTag();
+        flagGroups.add(group);
+        return flagGroups;
     }
 
     @Override
