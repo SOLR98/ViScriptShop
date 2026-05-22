@@ -21,6 +21,8 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -28,7 +30,7 @@ import javax.annotation.Nullable;
 import java.io.File;
 
 public class ShopProject implements IProject {
-    public static int VERSION = 2;
+    public static int VERSION = 3;
     public static final ProjectType PROVIDER = ProjectType.of(IGuiTexture.EMPTY, Component.translatable("viscript_shop.editor.shop.add").getString(), ".shopproj", ShopProject::new);
 
     public Shop shop = new Shop();
@@ -110,6 +112,7 @@ public class ShopProject implements IProject {
     private static CompoundTag migrateToNextVersion(@NotNull CompoundTag shopTag, int fromVersion) {
         return switch (fromVersion) {
             case 1 -> migrateV1ToV2(shopTag);
+            case 2 -> migrateV2ToV3(shopTag);
             default -> shopTag;
         };
     }
@@ -156,6 +159,27 @@ public class ShopProject implements IProject {
     }
 
     /**
+     * 版本兼容方法：将2.0版本的数字阶段迁移到3.0版本的flag阶段
+     * 2.0版本：ShopInfo.stage控制商店阶段，MerchantInfo.stage控制商品阶段
+     * 3.0版本：商店不再保存阶段，商品使用flags列表；旧数字阶段大于0时转成同名字符串flag
+     */
+    private static CompoundTag migrateV2ToV3(CompoundTag shopTag) {
+        CompoundTag migratedTag = shopTag.copy();
+        migratedTag.remove("stage");
+
+        var categoryInfosTag = migratedTag.get("categoryInfos");
+        if (categoryInfosTag instanceof ListTag categoryList) {
+            for (var category : categoryList) {
+                if (category instanceof CompoundTag categoryCompound) {
+                    migrateMerchantStages(categoryCompound);
+                }
+            }
+        }
+
+        return migratedTag;
+    }
+
+    /**
      * 迁移单个CategoryInfo中的merchants格式
      */
     private static void migrateCategoryMerchants(CompoundTag categoryCompound) {
@@ -170,6 +194,39 @@ public class ShopProject implements IProject {
                     }
                 }
             }
+        }
+    }
+
+    private static void migrateMerchantStages(CompoundTag categoryCompound) {
+        if (!(categoryCompound.get("merchants") instanceof ListTag merchants)) {
+            return;
+        }
+
+        for (var merchant : merchants) {
+            if (!(merchant instanceof CompoundTag merchantCompound) || !merchantCompound.contains("stage", Tag.TAG_INT)) {
+                continue;
+            }
+            int stage = merchantCompound.getInt("stage");
+            merchantCompound.remove("stage");
+            if (stage <= 0) {
+                continue;
+            }
+
+            ListTag flags = merchantCompound.contains("flags", Tag.TAG_LIST)
+                    ? merchantCompound.getList("flags", Tag.TAG_STRING)
+                    : new ListTag();
+            String stageFlag = String.valueOf(stage);
+            boolean exists = false;
+            for (int i = 0; i < flags.size(); i++) {
+                if (stageFlag.equals(flags.getString(i))) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists) {
+                flags.add(StringTag.valueOf(stageFlag));
+            }
+            merchantCompound.put("flags", flags);
         }
     }
 
@@ -250,7 +307,6 @@ public class ShopProject implements IProject {
                 }
             }
         }
-        this.shop.shopInfo.setStage(0);
         return true;
     }
 }

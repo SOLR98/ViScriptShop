@@ -20,7 +20,6 @@ import com.viscriptshop.util.UIElementUtil;
 import dev.vfyjxf.taffy.style.*;
 import net.minecraft.network.chat.Component;
 
-import java.util.Comparator;
 import java.util.List;
 
 public class ShopPreviewView extends View {
@@ -36,7 +35,6 @@ public class ShopPreviewView extends View {
     private DraggableUI<MerchantInfo> draggableMerchants = null;
     private CategoryInfo lastRenderedCategory = null;
     private CategoryInfo.ShopType lastRenderedShopType = null;
-    private int lastRenderedStage = Integer.MIN_VALUE;
     private int lastRenderedSignature = 0;
 
     public ShopPreviewView(ShopEditor editor) {
@@ -57,13 +55,6 @@ public class ShopPreviewView extends View {
         }).layout(layout -> {
             layout.heightPercent(100);
         });
-        UIElement sortButton = new Button().setText("viscript_shop.editor.sort.merchant").setOnClick(event -> {
-            Dialog.showCheckBox("viscript_shop.editor.sort.merchant", "viscript_shop.dialog.sort_merchant.info", (result) -> {
-                if (result) selectedCategory.getMerchants().sort(Comparator.comparingInt(MerchantInfo::getStage));
-            }).show(editor);
-        }).layout(layout -> {
-            layout.heightPercent(100);
-        });
         UIElement setTradeTypeButton = new Button().setText("viscript_shop.editor.setTradeType").setOnClick(event -> {
             showTradeTypeDialog();
         }).layout(layout -> {
@@ -74,7 +65,7 @@ public class ShopPreviewView extends View {
         }).layout(layout -> {
             layout.heightPercent(100);
         });
-        head.addChildren(addButton, sortButton, setTradeTypeButton, pasteButton).addEventListener(UIEvents.TICK, event -> {
+        head.addChildren(addButton, setTradeTypeButton, pasteButton).addEventListener(UIEvents.TICK, event -> {
             if (selectedCategory == null) {
                 setTradeTypeButton.setDisplay(TaffyDisplay.NONE);
             } else {
@@ -102,50 +93,44 @@ public class ShopPreviewView extends View {
     private void tickReloadMerchants() {
         selectedCategory = editor.categoryView.getSelectedCategory();
 
-        if (selectedCategory == null || !(editor.getCurrentProject() instanceof ShopProject shopProject)) {
+        if (selectedCategory == null || !(editor.getCurrentProject() instanceof ShopProject)) {
             head.setDisplay(TaffyDisplay.NONE);
             scrollerView.clearAllScrollViewChildren();
             draggableMerchants = null;
             lastRenderedCategory = null;
             lastRenderedShopType = null;
-            lastRenderedStage = Integer.MIN_VALUE;
             lastRenderedSignature = 0;
             return;
         }
 
         head.setDisplay(TaffyDisplay.FLEX);
 
-        int stage = shopProject.shop.shopInfo.getStage();
         CategoryInfo.ShopType shopType = selectedCategory.getShopType();
-        int signature = computeSignature(selectedCategory, stage);
+        int signature = computeSignature(selectedCategory);
 
         boolean dragging = draggableMerchants != null && draggableMerchants.isDragging();
         boolean needsRebuild = !dragging && (
                 selectedCategory != lastRenderedCategory ||
                         shopType != lastRenderedShopType ||
-                        stage != lastRenderedStage ||
                         signature != lastRenderedSignature
         );
 
         if (needsRebuild) {
-            rebuildMerchantsUI(stage);
+            rebuildMerchantsUI();
             lastRenderedCategory = selectedCategory;
             lastRenderedShopType = shopType;
-            lastRenderedStage = stage;
             lastRenderedSignature = signature;
         }
     }
 
-    private void rebuildMerchantsUI(int stage) {
+    private void rebuildMerchantsUI() {
         scrollerView.clearAllScrollViewChildren();
 
-        List<MerchantInfo> stageMerchants = selectedCategory.getMerchants().stream()
-                .filter(m -> m.getStage() == stage)
-                .toList();
+        List<MerchantInfo> merchants = selectedCategory.getMerchants();
 
-        draggableMerchants = new DraggableUI<>(stageMerchants, newOrder -> {
-            applyStageMerchantOrder(stage, newOrder);
-            lastRenderedSignature = computeSignatureFromStageList(stage, selectedCategory.getShopType(), newOrder);
+        draggableMerchants = new DraggableUI<>(merchants, newOrder -> {
+            selectedCategory.setMerchants(newOrder);
+            lastRenderedSignature = computeSignatureFromMerchantList(selectedCategory.getShopType(), newOrder);
         });
 
         draggableMerchants.layout(layout -> {
@@ -156,7 +141,7 @@ public class ShopPreviewView extends View {
             layout.gapAll(5);
         });
 
-        for (MerchantInfo merchantInfo : stageMerchants) {
+        for (MerchantInfo merchantInfo : merchants) {
             MerchantCard card = createMerchantCard(merchantInfo);
             card.root.addEventListener(UIEvents.MOUSE_DOWN, event -> showMerchantMenuTab(event, merchantInfo));
             draggableMerchants.addSortableCard(merchantInfo, card.root, card.dragHandle);
@@ -436,32 +421,15 @@ public class ShopPreviewView extends View {
         return -1;
     }
 
-    private void applyStageMerchantOrder(int stage, List<MerchantInfo> newStageOrder) {
-        if (selectedCategory == null) return;
-        var merchants = selectedCategory.getMerchants();
-
-        int stageIndex = 0;
-        for (int i = 0; i < merchants.size() && stageIndex < newStageOrder.size(); i++) {
-            MerchantInfo m = merchants.get(i);
-            if (m.getStage() == stage) {
-                merchants.set(i, newStageOrder.get(stageIndex++));
-            }
-        }
+    private int computeSignature(CategoryInfo category) {
+        return computeSignatureFromMerchantList(category.getShopType(), category.getMerchants());
     }
 
-    private int computeSignature(CategoryInfo category, int stage) {
-        List<MerchantInfo> stageMerchants = category.getMerchants().stream()
-                .filter(m -> m.getStage() == stage)
-                .toList();
-        return computeSignatureFromStageList(stage, category.getShopType(), stageMerchants);
-    }
-
-    private int computeSignatureFromStageList(int stage, CategoryInfo.ShopType shopType, List<MerchantInfo> stageMerchants) {
+    private int computeSignatureFromMerchantList(CategoryInfo.ShopType shopType, List<MerchantInfo> merchants) {
         int sig = 1;
-        sig = 31 * sig + stage;
         sig = 31 * sig + (shopType == null ? 0 : shopType.ordinal());
 
-        for (MerchantInfo m : stageMerchants) {
+        for (MerchantInfo m : merchants) {
             sig = 31 * sig + System.identityHashCode(m);
             sig = 31 * sig + m.hashCode();
         }

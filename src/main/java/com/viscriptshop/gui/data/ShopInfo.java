@@ -29,8 +29,6 @@ public class ShopInfo implements IConfigurable, IPersistedSerializable {
 
     @Configurable(name = "viscript_shop.data.shop.name", tips = "viscript_shop.data.shop.name.tip")
     private String name = "";
-    @Configurable(name = "viscript_shop.data.shop.stage", tips = "viscript_shop.data.shop.stage.tip")
-    private int stage = 0;
     @Persisted
     private boolean isQuickOpening = false;
     @Configurable(name = "viscript_shop.data.shop.lockedMerchantVisibility")

@@ -12,6 +12,8 @@ import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 
 public class ShopRegistries {
@@ -31,5 +33,7 @@ public class ShopRegistries {
         public static final StreamCodec<ByteBuf, Money> STREAM_CODEC = ByteBufCodecs.fromCodec(CODEC);
         @Persisted
         private int money;
+        @Persisted
+        private List<String> flags = new ArrayList<>();
     }
 }

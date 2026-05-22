@@ -102,7 +102,6 @@ public class ShopUI extends UIElement {
         this.shopLocation = shopLocation;
         this.playerItems.clear();
         this.currentShopInfo = ShopHelper.cacheShopInfo == null ? shopInfo : ShopHelper.cacheShopInfo;
-        this.currentShopInfo.setStage(shopInfo.getStage());
         if (minecraft.player != null) {
             // 根据 categoryId 查找对应分类
             if (categoryId != null && !categoryId.isEmpty()) {
@@ -305,14 +304,6 @@ public class ShopUI extends UIElement {
         this.currencyLayoutToggle = layoutToggle;
         updateCurrencyLayoutToggleState();
 
-        Label stageLabel = (Label) new Label().setText(Component.translatable("viscript_shop.ui.stage", this.currentShopInfo.getStage())).textStyle(textStyle -> {
-            textStyle.textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER).adaptiveWidth(true);
-        }).layout(layout -> {
-            layout.marginTop(2.2f);
-            layout.paddingHorizontal(6);
-            layout.heightPercent(85);
-            layout.marginRight(10);
-        }).style(style -> style.backgroundTexture(SpriteTexture.of(ViscriptShop.formattedMod("textures/gui/level_bar.png"))));
         head.addChildren(new UIElement().layout(layout -> {
             layout.heightPercent(100);
             layout.alignItems(AlignItems.CENTER);
@@ -321,7 +312,7 @@ public class ShopUI extends UIElement {
             layout.heightPercent(100);
             layout.alignItems(AlignItems.CENTER);
             layout.flexDirection(FlexDirection.ROW);
-        }).addChildren(stageLabel, new PlayerHeadElement().layout(layout -> layout.marginRight(5))));
+        }).addChildren(new PlayerHeadElement().layout(layout -> layout.marginRight(5))));
 
         UIElement body = new UIElement().layout(layout -> {
             layout.widthPercent(100);
@@ -1036,13 +1027,30 @@ public class ShopUI extends UIElement {
      * @return null表示已解锁，非null返回锁定原因的Component
      */
     private Component getMerchantLockReason(MerchantInfo merchantInfo) {
-        // 阶段判断
-        if (merchantInfo.getStage() > currentShopInfo.getStage()) {
-            return Component.translatable("viscript_shop.ui.stage.lock", merchantInfo.getStage());
+        if (minecraft.player == null) {
+            return null;
+        }
+
+        List<String> missingFlags = getMissingFlags(merchantInfo.getFlags(), ViScriptShopClientUtil.getStageFlags(minecraft.player));
+        if (!missingFlags.isEmpty()) {
+            return Component.translatable("viscript_shop.ui.flags.lock", String.join(", ", missingFlags));
         }
 
         // 所有条件都满足，返回null表示已解锁
         return null;
+    }
+
+    private List<String> getMissingFlags(List<String> requiredFlags, List<String> playerFlags) {
+        if (requiredFlags == null || requiredFlags.isEmpty()) {
+            return List.of();
+        }
+        List<String> missingFlags = new ArrayList<>();
+        for (String flag : requiredFlags) {
+            if (!flag.isEmpty() && !playerFlags.contains(flag)) {
+                missingFlags.add(flag);
+            }
+        }
+        return missingFlags;
     }
 
     /**

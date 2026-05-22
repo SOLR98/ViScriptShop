@@ -14,6 +14,8 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.sirgrantd.sg_economy.api.SGEconomyApi;
 
+import java.util.List;
+
 public class ViScriptShopClientUtil {
     @Info("客户端打开商店（带分类和商品参数）")
     public static void clientOpenShop(String shopLocation, ShopInfo shopInfo, String categoryId, String merchantId) {
@@ -33,5 +35,10 @@ public class ViScriptShopClientUtil {
             return SGEconomyApi.get().getBalanceAsInt(player);
         }
         return player.getData(ShopRegistries.MONEY).getMoney();
+    }
+
+    @Info("获取玩家阶段标记")
+    public static List<String> getStageFlags(LocalPlayer player) {
+        return player.getData(ShopRegistries.MONEY).getFlags();
     }
 }

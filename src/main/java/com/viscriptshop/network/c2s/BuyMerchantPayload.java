@@ -23,6 +23,7 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 
+import java.util.List;
 import java.util.Map;
 
 public class BuyMerchantPayload {
@@ -52,6 +53,14 @@ public class BuyMerchantPayload {
 
             int stock = merchantInfo.getStock();
             int buyCount = purchaseEntry.getBuyCount();
+
+            List<String> missingFlags = ViScriptShopServerUtil.getMissingStageFlags(player, merchantInfo.getFlags());
+            if (!missingFlags.isEmpty()) {
+                RPCPacketDistributor.rpcToPlayer(player, S2CPayload.SEND_MESSAGE, Message.Type.ERROR,
+                        Component.translatable("viscript_shop.message.stage_flags.missing", String.join(", ", missingFlags)));
+                NeoForge.EVENT_BUS.post(new ShopServerEvent.BuyFail(player, shopInfo, cost, gain));
+                return;
+            }
 
             if (stock >= 0 && buyCount > stock) {
                 // 发送错误消息

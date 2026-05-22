@@ -73,16 +73,15 @@ public class ShopCommand implements ICommand {
                                 .executes(this::reloadShop)
                         )
                 )
-                .then(Commands.literal("setStage")
-                        .then(Commands.argument("shop", StringArgumentType.string())
-                                .suggests((context, builder) -> {
-                                    ViscriptShop.getShopSavedData().shopInfoMap.forEach((key, value) -> {
-                                        builder.suggest("\"" + key + "\"");
-                                    });
-                                    return builder.buildFuture();
-                                })
-                                .then(Commands.argument("stage", IntegerArgumentType.integer())
-                                        .executes(this::setStageShop)
+                .then(Commands.literal("stage")
+                        .then(Commands.literal("add")
+                                .then(Commands.argument("flag", StringArgumentType.string())
+                                        .executes(this::addStageFlag)
+                                )
+                        )
+                        .then(Commands.literal("remove")
+                                .then(Commands.argument("flag", StringArgumentType.string())
+                                        .executes(this::removeStageFlag)
                                 )
                         )
                 )
@@ -267,21 +266,6 @@ public class ShopCommand implements ICommand {
     }
 
     @SneakyThrows
-    private int setStageShop(CommandContext<CommandSourceStack> context) {
-        String shop = StringArgumentType.getString(context, "shop");
-        int stage = IntegerArgumentType.getInteger(context, "stage");
-
-        if (ViScriptShopServerUtil.getShopInfo(shop) == null) {
-            context.getSource().sendFailure(Component.translatable("command.viscript_shop.error.shop_not_found", shop));
-            return 0;
-        }
-
-        ViScriptShopServerUtil.setStageShop(shop, stage);
-        context.getSource().sendSuccess(() -> Component.translatable("command.viscript_shop.setStage.shop", stage), true);
-        return 1;
-    }
-
-    @SneakyThrows
     private int setQuickOpeningShop(CommandContext<CommandSourceStack> context) {
         String shop = StringArgumentType.getString(context, "shop");
         boolean quickOpening = BoolArgumentType.getBool(context, "quickOpening");
@@ -329,6 +313,52 @@ public class ShopCommand implements ICommand {
 
         context.getSource().sendSuccess(() -> Component.translatable("command.viscript_shop.remove.success", merchantId), true);
         return 1;
+    }
+
+    @SneakyThrows
+    private int addStageFlag(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
+        if (player == null) {
+            throw playerOnlyException();
+        }
+
+        String flag = StringArgumentType.getString(context, "flag").trim();
+        if (flag.isEmpty()) {
+            context.getSource().sendFailure(Component.translatable("command.viscript_shop.stage.empty"));
+            return 0;
+        }
+
+        boolean added = ViScriptShopServerUtil.addStageFlag(player, flag);
+        if (added) {
+            context.getSource().sendSuccess(() -> Component.translatable("command.viscript_shop.stage.add", flag), true);
+            return 1;
+        }
+
+        context.getSource().sendFailure(Component.translatable("command.viscript_shop.stage.add.exists", flag));
+        return 0;
+    }
+
+    @SneakyThrows
+    private int removeStageFlag(CommandContext<CommandSourceStack> context) {
+        ServerPlayer player = context.getSource().getPlayer();
+        if (player == null) {
+            throw playerOnlyException();
+        }
+
+        String flag = StringArgumentType.getString(context, "flag").trim();
+        if (flag.isEmpty()) {
+            context.getSource().sendFailure(Component.translatable("command.viscript_shop.stage.empty"));
+            return 0;
+        }
+
+        boolean removed = ViScriptShopServerUtil.removeStageFlag(player, flag);
+        if (removed) {
+            context.getSource().sendSuccess(() -> Component.translatable("command.viscript_shop.stage.remove", flag), true);
+            return 1;
+        }
+
+        context.getSource().sendFailure(Component.translatable("command.viscript_shop.stage.remove.missing", flag));
+        return 0;
     }
 
     public static List<String> getServerShopFiles() {
