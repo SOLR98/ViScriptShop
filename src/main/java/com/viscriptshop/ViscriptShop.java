@@ -1,5 +1,6 @@
 package com.viscriptshop;
 
+import com.lowdragmc.lowdraglib2.Platform;
 import com.lowdragmc.lowdraglib2.editor.ui.EditorWindow;
 import com.lowdragmc.lowdraglib2.gui.factory.PlayerUIMenuType;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
@@ -82,8 +83,12 @@ public class ViscriptShop {
         );
         PlayerUIMenuType.register(ShopEditor.SHOP_ID, ignored -> player -> {
             if (player.level().isClientSide) {
-                return new ModularUI(UI.of(EditorWindow.open(ShopEditor.SHOP_ID, ShopEditor::new)))
+                ModularUI modularUI = new ModularUI(UI.of(EditorWindow.open(ShopEditor.SHOP_ID, ShopEditor::new)))
                         .shouldCloseOnKeyInventory(false);
+                if (!Platform.isDevEnv()) {
+                    modularUI.shouldCloseOnEsc(false);
+                }
+                return modularUI;
             }
             return new ModularUI(UI.empty());
         });

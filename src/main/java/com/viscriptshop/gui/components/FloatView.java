@@ -12,6 +12,7 @@ import dev.vfyjxf.taffy.style.*;
 import lombok.Getter;
 import net.minecraft.network.chat.Component;
 import org.joml.Vector2f;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Supplier;
 
@@ -39,6 +40,13 @@ public class FloatView extends UIElement {
 
         this.titleBar = new UIElement();
         this.contentContainer = new UIElement();
+        setFocusable(true);
+        addEventListener(UIEvents.KEY_DOWN, event -> {
+            if (event.keyCode == GLFW.GLFW_KEY_ESCAPE) {
+                hide();
+                event.stopPropagation();
+            }
+        });
 
         Button closeButton = (Button) new Button().setText("x").setOnClick(event -> hide())
                 .layout(layout -> {
@@ -103,6 +111,7 @@ public class FloatView extends UIElement {
             isShow = true;
             this.parent.addChildren(this);
         }
+        focus();
     }
 
     public void hide() {
