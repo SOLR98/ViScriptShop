@@ -11,7 +11,7 @@ import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
 import com.lowdragmc.lowdraglib2.utils.PersistedParser;
 import com.mojang.serialization.Codec;
 import com.viscriptshop.gui.components.MerchantFlagGroupsConfigurator;
-import com.viscriptshop.util.CodecUtil;
+import com.viscript_lib.util.CodecUtil;
 import dev.vfyjxf.taffy.style.TaffyDisplay;
 import lombok.AllArgsConstructor;
 import lombok.Data;

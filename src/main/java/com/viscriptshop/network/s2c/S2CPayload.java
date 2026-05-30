@@ -5,19 +5,17 @@ import com.lowdragmc.lowdraglib2.editor.ui.Editor;
 import com.lowdragmc.lowdraglib2.editor.ui.EditorWindow;
 import com.lowdragmc.lowdraglib2.gui.holder.ModularUIContainerScreen;
 import com.lowdragmc.lowdraglib2.gui.holder.ModularUIScreen;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.Dialog;
 import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacket;
 import com.lowdragmc.lowdraglib2.syncdata.rpc.RPCSender;
 import com.mojang.serialization.Codec;
+import com.viscript_lib.util.CodecUtil;
 import com.viscriptshop.ViscriptShop;
-import com.viscriptshop.gui.ShopEditor;
 import com.viscriptshop.gui.ShopUI;
 import com.viscriptshop.gui.components.DialogSelect;
 import com.viscriptshop.gui.components.Message;
 import com.viscriptshop.gui.data.AggregatedResources;
 import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.gui.project.ShopProject;
-import com.viscriptshop.util.CodecUtil;
 import com.viscriptshop.util.ViScriptShopClientUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
@@ -31,7 +29,6 @@ public class S2CPayload {
     public static final String SHOP_INFO_PROJECT = MOD_ID + "shop_info_project";
     public static final String OPEN_SHOP_UI = MOD_ID + "open_shop_ui";
     public static final String SEND_MESSAGE = MOD_ID + "send_message";
-    public static final String SEND_EDITOR_DIALOG = MOD_ID + "send_editor_dialog";
     public static final String GET_SHOP_INFO_S2C = MOD_ID + "get_shop_info_s2c";
     public static final String GET_ITEM_COUNT = MOD_ID + "get_item_count_s2c";
     public static final String RELOAD_SHOP_UI = MOD_ID + "reload_shop_ui";
@@ -62,13 +59,6 @@ public class S2CPayload {
     public static void sendMessage(RPCSender sender, Message.Type messageType, Component message) {
         if (Minecraft.getInstance().screen instanceof ModularUIScreen screen) {
             Message.send(messageType, message.getString(), screen.modularUI.ui.rootElement);
-        }
-    }
-
-    @RPCPacket(SEND_EDITOR_DIALOG)
-    public static void sendEditorDialog(RPCSender sender, Component title, Component content) {
-        if (sender.isServer() && getCurrentEditorWindow() instanceof EditorWindow window && window.getCurrentEditor() instanceof ShopEditor editor) {
-            Dialog.showNotification(title.getString(), content.getString(), null).show(editor);
         }
     }
 

@@ -1,44 +1,38 @@
 package com.viscriptshop.gui.project;
 
-import com.lowdragmc.lowdraglib2.LDLib2;
 import com.lowdragmc.lowdraglib2.Platform;
 import com.lowdragmc.lowdraglib2.editor.project.IProject;
 import com.lowdragmc.lowdraglib2.editor.project.ProjectType;
 import com.lowdragmc.lowdraglib2.editor.resource.Resources;
 import com.lowdragmc.lowdraglib2.editor.ui.Editor;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.Dialog;
-import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
-import com.lowdragmc.lowdraglib2.syncdata.ISubscription;
+import com.viscript_lib.gui.editor.EditorFileFormat;
+import com.viscript_lib.gui.editor.FunctionFileProjectType;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.components.Message;
 import com.viscriptshop.gui.data.CategoryInfo;
 import com.viscriptshop.gui.data.MerchantInfo;
 import com.viscriptshop.gui.data.Shop;
-import com.viscriptshop.network.c2s.C2SPayload;
 import com.viscriptshop.util.ShopHelper;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nullable;
 import java.io.File;
+import java.nio.file.Files;
+import java.util.Objects;
 
 public class ShopProject implements IProject {
     public static int VERSION = 3;
-    public static final ProjectType PROVIDER = ProjectType.of(IGuiTexture.EMPTY, Component.translatable("viscript_shop.editor.shop.add").getString(), ".shopproj", ShopProject::new);
+    public static final EditorFileFormat FORMAT = EditorFileFormat.compressed(ViscriptShop.MOD_ID, "shop", Shop.SUFFIX);
+    public static final ProjectType PROVIDER = new ShopFunctionFileProjectType();
 
     public Shop shop = new Shop();
-
-    // runtime
-    //导出shop数据文本按钮
-    @Nullable
-    private ISubscription exportMenuSubscription;
 
 
     @Override
@@ -58,19 +52,42 @@ public class ShopProject implements IProject {
 
     @Override
     public CompoundTag serializeProject(@NotNull HolderLookup.Provider provider) {
-        var data = new CompoundTag();
-        data.put("shop", shop.serializeNBT(provider));
+        var data = shop.serializeNBT(provider);
+        data.putInt("version_num", VERSION);
         return data;
     }
 
     @Override
     public void deserializeProject(@NotNull HolderLookup.Provider provider, @NotNull CompoundTag nbt) {
-        CompoundTag shopTag = nbt.getCompound("shop");
-        // 获取项目版本
-        var version = nbt.contains("version_num") ? nbt.getInt("version_num") : 1;
+        CompoundTag shopTag = unwrapShopTag(nbt);
+        var version = getShopDataVersion(nbt, shopTag);
         // 应用版本兼容
         shopTag = migrateShopData(shopTag, version);
         shop.deserializeNBT(provider, shopTag);
+    }
+
+    private static CompoundTag unwrapShopTag(CompoundTag nbt) {
+        if (nbt.contains("shop", Tag.TAG_COMPOUND)) {
+            return nbt.getCompound("shop");
+        }
+        if (nbt.contains("data", Tag.TAG_COMPOUND)) {
+            CompoundTag dataTag = nbt.getCompound("data");
+            if (dataTag.contains("shop", Tag.TAG_COMPOUND)) {
+                return dataTag.getCompound("shop");
+            }
+            return dataTag;
+        }
+        return nbt;
+    }
+
+    private static int getShopDataVersion(CompoundTag rootTag, CompoundTag shopTag) {
+        if (shopTag.contains("version_num", Tag.TAG_INT)) {
+            return shopTag.getInt("version_num");
+        }
+        if (rootTag.contains("version_num", Tag.TAG_INT)) {
+            return rootTag.getInt("version_num");
+        }
+        return 1;
     }
 
     /**
@@ -252,54 +269,6 @@ public class ShopProject implements IProject {
         return meta;
     }
 
-    @Override
-    public void onLoad(Editor editor) {
-        IProject.super.onLoad(editor);
-        if (exportMenuSubscription != null) {
-            exportMenuSubscription.unsubscribe();
-        }
-        exportMenuSubscription = editor.fileMenu.registerMenuCreator((tab, menu) ->
-                menu.branch("viscript_shop.editor.shop.export", m -> {
-                            m.leaf("viscript_shop.editor.shop.export", () -> {
-                                if (isTrueFormat(editor)) {
-                                    Dialog.showFileDialog("viscript_shop.editor.saveAs", new File(LDLib2.getAssetsDir(), "%s/shop/".formatted(ViscriptShop.MOD_ID)), false,
-                                            Dialog.suffixFilter(Shop.SUFFIX), file -> {
-                                                if (file != null && !file.isDirectory()) {
-                                                    if (!file.getName().endsWith(Shop.SUFFIX)) {
-                                                        file = new File(file.getParentFile(), file.getName() + Shop.SUFFIX);
-                                                    }
-                                                    try {
-                                                        var fileData = shop.serializeNBT(Platform.getFrozenRegistry());
-                                                        NbtIo.writeCompressed(fileData, file.toPath());
-                                                        ShopHelper.clearCache();
-                                                    } catch (Exception ignored) {
-                                                    }
-                                                }
-                                            }).show(editor);
-                                }
-                            });
-                            m.leaf("viscript_shop.editor.project.upload_shop", () -> {
-                                Dialog.stringEditorDialog("viscript_shop.editor.project.upload_shop", "", (result) -> {
-                                    return !result.isEmpty();
-                                }, (result) -> {
-                                    var fileData = shop.serializeNBT(Platform.getFrozenRegistry());
-                                    fileData.putString("fileName", result);
-                                    RPCPacketDistributor.rpcToServer(C2SPayload.UPLOAD_SHOP_FILE, fileData);
-                                }).show(editor);
-                            });
-                        }
-                ));
-    }
-
-    @Override
-    public void onClosed(Editor editor) {
-        IProject.super.onClosed(editor);
-        if (exportMenuSubscription != null) {
-            exportMenuSubscription.unsubscribe();
-            exportMenuSubscription = null;
-        }
-    }
-
     public boolean isTrueFormat(Editor editor) {
         for (CategoryInfo categoryInfo : this.shop.shopInfo.getCategoryInfos()) {
             for (MerchantInfo merchant : categoryInfo.getMerchants()) {
@@ -323,5 +292,53 @@ public class ShopProject implements IProject {
             }
         }
         return true;
+    }
+
+    private static class ShopFunctionFileProjectType extends FunctionFileProjectType {
+        private ShopFunctionFileProjectType() {
+            super(IGuiTexture.EMPTY, "viscript_shop.editor.shop.add", FORMAT, ShopProject::new);
+        }
+
+        @Override
+        public IProject loadProjectFromFile(File file) throws Exception {
+            CompoundTag data;
+            if (FORMAT.compressed()) {
+                try (var inputStream = Files.newInputStream(file.toPath())) {
+                    data = NbtIo.readCompressed(inputStream, NbtAccounter.unlimitedHeap());
+                }
+            } else {
+                data = Objects.requireNonNull(NbtIo.read(file.toPath()));
+            }
+            var project = getProjectCreator().get();
+            project.deserializeProject(Platform.getFrozenRegistry(), data);
+            return project;
+        }
+
+        @Override
+        public void saveProjectToFile(IProject project, File file) throws Exception {
+            if (file.getParentFile() != null) {
+                Files.createDirectories(file.getParentFile().toPath());
+            }
+            var fileData = project.serializeProject(Platform.getFrozenRegistry());
+            if (FORMAT.compressed()) {
+                NbtIo.writeCompressed(fileData, file.toPath());
+            } else {
+                NbtIo.write(fileData, file.toPath());
+            }
+            ShopHelper.clearCache();
+        }
+
+        @Override
+        public boolean isProjectDirty(IProject project, File file) throws Exception {
+            CompoundTag fileData;
+            if (FORMAT.compressed()) {
+                try (var inputStream = Files.newInputStream(file.toPath())) {
+                    fileData = NbtIo.readCompressed(inputStream, NbtAccounter.unlimitedHeap());
+                }
+            } else {
+                fileData = Objects.requireNonNull(NbtIo.read(file.toPath()));
+            }
+            return !project.serializeProject(Platform.getFrozenRegistry()).equals(fileData);
+        }
     }
 }

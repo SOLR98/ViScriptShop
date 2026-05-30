@@ -9,6 +9,7 @@ import com.viscriptshop.gui.project.ShopProject;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.Tag;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -55,7 +56,8 @@ public class ShopHelper {
 
         // .shop文件没有版本信息，如果启用兼容则默认当作1.0版本处理
         if (Config.enableLegacyDataMigration != null && Config.enableLegacyDataMigration.get()) {
-            compoundTag = ShopProject.migrateShopData(compoundTag, 1);
+            int version = compoundTag.contains("version_num", Tag.TAG_INT) ? compoundTag.getInt("version_num") : 1;
+            compoundTag = ShopProject.migrateShopData(compoundTag, version);
         }
 
         ShopInfo shopInfo = new ShopInfo();

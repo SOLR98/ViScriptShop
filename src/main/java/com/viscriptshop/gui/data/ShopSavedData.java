@@ -3,6 +3,7 @@ package com.viscriptshop.gui.data;
 import com.viscriptshop.gui.project.ShopProject;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.saveddata.SavedData;
 import org.jetbrains.annotations.NotNull;
 
@@ -108,7 +109,9 @@ public class ShopSavedData extends SavedData {
                 continue;
             }
             ShopInfo shopInfo = new ShopInfo();
-            shopInfo.deserializeNBT(provider, ShopProject.migrateShopData(nbt.getCompound(shop), 1));
+            CompoundTag shopTag = nbt.getCompound(shop);
+            int version = shopTag.contains("version_num", Tag.TAG_INT) ? shopTag.getInt("version_num") : 1;
+            shopInfo.deserializeNBT(provider, ShopProject.migrateShopData(shopTag, version));
             shopSavedData.shopInfoMap.put(shop, shopInfo);
         }
         return shopSavedData;

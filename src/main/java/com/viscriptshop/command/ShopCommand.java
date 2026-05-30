@@ -3,12 +3,14 @@ package com.viscriptshop.command;
 import com.lowdragmc.lowdraglib2.LDLib2;
 import com.lowdragmc.lowdraglib2.registry.annotation.LDLRegister;
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.BoolArgumentType;
+import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import com.viscript_lib.register.ICommand;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.data.*;
 import com.viscriptshop.util.ShopHelper;
@@ -25,7 +27,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 
 @LDLRegister(name = "shop", registry = ICommand.COMMAND_ID)
@@ -36,40 +41,21 @@ public class ShopCommand implements ICommand {
                 .then(Commands.literal("editor")
                         .requires(commandSourceStack -> commandSourceStack.hasPermission(Commands.LEVEL_OWNERS))
                         .executes(context -> openEditor(context, ""))
-                        .then(Commands.argument("shop", StringArgumentType.string())
-                                .suggests((context, builder) -> {
-                                    getServerShopFiles().forEach(builder::suggest);
-                                    return builder.buildFuture();
-                                })
-                                .executes(context -> openEditor(context, StringArgumentType.getString(context, "shop")))
+                        .then(Commands.argument("shop", StringArgumentType.greedyString())
+                                .suggests(ShopCommand::suggestServerShopFiles)
+                                .executes(this::openEditorTarget)
                         )
                 )
                 .then(Commands.literal("open")
-                        .then(Commands.argument("shop", StringArgumentType.string())
-                                .suggests((context, builder) -> {
-                                    getServerShopFiles().forEach(builder::suggest);
-                                    return builder.buildFuture();
-                                })
-                                .executes(this::openShop)
-                                .then(Commands.argument("categoryId", StringArgumentType.string())
-                                        .suggests(ShopCommand::suggestCategories)
-                                        .executes(this::openShopWithCategory)
-                                        .then(Commands.argument("merchantId", StringArgumentType.string())
-                                                .suggests(ShopCommand::suggestMerchants)
-                                                .executes(this::openShopWithMerchant)
-                                        )
-                                )
+                        .then(Commands.argument("target", StringArgumentType.greedyString())
+                                .suggests(ShopCommand::suggestOpenTarget)
+                                .executes(this::openShopTarget)
                         )
                 )
                 .then(Commands.literal("reload")
                         .executes(this::reload)
-                        .then(Commands.argument("shop", StringArgumentType.string())
-                                .suggests((context, builder) -> {
-                                    ViscriptShop.getShopSavedData().shopInfoMap.forEach((key, value) -> {
-                                        builder.suggest("\"" + key + "\"");
-                                    });
-                                    return builder.buildFuture();
-                                })
+                        .then(Commands.argument("shop", StringArgumentType.greedyString())
+                                .suggests(ShopCommand::suggestSavedShops)
                                 .executes(this::reloadShop)
                         )
                 )
@@ -87,39 +73,15 @@ public class ShopCommand implements ICommand {
                         )
                 )
                 .then(Commands.literal("setStock")
-                        .then(Commands.argument("shop", StringArgumentType.string())
-                                .suggests((context, builder) -> {
-                                    ViscriptShop.getShopSavedData().shopInfoMap.forEach((key, value) -> {
-                                        builder.suggest("\"" + key + "\"");
-                                    });
-                                    return builder.buildFuture();
-                                })
-                                .then(Commands.argument("categoryId", StringArgumentType.string())
-                                        .suggests(ShopCommand::suggestCategories)
-                                        .then(Commands.argument("merchantId", StringArgumentType.string())
-                                                .suggests(ShopCommand::suggestMerchants)
-                                                .then(Commands.argument("stock", IntegerArgumentType.integer())
-                                                        .executes(this::setMerchantStock)
-                                                )
-                                        )
-                                )
+                        .then(Commands.argument("target", StringArgumentType.greedyString())
+                                .suggests(ShopCommand::suggestSetStockTarget)
+                                .executes(this::setMerchantStockTarget)
                         )
                 )
                 .then(Commands.literal("remove")
-                        .then(Commands.argument("shop", StringArgumentType.string())
-                                .suggests((context, builder) -> {
-                                    ViscriptShop.getShopSavedData().shopInfoMap.forEach((key, value) -> {
-                                        builder.suggest("\"" + key + "\"");
-                                    });
-                                    return builder.buildFuture();
-                                })
-                                .then(Commands.argument("categoryId", StringArgumentType.string())
-                                        .suggests(ShopCommand::suggestCategories)
-                                        .then(Commands.argument("merchantId", StringArgumentType.string())
-                                                .suggests(ShopCommand::suggestMerchants)
-                                                .executes(this::removeMerchant)
-                                        )
-                                )
+                        .then(Commands.argument("target", StringArgumentType.greedyString())
+                                .suggests(ShopCommand::suggestRemoveTarget)
+                                .executes(this::removeMerchantTarget)
                         )
                 )
                 .then(Commands.literal("money")
@@ -180,16 +142,9 @@ public class ShopCommand implements ICommand {
 
         if (ViscriptShop.isFtbLibraryLoaded()) {
             root.then(Commands.literal("setQuickOpening")
-                    .then(Commands.argument("shop", StringArgumentType.string())
-                            .suggests((context, builder) -> {
-                                ViscriptShop.getShopSavedData().shopInfoMap.forEach((key, value) -> {
-                                    builder.suggest("\"" + key + "\"");
-                                });
-                                return builder.buildFuture();
-                            })
-                            .then(Commands.argument("quickOpening", BoolArgumentType.bool())
-                                    .executes(this::setQuickOpeningShop)
-                            )
+                    .then(Commands.argument("target", StringArgumentType.greedyString())
+                            .suggests(ShopCommand::suggestQuickOpeningTarget)
+                            .executes(this::setQuickOpeningTarget)
                     )
             );
         }
@@ -205,6 +160,15 @@ public class ShopCommand implements ICommand {
     }
 
     @SneakyThrows
+    private int openEditorTarget(CommandContext<CommandSourceStack> context) {
+        List<String> args = parseGreedyArguments(context, "shop");
+        if (args.size() != 1) {
+            return sendInvalidUsage(context, "viscript_shop editor [shop]");
+        }
+        return openEditor(context, args.getFirst());
+    }
+
+    @SneakyThrows
     private int openEditor(CommandContext<CommandSourceStack> context, String shop) {
         CommandSourceStack source = context.getSource();
         ServerPlayer player = source.getPlayer();
@@ -217,40 +181,18 @@ public class ShopCommand implements ICommand {
     }
 
     @SneakyThrows
-    private int openShop(CommandContext<CommandSourceStack> context) {
+    private int openShopTarget(CommandContext<CommandSourceStack> context) {
         CommandSourceStack source = context.getSource();
         ServerPlayer player = source.getPlayer();
         if (player != null) {
-            String shop = StringArgumentType.getString(context, "shop");
-            ViScriptShopServerUtil.serverOpenShop(player, shop);
-            return 1;
-        } else {
-            throw playerOnlyException();
-        }
-    }
+            List<String> args = parseGreedyArguments(context, "target");
+            if (args.isEmpty() || args.size() > 3) {
+                return sendInvalidUsage(context, "viscript_shop open <shop> [categoryId] [merchantId]");
+            }
 
-    @SneakyThrows
-    private int openShopWithCategory(CommandContext<CommandSourceStack> context) {
-        CommandSourceStack source = context.getSource();
-        ServerPlayer player = source.getPlayer();
-        if (player != null) {
-            String shop = StringArgumentType.getString(context, "shop");
-            String categoryId = StringArgumentType.getString(context, "categoryId");
-            ViScriptShopServerUtil.serverOpenShop(player, shop, categoryId, null);
-            return 1;
-        } else {
-            throw playerOnlyException();
-        }
-    }
-
-    @SneakyThrows
-    private int openShopWithMerchant(CommandContext<CommandSourceStack> context) {
-        CommandSourceStack source = context.getSource();
-        ServerPlayer player = source.getPlayer();
-        if (player != null) {
-            String shop = StringArgumentType.getString(context, "shop");
-            String categoryId = StringArgumentType.getString(context, "categoryId");
-            String merchantId = StringArgumentType.getString(context, "merchantId");
+            String shop = args.getFirst();
+            String categoryId = args.size() > 1 ? args.get(1) : null;
+            String merchantId = args.size() > 2 ? args.get(2) : null;
             ViScriptShopServerUtil.serverOpenShop(player, shop, categoryId, merchantId);
             return 1;
         } else {
@@ -260,16 +202,30 @@ public class ShopCommand implements ICommand {
 
     @SneakyThrows
     private int reloadShop(CommandContext<CommandSourceStack> context) {
-        String shop = StringArgumentType.getString(context, "shop");
+        List<String> args = parseGreedyArguments(context, "shop");
+        if (args.size() != 1) {
+            return sendInvalidUsage(context, "viscript_shop reload [shop]");
+        }
+
+        String shop = args.getFirst();
         ViScriptShopServerUtil.reloadOpenShop(shop);
         context.getSource().sendSuccess(() -> Component.translatable("command.viscript_shop.reload.shop"), true);
         return 1;
     }
 
     @SneakyThrows
-    private int setQuickOpeningShop(CommandContext<CommandSourceStack> context) {
-        String shop = StringArgumentType.getString(context, "shop");
-        boolean quickOpening = BoolArgumentType.getBool(context, "quickOpening");
+    private int setQuickOpeningTarget(CommandContext<CommandSourceStack> context) {
+        List<String> args = parseGreedyArguments(context, "target");
+        if (args.size() != 2) {
+            return sendInvalidUsage(context, "viscript_shop setQuickOpening <shop> <true|false>");
+        }
+
+        String shop = args.getFirst();
+        Boolean quickOpening = parseBoolean(args.get(1));
+        if (quickOpening == null) {
+            context.getSource().sendFailure(Component.translatable("command.viscript_shop.error.invalid_boolean", args.get(1)));
+            return 0;
+        }
 
         if (ViScriptShopServerUtil.getShopInfo(shop) == null) {
             context.getSource().sendFailure(Component.translatable("command.viscript_shop.error.shop_not_found", shop));
@@ -282,11 +238,20 @@ public class ShopCommand implements ICommand {
     }
 
     @SneakyThrows
-    private int setMerchantStock(CommandContext<CommandSourceStack> context) {
-        String shop = StringArgumentType.getString(context, "shop");
-        String categoryId = StringArgumentType.getString(context, "categoryId");
-        String merchantId = StringArgumentType.getString(context, "merchantId");
-        int stock = IntegerArgumentType.getInteger(context, "stock");
+    private int setMerchantStockTarget(CommandContext<CommandSourceStack> context) {
+        List<String> args = parseGreedyArguments(context, "target");
+        if (args.size() != 4) {
+            return sendInvalidUsage(context, "viscript_shop setStock <shop> <categoryId> <merchantId> <stock>");
+        }
+
+        String shop = args.getFirst();
+        String categoryId = args.get(1);
+        String merchantId = args.get(2);
+        Integer stock = parseInteger(args.get(3));
+        if (stock == null) {
+            context.getSource().sendFailure(Component.translatable("command.viscript_shop.error.invalid_stock", args.get(3)));
+            return 0;
+        }
 
         boolean success = ViScriptShopServerUtil.setMerchantStock(shop, categoryId, merchantId, stock);
 
@@ -300,10 +265,15 @@ public class ShopCommand implements ICommand {
     }
 
     @SneakyThrows
-    private int removeMerchant(CommandContext<CommandSourceStack> context) {
-        String shop = StringArgumentType.getString(context, "shop");
-        String categoryId = StringArgumentType.getString(context, "categoryId");
-        String merchantId = StringArgumentType.getString(context, "merchantId");
+    private int removeMerchantTarget(CommandContext<CommandSourceStack> context) {
+        List<String> args = parseGreedyArguments(context, "target");
+        if (args.size() != 3) {
+            return sendInvalidUsage(context, "viscript_shop remove <shop> <categoryId> <merchantId>");
+        }
+
+        String shop = args.getFirst();
+        String categoryId = args.get(1);
+        String merchantId = args.get(2);
 
         boolean success = ViScriptShopServerUtil.removeMerchant(shop, categoryId, merchantId);
 
@@ -370,7 +340,7 @@ public class ShopCommand implements ICommand {
                 stream.filter(Files::isRegularFile).forEach(file -> {
                     String string = file.toString();
                     if (string.endsWith(Shop.SUFFIX)) {
-                        shopFiles.add("\"" + string.replace(assets.getPath(), "").substring(1).replace("\\", "/").replace(Shop.SUFFIX, "") + "\"");
+                        shopFiles.add(string.replace(assets.getPath(), "").substring(1).replace("\\", "/").replace(Shop.SUFFIX, ""));
                     }
                 });
             } catch (IOException ignored) {
@@ -379,43 +349,83 @@ public class ShopCommand implements ICommand {
         return shopFiles;
     }
 
-    // 补全分类ID
-    private static CompletableFuture<Suggestions> suggestCategories(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
-        try {
-            String shopId = StringArgumentType.getString(context, "shop");
-            ShopInfo shopInfo = ViScriptShopServerUtil.getShopInfo(shopId);
-            if (shopInfo != null) {
-                for (CategoryInfo category : shopInfo.getCategoryInfos()) {
-                    builder.suggest(category.getId());
-                }
-            }
-        } catch (IllegalArgumentException ignored) {
-            // shop参数还未填写，不提供建议
-        }
+    private static CompletableFuture<Suggestions> suggestServerShopFiles(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        suggestMatching(getServerShopFiles(), builder);
         return builder.buildFuture();
     }
 
-    // 补全商品ID
-    private static CompletableFuture<Suggestions> suggestMerchants(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
-        try {
-            String shopId = StringArgumentType.getString(context, "shop");
-            String categoryId = StringArgumentType.getString(context, "categoryId");
+    private static CompletableFuture<Suggestions> suggestSavedShops(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        suggestMatching(ViscriptShop.getShopSavedData().shopInfoMap.keySet(), builder);
+        return builder.buildFuture();
+    }
 
-            ShopInfo shopInfo = ViScriptShopServerUtil.getShopInfo(shopId);
-            if (shopInfo != null) {
-                for (CategoryInfo category : shopInfo.getCategoryInfos()) {
-                    if (category.getId().equals(categoryId)) {
-                        for (MerchantInfo merchant : category.getMerchants()) {
-                            builder.suggest(merchant.getId());
-                        }
-                        break;
+    private static CompletableFuture<Suggestions> suggestOpenTarget(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        return suggestShopCategoryMerchantTarget(builder, getServerShopFiles());
+    }
+
+    private static CompletableFuture<Suggestions> suggestSetStockTarget(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        return suggestShopCategoryMerchantTarget(builder, getKnownShopIds());
+    }
+
+    private static CompletableFuture<Suggestions> suggestRemoveTarget(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        return suggestShopCategoryMerchantTarget(builder, getKnownShopIds());
+    }
+
+    private static CompletableFuture<Suggestions> suggestQuickOpeningTarget(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+        List<String> tokens = parseSuggestionArguments(builder.getRemaining());
+        boolean trailingSpace = hasTrailingWhitespace(builder.getRemaining());
+        int argIndex = getCurrentArgumentIndex(tokens, trailingSpace);
+        SuggestionsBuilder currentBuilder = currentArgumentBuilder(builder);
+
+        if (argIndex == 0) {
+            suggestMatching(getKnownShopIds(), currentBuilder);
+        } else if (argIndex == 1) {
+            suggestMatching(List.of("true", "false"), currentBuilder);
+        }
+
+        return currentBuilder.buildFuture();
+    }
+
+    private static CompletableFuture<Suggestions> suggestShopCategoryMerchantTarget(SuggestionsBuilder builder, Collection<String> shopIds) {
+        List<String> tokens = parseSuggestionArguments(builder.getRemaining());
+        boolean trailingSpace = hasTrailingWhitespace(builder.getRemaining());
+        int argIndex = getCurrentArgumentIndex(tokens, trailingSpace);
+        SuggestionsBuilder currentBuilder = currentArgumentBuilder(builder);
+
+        if (argIndex == 0) {
+            suggestMatching(shopIds, currentBuilder);
+        } else if (argIndex == 1 && !tokens.isEmpty()) {
+            suggestCategories(tokens.getFirst(), currentBuilder);
+        } else if (argIndex == 2 && tokens.size() >= 2) {
+            suggestMerchants(tokens.getFirst(), tokens.get(1), currentBuilder);
+        }
+
+        return currentBuilder.buildFuture();
+    }
+
+    // 补全分类ID
+    private static void suggestCategories(String shopId, SuggestionsBuilder builder) {
+        ShopInfo shopInfo = ViScriptShopServerUtil.getShopInfo(shopId);
+        if (shopInfo != null) {
+            for (CategoryInfo category : shopInfo.getCategoryInfos()) {
+                suggestMatching(List.of(category.getId()), builder);
+            }
+        }
+    }
+
+    // 补全商品ID
+    private static void suggestMerchants(String shopId, String categoryId, SuggestionsBuilder builder) {
+        ShopInfo shopInfo = ViScriptShopServerUtil.getShopInfo(shopId);
+        if (shopInfo != null) {
+            for (CategoryInfo category : shopInfo.getCategoryInfos()) {
+                if (category.getId().equals(categoryId)) {
+                    for (MerchantInfo merchant : category.getMerchants()) {
+                        suggestMatching(List.of(merchant.getId()), builder);
                     }
+                    break;
                 }
             }
-        } catch (IllegalArgumentException ignored) {
-            // 参数还未填写，不提供建议
         }
-        return builder.buildFuture();
     }
 
     // 补全当前执行玩家已拥有的阶段标记
@@ -425,5 +435,104 @@ public class ShopCommand implements ICommand {
             ViScriptShopServerUtil.getStageFlags(player).forEach(builder::suggest);
         }
         return builder.buildFuture();
+    }
+
+    private static Collection<String> getKnownShopIds() {
+        LinkedHashSet<String> shopIds = new LinkedHashSet<>(getServerShopFiles());
+        shopIds.addAll(ViscriptShop.getShopSavedData().shopInfoMap.keySet());
+        return shopIds;
+    }
+
+    private static void suggestMatching(Collection<String> suggestions, SuggestionsBuilder builder) {
+        String remaining = builder.getRemaining().toLowerCase(Locale.ROOT);
+        for (String suggestion : suggestions) {
+            if (suggestion.toLowerCase(Locale.ROOT).startsWith(remaining)) {
+                builder.suggest(suggestion);
+            }
+        }
+    }
+
+    private static List<String> parseGreedyArguments(CommandContext<CommandSourceStack> context, String argumentName) throws CommandSyntaxException {
+        return parseArguments(StringArgumentType.getString(context, argumentName));
+    }
+
+    private static List<String> parseSuggestionArguments(String input) {
+        try {
+            return parseArguments(input);
+        } catch (CommandSyntaxException ignored) {
+            String trimmed = input.trim();
+            if (trimmed.isEmpty()) {
+                return List.of();
+            }
+            return List.of(trimmed.split("\\s+"));
+        }
+    }
+
+    private static List<String> parseArguments(String input) throws CommandSyntaxException {
+        StringReader reader = new StringReader(input);
+        List<String> args = new ArrayList<>();
+        while (reader.canRead()) {
+            reader.skipWhitespace();
+            if (!reader.canRead()) {
+                break;
+            }
+            if (StringReader.isQuotedStringStart(reader.peek())) {
+                args.add(reader.readQuotedString());
+            } else {
+                args.add(readUnquotedGreedyToken(reader));
+            }
+        }
+        return args;
+    }
+
+    private static String readUnquotedGreedyToken(StringReader reader) {
+        int start = reader.getCursor();
+        while (reader.canRead() && !Character.isWhitespace(reader.peek())) {
+            reader.skip();
+        }
+        return reader.getString().substring(start, reader.getCursor());
+    }
+
+    private static SuggestionsBuilder currentArgumentBuilder(SuggestionsBuilder builder) {
+        String remaining = builder.getRemaining();
+        if (remaining.isEmpty()) {
+            return builder;
+        }
+        int lastSpace = Math.max(remaining.lastIndexOf(' '), remaining.lastIndexOf('\t'));
+        return lastSpace < 0 ? builder : builder.createOffset(builder.getStart() + lastSpace + 1);
+    }
+
+    private static int getCurrentArgumentIndex(List<String> tokens, boolean trailingSpace) {
+        if (tokens.isEmpty()) {
+            return 0;
+        }
+        return trailingSpace ? tokens.size() : tokens.size() - 1;
+    }
+
+    private static boolean hasTrailingWhitespace(String input) {
+        return !input.isEmpty() && Character.isWhitespace(input.charAt(input.length() - 1));
+    }
+
+    private static Integer parseInteger(String value) {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+    }
+
+    private static Boolean parseBoolean(String value) {
+        if ("true".equalsIgnoreCase(value)) {
+            return true;
+        }
+        if ("false".equalsIgnoreCase(value)) {
+            return false;
+        }
+        return null;
+    }
+
+    private static int sendInvalidUsage(CommandContext<CommandSourceStack> context, String usage) {
+        context.getSource().sendFailure(Component.translatable("command.viscript_shop.error.invalid_usage", usage));
+        return 0;
     }
 }

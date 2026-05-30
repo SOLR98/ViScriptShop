@@ -17,6 +17,9 @@
   "command.viscript_shop.remove.success": "成功删除商品 %s",
   "command.viscript_shop.error.shop_not_found": "商店不存在：%s",
   "command.viscript_shop.error.merchant_not_found": "商品不存在：%s",
+  "command.viscript_shop.error.invalid_usage": "指令参数不正确，用法：/%s",
+  "command.viscript_shop.error.invalid_stock": "库存必须是整数：%s",
+  "command.viscript_shop.error.invalid_boolean": "参数必须是 true 或 false：%s",
 
   "viscript_shop.configuration.config": "ViScriptShop模组配置",
   "viscript_shop.configuration.showFtbLibraryButton": "是否打开FTB Library的按钮来允许打开商店",
@@ -75,9 +78,7 @@
   "viscript_shop.data.flag_group.mode.nor": "一个都不能拥有",
 
   "viscript_shop.editor.title": "编辑商店界面",
-  "viscript_shop.editor.shop.add": "商店项目",
-  "viscript_shop.editor.shop.export": "导出商店文件",
-  "viscript_shop.editor.saveAs": "另存为",
+  "viscript_shop.editor.shop.add": "商店文件",
   "viscript_shop.editor.project.upload_shop": "上传商店文件",
   "viscript_shop.editor.add.category": "添加分类",
   "viscript_shop.editor.update.category": "编辑分类",
@@ -132,12 +133,6 @@
   "viscript_shop.message.buy.too_many_items": "本次购买给予的物品数量超过限制，最多允许%s个",
   "viscript_shop.message.buySuccess": "已成功购买",
   "viscript_shop.message.noMerchant": "无可以保存的商品",
-  "viscript_shop.message.uploadFile.error": "上传文件失败",
-  "viscript_shop.message.uploadFile.error.content": "无法创建商店文件！",
-  "viscript_shop.message.uploadFile.error.content1": "无法写入商店文件！",
-  "viscript_shop.message.uploadFile.success": "上传文件成功",
-  "viscript_shop.message.uploadFile.success.content": "已覆盖同名商店文件！",
-  "viscript_shop.message.uploadFile.success.content1": "已创建新商店文件并写入！",
 
   "viscript_shop.dialog.delete_category.info": "是否要删除当前分类信息？",
   "viscript_shop.dialog.delete_merchant.info": "是否要删除当前商品信息？",

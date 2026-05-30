@@ -17,6 +17,9 @@
   "command.viscript_shop.remove.success": "Successfully removed merchant %s",
   "command.viscript_shop.error.shop_not_found": "Shop not found: %s",
   "command.viscript_shop.error.merchant_not_found": "Merchant not found: %s",
+  "command.viscript_shop.error.invalid_usage": "Invalid command arguments. Usage: /%s",
+  "command.viscript_shop.error.invalid_stock": "Stock must be an integer: %s",
+  "command.viscript_shop.error.invalid_boolean": "Argument must be true or false: %s",
 
   "viscript_shop.configuration.config": "ViScriptShop Configuration",
   "viscript_shop.configuration.showFtbLibraryButton": "Enable FTB Library button to open shops",
@@ -75,9 +78,7 @@
   "viscript_shop.data.flag_group.mode.nor": "Has none",
 
   "viscript_shop.editor.title": "Edit Shop Interface",
-  "viscript_shop.editor.shop.add": "Shop Project",
-  "viscript_shop.editor.shop.export": "Export Shop File",
-  "viscript_shop.editor.saveAs": "Save As",
+  "viscript_shop.editor.shop.add": "Shop File",
   "viscript_shop.editor.project.upload_shop": "Upload Shop File",
   "viscript_shop.editor.add.category": "Add Category",
   "viscript_shop.editor.update.category": "Edit Category",
@@ -132,12 +133,6 @@
   "viscript_shop.message.buy.too_many_items": "This purchase gives too many items. Maximum allowed: %s",
   "viscript_shop.message.buySuccess": "Purchase successful",
   "viscript_shop.message.noMerchant": "No merchandise to save",
-  "viscript_shop.message.uploadFile.error": "File upload failed",
-  "viscript_shop.message.uploadFile.error.content": "Could not create shop file!",
-  "viscript_shop.message.uploadFile.error.content1": "Could not write to shop file!",
-  "viscript_shop.message.uploadFile.success": "File uploaded successfully",
-  "viscript_shop.message.uploadFile.success.content": "Overwrote existing shop file with the same name!",
-  "viscript_shop.message.uploadFile.success.content1": "Created and wrote to a new shop file!",
 
   "viscript_shop.dialog.delete_category.info": "Are you sure you want to delete the current category information?",
   "viscript_shop.dialog.delete_merchant.info": "Are you sure you want to delete the current merchandise information?",

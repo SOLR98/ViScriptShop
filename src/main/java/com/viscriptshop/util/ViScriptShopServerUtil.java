@@ -3,6 +3,7 @@ package com.viscriptshop.util;
 import com.lowdragmc.lowdraglib2.Platform;
 import com.lowdragmc.lowdraglib2.gui.factory.PlayerUIMenuType;
 import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
+import com.viscript_lib.util.CodecUtil;
 import com.viscriptshop.Config;
 import com.viscriptshop.ShopRegistries;
 import com.viscriptshop.ViscriptShop;

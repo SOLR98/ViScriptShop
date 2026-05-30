@@ -18,6 +18,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.utils.UIElementProvider;
 import com.lowdragmc.lowdraglib2.gui.util.TreeBuilder;
 import com.lowdragmc.lowdraglib2.gui.util.TreeNode;
 import com.lowdragmc.lowdraglib2.utils.search.IResultHandler;
+import com.viscript_lib.util.SimpleItemStackFilter;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.data.CategoryInfo;
 import dev.vfyjxf.taffy.style.AlignItems;

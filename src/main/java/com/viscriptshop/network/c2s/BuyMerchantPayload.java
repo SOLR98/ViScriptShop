@@ -13,7 +13,7 @@ import com.viscriptshop.gui.data.AggregatedResources;
 import com.viscriptshop.gui.data.MerchantFlagGroup;
 import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.network.s2c.S2CPayload;
-import com.viscriptshop.util.ItemUtil;
+import com.viscript_lib.util.ItemUtil;
 import com.viscriptshop.util.ViScriptShopServerUtil;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;

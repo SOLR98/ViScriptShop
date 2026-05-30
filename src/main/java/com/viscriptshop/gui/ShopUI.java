@@ -30,7 +30,7 @@ import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.network.c2s.BuyMerchantPayload;
 import com.viscriptshop.network.c2s.GetItemCountC2SPayload;
 import com.viscriptshop.util.ShopHelper;
-import com.viscriptshop.util.SimpleItemStackFilter;
+import com.viscript_lib.util.SimpleItemStackFilter;
 import com.viscriptshop.util.UIElementUtil;
 import com.viscriptshop.util.ViScriptShopClientUtil;
 import dev.vfyjxf.taffy.style.*;
