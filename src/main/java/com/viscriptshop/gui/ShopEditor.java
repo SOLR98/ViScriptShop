@@ -92,7 +92,7 @@ public class ShopEditor extends FunctionFileEditor {
             EditorServerUploads.uploadToServer(
                     ShopProject.FORMAT,
                     fileName,
-                    project.serializeProject(Platform.getFrozenRegistry())
+                    project.serializeRuntimeFile(Platform.getFrozenRegistry())
             );
             ShopHelper.clearCache();
         }

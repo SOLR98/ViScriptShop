@@ -1,9 +1,7 @@
 package com.viscriptshop.gui.data;
 
-import com.viscriptshop.gui.project.ShopProject;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.saveddata.SavedData;
 import org.jetbrains.annotations.NotNull;
 
@@ -108,10 +106,7 @@ public class ShopSavedData extends SavedData {
             if (shop.equals(MERCHANT_STOCKS_TAG) || shop.equals(LEGACY_PERSONAL_STOCK_TAG)) {
                 continue;
             }
-            ShopInfo shopInfo = new ShopInfo();
-            CompoundTag shopTag = nbt.getCompound(shop);
-            int version = shopTag.contains("version_num", Tag.TAG_INT) ? shopTag.getInt("version_num") : 1;
-            shopInfo.deserializeNBT(provider, ShopProject.migrateShopData(shopTag, version));
+            ShopInfo shopInfo = Shop.deserializeRuntimeInfo(provider, nbt.getCompound(shop), true);
             shopSavedData.shopInfoMap.put(shop, shopInfo);
         }
         return shopSavedData;
@@ -120,7 +115,7 @@ public class ShopSavedData extends SavedData {
     @Override
     public @NotNull CompoundTag save(@NotNull CompoundTag compoundTag, HolderLookup.@NotNull Provider provider) {
         for (Map.Entry<String, ShopInfo> entry : shopInfoMap.entrySet()) {
-            compoundTag.put(entry.getKey(), entry.getValue().serializeNBT(provider));
+            compoundTag.put(entry.getKey(), Shop.serializeRuntimeNBT(provider, entry.getValue()));
         }
         if (!merchantStocks.isEmpty()) {
             CompoundTag merchantStocksTag = new CompoundTag();
