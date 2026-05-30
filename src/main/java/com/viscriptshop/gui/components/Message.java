@@ -118,12 +118,7 @@ public class Message extends UIElement {
         ERROR,
         INFO,
         SUCCESS,
-        WARN;
-
-        public static final StreamCodec<FriendlyByteBuf, Type> STREAM_CODEC = StreamCodec.of(
-                (buf, type) -> buf.writeVarInt(type.ordinal()),
-                buf -> Type.values()[buf.readVarInt()]
-        );
+        WARN
     }
 }
 

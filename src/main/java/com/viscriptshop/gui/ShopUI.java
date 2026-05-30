@@ -102,7 +102,7 @@ public class ShopUI extends UIElement {
     public ShopUI(String shopLocation, ShopInfo shopInfo, String title, String categoryId, String merchantId) {
         this.shopLocation = shopLocation;
         this.playerItems.clear();
-        this.currentShopInfo = ShopHelper.cacheShopInfo == null ? shopInfo : ShopHelper.cacheShopInfo;
+        this.currentShopInfo = initCurrentShopInfo(shopInfo);
         if (minecraft.player != null) {
             // 根据 categoryId 查找对应分类
             if (categoryId != null && !categoryId.isEmpty()) {
@@ -450,6 +450,35 @@ public class ShopUI extends UIElement {
         right.addChildren(rightTop, rightBottom);
 
         root.addChildren(left, center, right);
+    }
+
+    private ShopInfo initCurrentShopInfo(ShopInfo shopInfo) {
+        if (ShopHelper.cacheShopInfo == null) {
+            return shopInfo;
+        }
+        copyCachedBuyCounts(ShopHelper.cacheShopInfo, shopInfo);
+        return shopInfo;
+    }
+
+    private void copyCachedBuyCounts(ShopInfo cachedShopInfo, ShopInfo freshShopInfo) {
+        for (CategoryInfo freshCategory : freshShopInfo.getCategoryInfos()) {
+            CategoryInfo cachedCategory = cachedShopInfo.getCategoryInfos().stream()
+                    .filter(category -> category.getId().equals(freshCategory.getId()))
+                    .findFirst()
+                    .orElse(null);
+            if (cachedCategory == null) continue;
+
+            for (MerchantInfo freshMerchant : freshCategory.getMerchants()) {
+                cachedCategory.getMerchants().stream()
+                        .filter(merchant -> merchant.getId().equals(freshMerchant.getId()))
+                        .findFirst()
+                        .ifPresent(cachedMerchant -> {
+                            int buyCount = cachedMerchant.getBuyCount().intValue();
+                            int stock = freshMerchant.getStock();
+                            freshMerchant.setBuyCount(stock >= 0 ? Math.min(buyCount, stock) : buyCount);
+                        });
+            }
+        }
     }
 
     @Override

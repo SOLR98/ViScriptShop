@@ -19,6 +19,10 @@ public class Config {
     // -1 表示不限制
     public static ModConfigSpec.IntValue maxShopUiGiveItemsPerPurchase;
 
+    // 是否使用玩家独立库存
+    // false 表示所有玩家共享库存，true 表示每个玩家单独消耗库存
+    public static ModConfigSpec.BooleanValue isPersonalStock;
+
     static {
         ModConfigSpec.Builder CONFIG_BUILDER = new ModConfigSpec.Builder();
         CONFIG_BUILDER.push("config");
@@ -30,6 +34,7 @@ public class Config {
         }
         enableLegacyDataMigration = CONFIG_BUILDER.define("enableLegacyDataMigration", true);
         maxShopUiGiveItemsPerPurchase = CONFIG_BUILDER.defineInRange("maxShopUiGiveItemsPerPurchase", -1, -1, Integer.MAX_VALUE);
+        isPersonalStock = CONFIG_BUILDER.define("isPersonalStock", false);
         CONFIG_BUILDER.pop();
         CONFIG_SPEC = CONFIG_BUILDER.build();
     }

@@ -1,16 +1,19 @@
 package com.viscriptshop.util;
 
+import com.lowdragmc.lowdraglib2.Platform;
 import com.lowdragmc.lowdraglib2.gui.factory.PlayerUIMenuType;
 import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
 import com.viscriptshop.Config;
 import com.viscriptshop.ShopRegistries;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.ShopEditor;
+import com.viscriptshop.gui.data.CategoryInfo;
 import com.viscriptshop.gui.data.MerchantInfo;
 import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.gui.data.ShopSavedData;
 import com.viscriptshop.network.s2c.S2CPayload;
 import dev.latvian.mods.kubejs.typings.Info;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerPlayer;
 import net.sirgrantd.sg_economy.api.SGEconomyApi;
 
@@ -39,7 +42,8 @@ public class ViScriptShopServerUtil {
             ViscriptShop.LOGGER.error("shop location {} not found", shopLocation);
             return;
         }
-        RPCPacketDistributor.rpcToPlayer(player, S2CPayload.OPEN_SHOP_UI, shopLocation, shopInfo,
+        ShopInfo visibleShopInfo = getPlayerVisibleShopInfo(player, shopLocation, shopInfo);
+        RPCPacketDistributor.rpcToPlayer(player, S2CPayload.OPEN_SHOP_UI, shopLocation, visibleShopInfo,
                 categoryId != null ? categoryId : "",
                 merchantId != null ? merchantId : "");
     }
@@ -115,6 +119,7 @@ public class ViScriptShopServerUtil {
                 for (var merchant : category.getMerchants()) {
                     if (merchant.getId().equals(merchantId)) {
                         merchant.setStock(stock);
+                        ViscriptShop.getShopSavedData().clearMerchantStock(shopLocation, categoryId, merchantId);
                         // 保存到存档数据并清理文件缓存
                         setShopInfo(shopLocation, shopInfo);
                         ShopHelper.clearCache();
@@ -139,6 +144,7 @@ public class ViScriptShopServerUtil {
             if (category.getId().equals(categoryId)) {
                 boolean removed = category.getMerchants().removeIf(merchant -> merchant.getId().equals(merchantId));
                 if (removed) {
+                    ViscriptShop.getShopSavedData().clearMerchantStock(shopLocation, categoryId, merchantId);
                     // 保存到存档数据并清理文件缓存
                     setShopInfo(shopLocation, shopInfo);
                     ShopHelper.clearCache();
@@ -148,6 +154,61 @@ public class ViScriptShopServerUtil {
             }
         }
         return false;
+    }
+
+    @Info("是否启用玩家独立库存")
+    public static boolean isPersonalStockEnabled() {
+        return Config.isPersonalStock != null && Config.isPersonalStock.get();
+    }
+
+    @Info("获取玩家可见的商店信息")
+    public static ShopInfo getPlayerVisibleShopInfo(ServerPlayer player, String shopLocation, ShopInfo shopInfo) {
+        ShopInfo visibleShopInfo = copyShopInfo(shopInfo);
+        for (CategoryInfo categoryInfo : visibleShopInfo.getCategoryInfos()) {
+            for (MerchantInfo merchantInfo : categoryInfo.getMerchants()) {
+                merchantInfo.setStock(getEffectiveMerchantStock(player, shopLocation, categoryInfo.getId(), merchantInfo));
+            }
+        }
+        return visibleShopInfo;
+    }
+
+    @Info("获取玩家当前实际可购买库存")
+    public static int getEffectiveMerchantStock(ServerPlayer player, String shopLocation, String categoryId, MerchantInfo merchantInfo) {
+        int stock = merchantInfo.getStock();
+        if (stock < 0) {
+            return stock;
+        }
+
+        ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
+        if (shopSavedData == null) {
+            return stock;
+        }
+        return shopSavedData.getMerchantStock(shopLocation, getStockOwner(player), categoryId, merchantInfo.getId(), stock);
+    }
+
+    @Info("扣减玩家购买后的库存")
+    public static boolean reduceMerchantStock(ServerPlayer player, String shopLocation, String categoryId, MerchantInfo merchantInfo, int count) {
+        int stock = merchantInfo.getStock();
+        if (stock < 0 || count <= 0) {
+            return false;
+        }
+
+        ShopSavedData shopSavedData = ViscriptShop.getShopSavedData();
+        if (shopSavedData != null) {
+            int currentStock = getEffectiveMerchantStock(player, shopLocation, categoryId, merchantInfo);
+            shopSavedData.setMerchantStock(shopLocation, getStockOwner(player), categoryId, merchantInfo.getId(),
+                    Math.max(0, currentStock - count));
+        }
+        return false;
+    }
+
+    private static ShopInfo copyShopInfo(ShopInfo shopInfo) {
+        Tag tag = CodecUtil.serializeNBT(ShopInfo.CODEC, shopInfo, Platform.getFrozenRegistry());
+        return CodecUtil.deserializeNBT(ShopInfo.CODEC, tag, Platform.getFrozenRegistry());
+    }
+
+    private static String getStockOwner(ServerPlayer player) {
+        return isPersonalStockEnabled() ? player.getUUID().toString() : ShopSavedData.GLOBAL_STOCK_OWNER;
     }
 
     @Info("获取玩家钱")

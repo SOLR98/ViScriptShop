@@ -23,6 +23,7 @@
   "viscript_shop.configuration.isReplaceMoneyToMagicCoin": "Whether to replace this mod's currency with the currency from MagicCoins",
   "viscript_shop.configuration.enableLegacyDataMigration": "Enable legacy data migration for .shop files. Disable to improve performance, but old version files will not load",
   "viscript_shop.configuration.maxShopUiGiveItemsPerPurchase": "Maximum items granted in one shop UI purchase (-1 = unlimited)",
+  "viscript_shop.configuration.isPersonalStock": "Use per-player stock. Disabled means all players share stock; enabled means each player consumes stock independently",
 
   "viscript_shop.data.shop.name": "Shop Name",
   "viscript_shop.data.shop.name.tip": "Leave blank if you want a dynamic shop name. Use commands to set the shop name.",

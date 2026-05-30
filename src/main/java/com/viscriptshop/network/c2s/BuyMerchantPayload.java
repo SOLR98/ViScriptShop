@@ -51,7 +51,7 @@ public class BuyMerchantPayload {
                     .orElse(null);
             if (merchantInfo == null) continue;
 
-            int stock = merchantInfo.getStock();
+            int stock = ViScriptShopServerUtil.getEffectiveMerchantStock(player, shopLocation, purchaseEntry.getCategoryId(), merchantInfo);
             int buyCount = purchaseEntry.getBuyCount();
 
             if (!MerchantFlagGroup.canAccess(merchantInfo.getFlagGroupMode(), merchantInfo.getFlagGroups(), ViScriptShopServerUtil.getStageFlags(player))) {
@@ -117,11 +117,8 @@ public class BuyMerchantPayload {
                     .orElse(null);
             if (merchantInfo == null) continue;
 
-            int stock = merchantInfo.getStock();
-            if (stock >= 0) {
-                // 扣减库存（库存不会小于0）
-                merchantInfo.setStock(Math.max(0, stock - purchaseEntry.getBuyCount()));
-            }
+            ViScriptShopServerUtil.reduceMerchantStock(player, shopLocation, purchaseEntry.getCategoryId(),
+                    merchantInfo, purchaseEntry.getBuyCount());
         }
 
         // 保存数据到文件
@@ -161,7 +158,8 @@ public class BuyMerchantPayload {
         }
 
         // 重新加载 UI
-        RPCPacketDistributor.rpcToPlayer(player, S2CPayload.RELOAD_SHOP_UI, shopInfo, cost);
+        RPCPacketDistributor.rpcToPlayer(player, S2CPayload.RELOAD_SHOP_UI,
+                ViScriptShopServerUtil.getPlayerVisibleShopInfo(player, shopLocation, shopInfo), cost);
     }
 
     public static void executeCommands(ServerPlayer player, String value) {
