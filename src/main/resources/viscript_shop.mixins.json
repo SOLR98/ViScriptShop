@@ -6,7 +6,6 @@
   "mixins": [
   ],
   "client": [
-    "FtbLibraryClientMixin"
   ],
   "injectors": {
     "defaultRequire": 1
