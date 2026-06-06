@@ -38,8 +38,12 @@ public class MerchantInfo implements IConfigurable, IPersistedSerializable {
     //以物换物商店
     @Configurable(name = "viscript_shop.data.merchant.itemA")
     private ItemStack itemA = ItemStack.EMPTY;
+    @Configurable(name = "viscript_shop.data.merchant.itemA.matchRule", subConfigurable = true)
+    private ItemMatchRule itemAMatchRule = new ItemMatchRule();
     @Configurable(name = "viscript_shop.data.merchant.itemB")
     private ItemStack itemB = ItemStack.EMPTY;
+    @Configurable(name = "viscript_shop.data.merchant.itemB.matchRule", subConfigurable = true)
+    private ItemMatchRule itemBMatchRule = new ItemMatchRule();
     //通用货币商店
     @Configurable(name = "viscript_shop.data.merchant.money")
     @ConfigNumber(range = {0, Integer.MAX_VALUE})
@@ -80,13 +84,16 @@ public class MerchantInfo implements IConfigurable, IPersistedSerializable {
         List<Configurator> configurators = new ArrayList<>(group.getConfigurators());
         group.removeAllConfigurators();
         //以物换物商店
-        List<Configurator> itemForItemConfigurators = configurators.subList(0, 2);
+        List<Configurator> barterConfigurators = configurators.subList(0, 4);
         //通用货币商店
-        List<Configurator> currencyConfigurators = configurators.subList(2, 4);
+        List<Configurator> currencyConfigurators = configurators.subList(4, 6);
+        //商品唯一标识
+        Configurator idConfigurator = configurators.get(6);
         //通用参数
-        List<Configurator> commonConfigurators = configurators.subList(4, configurators.size());
+        List<Configurator> commonConfigurators = configurators.subList(7, configurators.size());
+        group.addConfigurator(idConfigurator);
         switch (shopType) {
-            case ITEM_FOR_ITEM -> itemForItemConfigurators.forEach(group::addConfigurator);
+            case ITEM_FOR_ITEM -> barterConfigurators.forEach(group::addConfigurator);
             case CURRENCY -> currencyConfigurators.forEach(group::addConfigurator);
         }
         commonConfigurators.forEach(group::addConfigurator);
@@ -120,6 +127,20 @@ public class MerchantInfo implements IConfigurable, IPersistedSerializable {
         // 生成新的UUID，确保ID唯一性
         copy.setId(UUID.randomUUID().toString());
         return copy;
+    }
+
+    public ItemMatchRule getItemAMatchRule() {
+        if (itemAMatchRule == null) {
+            itemAMatchRule = new ItemMatchRule();
+        }
+        return itemAMatchRule;
+    }
+
+    public ItemMatchRule getItemBMatchRule() {
+        if (itemBMatchRule == null) {
+            itemBMatchRule = new ItemMatchRule();
+        }
+        return itemBMatchRule;
     }
 
     @Getter

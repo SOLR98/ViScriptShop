@@ -5,8 +5,6 @@ import com.lowdragmc.lowdraglib2.editor.ui.EditorWindow;
 import com.lowdragmc.lowdraglib2.gui.factory.PlayerUIMenuType;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
-import com.lowdragmc.lowdraglib2.syncdata.AccessorRegistries;
-import com.lowdragmc.lowdraglib2.syncdata.accessor.direct.CustomDirectAccessor;
 import com.mojang.logging.LogUtils;
 import com.viscriptshop.compat.ModComPat;
 import com.viscriptshop.gui.ShopEditor;
@@ -36,43 +34,6 @@ public class ViscriptShop {
     public ViscriptShop(IEventBus modEventBus, ModContainer modContainer, Dist dist) {
         ShopRegistries.ATTACHMENT_TYPES.register(modEventBus);
         ModComPat.init(dist);
-        AccessorRegistries.setPriority(0);
-        AccessorRegistries.registerAccessor(CustomDirectAccessor.builder(ShopInfo.class)
-                .codec(ShopInfo.CODEC)
-                .streamCodec(ShopInfo.STREAM_CODEC)
-                .codecMark()
-                .build()
-        );
-        AccessorRegistries.registerAccessor(CustomDirectAccessor.builder(CategoryInfo.class)
-                .codec(CategoryInfo.CODEC)
-                .streamCodec(CategoryInfo.STREAM_CODEC)
-                .codecMark()
-                .build()
-        );
-        AccessorRegistries.registerAccessor(CustomDirectAccessor.builder(MerchantFlagGroup.class)
-                .codec(MerchantFlagGroup.CODEC)
-                .streamCodec(MerchantFlagGroup.STREAM_CODEC)
-                .codecMark()
-                .build()
-        );
-        AccessorRegistries.registerAccessor(CustomDirectAccessor.builder(MerchantInfo.class)
-                .codec(MerchantInfo.CODEC)
-                .streamCodec(MerchantInfo.STREAM_CODEC)
-                .codecMark()
-                .build()
-        );
-        AccessorRegistries.registerAccessor(CustomDirectAccessor.builder(AggregatedResources.class)
-                .codec(AggregatedResources.CODEC)
-                .streamCodec(AggregatedResources.STREAM_CODEC)
-                .codecMark()
-                .build()
-        );
-        AccessorRegistries.registerAccessor(CustomDirectAccessor.builder(AggregatedResources.PurchaseEntry.class)
-                .codec(AggregatedResources.PurchaseEntry.CODEC)
-                .streamCodec(AggregatedResources.PurchaseEntry.STREAM_CODEC)
-                .codecMark()
-                .build()
-        );
         PlayerUIMenuType.register(ShopEditor.SHOP_ID, ignored -> player -> {
             if (player.level().isClientSide) {
                 ModularUI modularUI = new ModularUI(UI.of(EditorWindow.open(ShopEditor.SHOP_ID, ShopEditor::new)))

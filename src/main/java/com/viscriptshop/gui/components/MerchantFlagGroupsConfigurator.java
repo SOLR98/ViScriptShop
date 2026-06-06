@@ -23,10 +23,14 @@ import net.minecraft.network.chat.Component;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MerchantFlagGroupsConfigurator extends ConfiguratorGroup {
     private final MerchantInfo merchant;
+    private final Map<MerchantFlagGroup, Boolean> collapseStates = new IdentityHashMap<>();
+    private final Map<MerchantFlagGroup, ConfiguratorGroup> groupConfigurators = new IdentityHashMap<>();
 
     public MerchantFlagGroupsConfigurator(MerchantInfo merchant) {
         super("viscript_shop.data.merchant.flagGroups", false);
@@ -40,6 +44,8 @@ public class MerchantFlagGroupsConfigurator extends ConfiguratorGroup {
     }
 
     private void rebuild() {
+        captureGroupCollapseStates();
+        groupConfigurators.clear();
         removeAllConfigurators();
 
         List<MerchantFlagGroup> groups = merchant.getFlagGroups();
@@ -100,10 +106,11 @@ public class MerchantFlagGroupsConfigurator extends ConfiguratorGroup {
             group.setFlags(new ArrayList<>());
         }
 
-        ConfiguratorGroup groupConfigurator = new ConfiguratorGroup("", true);
+        ConfiguratorGroup groupConfigurator = new ConfiguratorGroup("", collapseStates.getOrDefault(group, true));
         groupConfigurator.setLabel(Component.translatable("viscript_shop.editor.flag_group.title", index + 1));
         groupConfigurator.setCanCollapse(true);
         groupConfigurator.configuratorContainer(layout -> layout.layout(l -> l.gapAll(3)));
+        groupConfigurators.put(group, groupConfigurator);
 
         groupConfigurator.addConfigurator(new SelectorConfigurator<>(
                 "viscript_shop.data.flag_group.mode",
@@ -125,6 +132,7 @@ public class MerchantFlagGroupsConfigurator extends ConfiguratorGroup {
                 .setText("viscript_shop.button.delete")
                 .setOnClick(event -> {
                     merchant.getFlagGroups().remove(group);
+                    collapseStates.remove(group);
                     notifyChanges();
                     rebuild();
                 })
@@ -226,9 +234,14 @@ public class MerchantFlagGroupsConfigurator extends ConfiguratorGroup {
                     if (group.getFlags().stream().noneMatch(existing -> flag.equals(existing == null ? "" : existing.trim()))) {
                         group.getFlags().add(flag);
                     }
+                    collapseStates.put(group, false);
                     notifyChanges();
                     rebuild();
                 }
         ).show(getModularUI());
+    }
+
+    private void captureGroupCollapseStates() {
+        groupConfigurators.forEach((group, configurator) -> collapseStates.put(group, configurator.isCollapse()));
     }
 }

@@ -10,10 +10,11 @@ import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.event.neoforge.ShopServerEvent;
 import com.viscriptshop.gui.components.Message;
 import com.viscriptshop.gui.data.AggregatedResources;
+import com.viscriptshop.gui.data.CategoryInfo;
 import com.viscriptshop.gui.data.MerchantFlagGroup;
+import com.viscriptshop.gui.data.MerchantInfo;
 import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.network.s2c.S2CPayload;
-import com.viscript_lib.util.ItemUtil;
 import com.viscriptshop.util.ViScriptShopServerUtil;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -24,8 +25,6 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
 
-import java.util.Map;
-
 public class BuyMerchantPayload {
     public static final String BUY_MERCHANT = C2SPayload.MOD_ID + "buy_merchant";
 
@@ -34,6 +33,14 @@ public class BuyMerchantPayload {
         ServerPlayer player = sender.asPlayer();
         if (player == null) return;
         ShopInfo shopInfo = ViScriptShopServerUtil.getShopInfo(shopLocation);
+        AggregatedResources request = gain;
+        cost = buildAuthoritativeCost(shopInfo, request);
+        gain = buildAuthoritativeGain(shopInfo, request);
+        if (gain.isEmpty()) {
+            RPCPacketDistributor.rpcToPlayer(player, S2CPayload.SEND_MESSAGE, Message.Type.ERROR,
+                    Component.translatable("viscript_shop.message.shoppingCar.empty"));
+            return;
+        }
 
         if (NeoForge.EVENT_BUS.post(new ShopServerEvent.BuyPre(player, shopInfo, cost, gain)).isCanceled()) return;
 
@@ -83,9 +90,9 @@ public class BuyMerchantPayload {
         }
 
         // 判断数量是否足够
-        Map<ItemStack, Integer> costItems = cost.getItems();
-        for (ItemStack itemStack : costItems.keySet()) {
-            if (!itemStack.isEmpty() && ItemUtil.getItemForPlayerCount(player, itemStack) < costItems.get(itemStack)) {
+        for (AggregatedResources.ItemEntry itemEntry : cost.getItemEntries()) {
+            var itemStack = itemEntry.getItemStack();
+            if (!itemStack.isEmpty() && itemEntry.getItemForPlayerCount(player) < itemEntry.getCount()) {
                 // 物品数量不够
                 RPCPacketDistributor.rpcToPlayer(player, S2CPayload.SEND_MESSAGE, Message.Type.ERROR, Component.translatable("viscript_shop.message.notEnoughItem", itemStack.getItem().getDescription().getString()));
                 NeoForge.EVENT_BUS.post(new ShopServerEvent.BuyFail(player, shopInfo, cost, gain));
@@ -130,8 +137,8 @@ public class BuyMerchantPayload {
         }
 
         // 删除物品
-        for (ItemStack itemStack : costItems.keySet()) {
-            ItemUtil.removeItemForPlayer(player, itemStack, costItems.get(itemStack));
+        for (AggregatedResources.ItemEntry itemEntry : cost.getItemEntries()) {
+            itemEntry.removeItemForPlayer(player);
         }
 
         // 扣除钱
@@ -179,5 +186,80 @@ public class BuyMerchantPayload {
                 }
             }
         }
+    }
+
+    private static AggregatedResources buildAuthoritativeCost(ShopInfo shopInfo, AggregatedResources request) {
+        AggregatedResources cost = new AggregatedResources();
+        for (AggregatedResources.PurchaseEntry purchaseEntry : request.getPurchaseEntries()) {
+            if (purchaseEntry.getBuyCount() <= 0) continue;
+
+            CategoryInfo categoryInfo = findCategory(shopInfo, purchaseEntry.getCategoryId());
+            if (categoryInfo == null) continue;
+            MerchantInfo merchantInfo = findMerchant(categoryInfo, purchaseEntry.getMerchantId());
+            if (merchantInfo == null) continue;
+
+            cost.getPurchaseEntries().add(new AggregatedResources.PurchaseEntry(
+                    purchaseEntry.getCategoryId(),
+                    purchaseEntry.getMerchantId(),
+                    purchaseEntry.getBuyCount()
+            ));
+            switch (categoryInfo.getShopType()) {
+                case ITEM_FOR_ITEM -> {
+                    cost.addItemEntry(merchantInfo.getItemA(), purchaseEntry.getBuyCount(), merchantInfo.getItemAMatchRule());
+                    cost.addItemEntry(merchantInfo.getItemB(), purchaseEntry.getBuyCount(), merchantInfo.getItemBMatchRule());
+                }
+                case CURRENCY -> {
+                    switch (merchantInfo.getTradeType()) {
+                        case BUY -> cost.addMoney(merchantInfo.getMoney(), purchaseEntry.getBuyCount());
+                        case SELL -> cost.addItemEntry(merchantInfo.getItemResult(), purchaseEntry.getBuyCount(), null);
+                    }
+                }
+            }
+        }
+        return cost;
+    }
+
+    private static AggregatedResources buildAuthoritativeGain(ShopInfo shopInfo, AggregatedResources request) {
+        AggregatedResources gain = new AggregatedResources();
+        for (AggregatedResources.PurchaseEntry purchaseEntry : request.getPurchaseEntries()) {
+            if (purchaseEntry.getBuyCount() <= 0) continue;
+
+            CategoryInfo categoryInfo = findCategory(shopInfo, purchaseEntry.getCategoryId());
+            if (categoryInfo == null) continue;
+            MerchantInfo merchantInfo = findMerchant(categoryInfo, purchaseEntry.getMerchantId());
+            if (merchantInfo == null) continue;
+
+            gain.getPurchaseEntries().add(new AggregatedResources.PurchaseEntry(
+                    purchaseEntry.getCategoryId(),
+                    purchaseEntry.getMerchantId(),
+                    purchaseEntry.getBuyCount()
+            ));
+            gain.addXp(merchantInfo.getXp(), purchaseEntry.getBuyCount());
+            gain.addCommand(merchantInfo.getCommand());
+            switch (categoryInfo.getShopType()) {
+                case ITEM_FOR_ITEM -> gain.addItem(merchantInfo.getItemResult(), purchaseEntry.getBuyCount());
+                case CURRENCY -> {
+                    switch (merchantInfo.getTradeType()) {
+                        case BUY -> gain.addItem(merchantInfo.getItemResult(), purchaseEntry.getBuyCount());
+                        case SELL -> gain.addMoney(merchantInfo.getMoney(), purchaseEntry.getBuyCount());
+                    }
+                }
+            }
+        }
+        return gain;
+    }
+
+    private static CategoryInfo findCategory(ShopInfo shopInfo, String categoryId) {
+        return shopInfo.getCategoryInfos().stream()
+                .filter(category -> category.getId().equals(categoryId))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private static MerchantInfo findMerchant(CategoryInfo categoryInfo, String merchantId) {
+        return categoryInfo.getMerchants().stream()
+                .filter(merchant -> merchant.getId().equals(merchantId))
+                .findFirst()
+                .orElse(null);
     }
 }

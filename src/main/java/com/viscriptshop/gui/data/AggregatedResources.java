@@ -9,12 +9,16 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.core.component.DataComponentType;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 汇总购物车中所需支付或获得的物品、货币和经验值。
@@ -29,6 +33,8 @@ public class AggregatedResources implements IPersistedSerializable {
 
     @Persisted
     private Map<ItemStack, Integer> items = new HashMap<>();
+    @Persisted
+    private List<ItemEntry> itemEntries = new ArrayList<>();
     @Persisted
     private List<String> commands = new ArrayList<>();
     @Persisted
@@ -63,6 +69,61 @@ public class AggregatedResources implements IPersistedSerializable {
         static {
             CODEC = PersistedParser.createCodec(PurchaseEntry::new);
             STREAM_CODEC = PersistedParser.createStreamCodec(PurchaseEntry::new);
+        }
+    }
+
+    /**
+     * 物品消耗条目，除了物品和数量外还保存组件比较规则。
+     */
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class ItemEntry implements IPersistedSerializable {
+        public static final StreamCodec<ByteBuf, ItemEntry> STREAM_CODEC;
+        public static final Codec<ItemEntry> CODEC;
+
+        @Persisted
+        private ItemStack itemStack = ItemStack.EMPTY;
+        @Persisted
+        private int count = 0;
+        @Persisted
+        private ItemMatchRule matchRule = new ItemMatchRule();
+
+        static {
+            CODEC = PersistedParser.createCodec(ItemEntry::new);
+            STREAM_CODEC = PersistedParser.createStreamCodec(ItemEntry::new);
+        }
+
+        public boolean canMerge(ItemStack stack, ItemMatchRule rule) {
+            return hasSameRule(rule) && safeRule().matches(itemStack, stack);
+        }
+
+        public boolean hasSameRule(ItemMatchRule rule) {
+            ItemMatchRule otherRule = rule == null ? new ItemMatchRule() : rule;
+            return safeRule().resolvedCompareMode() == otherRule.resolvedCompareMode()
+                    && componentSet(safeRule()).equals(componentSet(otherRule));
+        }
+
+        public ItemEntry copyWithCount(int count) {
+            ItemStack stack = itemStack.copy();
+            stack.setCount(1);
+            return new ItemEntry(stack, count, safeRule().copy());
+        }
+
+        public int getItemForPlayerCount(ServerPlayer player) {
+            return safeRule().getItemForPlayerCount(player, itemStack);
+        }
+
+        public void removeItemForPlayer(ServerPlayer player) {
+            safeRule().removeItemForPlayer(player, itemStack, count);
+        }
+
+        private ItemMatchRule safeRule() {
+            return matchRule == null ? new ItemMatchRule() : matchRule;
+        }
+
+        private static Set<DataComponentType<?>> componentSet(ItemMatchRule rule) {
+            return new HashSet<>(rule.resolvedComponents());
         }
     }
 
@@ -107,6 +168,26 @@ public class AggregatedResources implements IPersistedSerializable {
             newKey.setCount(1);
             items.put(newKey, totalQuantity);
         }
+    }
+
+    public void addItemEntry(ItemStack stack, int count, ItemMatchRule matchRule) {
+        if (stack.isEmpty() || count <= 0) return;
+
+        int totalQuantity = stack.getCount() * count;
+        ItemMatchRule rule = matchRule == null ? new ItemMatchRule() : matchRule;
+
+        for (ItemEntry entry : itemEntries) {
+            if (entry.canMerge(stack, rule)) {
+                entry.setCount(entry.getCount() + totalQuantity);
+                addItem(stack, count);
+                return;
+            }
+        }
+
+        ItemStack newStack = stack.copy();
+        newStack.setCount(1);
+        itemEntries.add(new ItemEntry(newStack, totalQuantity, rule.copy()));
+        addItem(stack, count);
     }
 
     /**
@@ -163,15 +244,15 @@ public class AggregatedResources implements IPersistedSerializable {
                 switch (categoryInfo.getShopType()) {
                     case ITEM_FOR_ITEM -> {
                         // 以物换物商店：成本是 itemA 和 itemB
-                        cost.addItem(merchant.getItemA(), count);
-                        cost.addItem(merchant.getItemB(), count);
+                        cost.addItemEntry(merchant.getItemA(), count, merchant.getItemAMatchRule());
+                        cost.addItemEntry(merchant.getItemB(), count, merchant.getItemBMatchRule());
                     }
                     case CURRENCY -> {
                         switch (merchant.getTradeType()) {
                             case BUY -> // 购买物品：成本是货币
                                     cost.addMoney(merchant.getMoney(), count);
                             case SELL -> // 出售物品：成本是玩家出售的物品 (itemResult)
-                                    cost.addItem(merchant.getItemResult(), count);
+                                    cost.addItemEntry(merchant.getItemResult(), count, null);
                         }
                     }
                 }

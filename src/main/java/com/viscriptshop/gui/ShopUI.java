@@ -30,7 +30,7 @@ import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.network.c2s.BuyMerchantPayload;
 import com.viscriptshop.network.c2s.GetItemCountC2SPayload;
 import com.viscriptshop.util.ShopHelper;
-import com.viscript_lib.util.SimpleItemStackFilter;
+import com.viscript_lib.util.item.SimpleItemStackFilter;
 import com.viscriptshop.util.UIElementUtil;
 import com.viscriptshop.util.ViScriptShopClientUtil;
 import dev.vfyjxf.taffy.style.*;
@@ -70,7 +70,7 @@ public class ShopUI extends UIElement {
 
     //data
     //玩家身上对应物品的数量
-    public Map<ItemStack, Integer> playerItems = new HashMap<>();
+    public List<AggregatedResources.ItemEntry> playerItems = new ArrayList<>();
     //打开的商店信息
     public ShopInfo currentShopInfo;
     //商店文件位置（用于购买后保存数据）
@@ -552,8 +552,8 @@ public class ShopUI extends UIElement {
             if (this.searchMode) {
                 if (!this.searchItem.isEmpty()) {
                     boolean isMatch = ItemStack.isSameItemSameComponents(merchantInfo.getItemResult(), this.searchItem) ||
-                            ItemStack.isSameItemSameComponents(merchantInfo.getItemA(), this.searchItem) ||
-                            ItemStack.isSameItemSameComponents(merchantInfo.getItemB(), this.searchItem);
+                            merchantInfo.getItemAMatchRule().matches(merchantInfo.getItemA(), this.searchItem) ||
+                            merchantInfo.getItemBMatchRule().matches(merchantInfo.getItemB(), this.searchItem);
                     if (!isMatch) {
                         continue;
                     }
@@ -689,8 +689,10 @@ public class ShopUI extends UIElement {
     public void reloadInventoryItem() {
         inventoryView.clearAllScrollViewChildren();
         AggregatedResources costSummary = AggregatedResources.getCostSummary(currentShopInfo);
-        costSummary.getItems().forEach((itemStack, count) -> {
-            int itemCount = getItemCount(itemStack);
+        costSummary.getItemEntries().forEach(itemEntry -> {
+            ItemStack itemStack = itemEntry.getItemStack();
+            int count = itemEntry.getCount();
+            int itemCount = getItemCount(itemEntry);
             String color = itemCount >= count ? "§a" : "§c";
             Label countLabel = (Label) new Label().setText(color + getCountText(count) + "§f/" + getCountText(itemCount))
                     .textStyle(textStyle -> {
@@ -1153,25 +1155,31 @@ public class ShopUI extends UIElement {
         }
     }
 
-    public void setItemCount(ItemStack itemStack, int count) {
-        ItemStack copy = itemStack.copy();
-        copy.setCount(1);
-        this.playerItems.put(copy, count);
+    public void setItemCount(AggregatedResources.ItemEntry itemEntry) {
+        AggregatedResources.ItemEntry copy = itemEntry.copyWithCount(itemEntry.getCount());
+        for (int i = 0; i < this.playerItems.size(); i++) {
+            AggregatedResources.ItemEntry existing = this.playerItems.get(i);
+            if (existing.canMerge(copy.getItemStack(), copy.getMatchRule())) {
+                this.playerItems.set(i, copy);
+                return;
+            }
+        }
+        this.playerItems.add(copy);
     }
 
-    public int getItemCount(ItemStack itemStack) {
-        for (ItemStack item : this.playerItems.keySet()) {
-            if (ItemStack.isSameItemSameComponents(itemStack, item)) {
-                return this.playerItems.get(item);
+    public int getItemCount(AggregatedResources.ItemEntry itemEntry) {
+        for (AggregatedResources.ItemEntry item : this.playerItems) {
+            if (item.canMerge(itemEntry.getItemStack(), itemEntry.getMatchRule())) {
+                return item.getCount();
             }
         }
         return 0;
     }
 
-    public void removeItemCount(ItemStack itemStack, int count) {
-        for (ItemStack item : this.playerItems.keySet()) {
-            if (ItemStack.isSameItemSameComponents(itemStack, item)) {
-                this.playerItems.put(item, this.playerItems.get(item) - count);
+    public void removeItemCount(AggregatedResources.ItemEntry itemEntry) {
+        for (AggregatedResources.ItemEntry item : this.playerItems) {
+            if (item.canMerge(itemEntry.getItemStack(), itemEntry.getMatchRule())) {
+                item.setCount(item.getCount() - itemEntry.getCount());
                 return;
             }
         }

@@ -12,10 +12,9 @@ import com.lowdragmc.lowdraglib2.gui.ui.styletemplate.Sprites;
 import com.lowdragmc.lowdraglib2.gui.util.TreeBuilder;
 import com.viscript_lib.gui.components.DraggableUI;
 import com.viscriptshop.gui.ShopEditor;
-import com.viscriptshop.gui.components.MerchantFloatView;
 import com.viscriptshop.gui.data.CategoryInfo;
 import com.viscriptshop.gui.data.MerchantInfo;
-import com.viscriptshop.gui.project.ShopProject;
+import com.viscriptshop.gui.data.Shop;
 import com.viscriptshop.util.UIElementUtil;
 import dev.vfyjxf.taffy.style.*;
 import net.minecraft.network.chat.Component;
@@ -26,7 +25,6 @@ public class ShopPreviewView extends View {
     public final ShopEditor editor;
     public final UIElement head = new UIElement();
     public final ScrollerView scrollerView = new ScrollerView();
-    private final MerchantFloatView merchantFloatView;
     private CategoryInfo selectedCategory = null;
 
     // 剪贴板：用于跨分类复制/剪切/粘贴商品
@@ -40,7 +38,6 @@ public class ShopPreviewView extends View {
     public ShopPreviewView(ShopEditor editor) {
         super("viscript_shop.editor.view.shopPreview");
         this.editor = editor;
-        this.merchantFloatView = new MerchantFloatView(editor, "viscript_shop.data.category.merchants");
         this.head.layout(layout -> {
             layout.flexDirection(FlexDirection.ROW);
             layout.widthPercent(100);
@@ -51,7 +48,7 @@ public class ShopPreviewView extends View {
         UIElement addButton = new Button().setText("viscript_shop.editor.add.merchant").setOnClick(event -> {
             MerchantInfo merchantInfo = new MerchantInfo();
             selectedCategory.getMerchants().add(merchantInfo);
-            merchantFloatView.showEdit(merchantInfo, selectedCategory.getShopType());
+            editor.inspectMerchant(merchantInfo, selectedCategory.getShopType());
         }).layout(layout -> {
             layout.heightPercent(100);
         });
@@ -93,7 +90,7 @@ public class ShopPreviewView extends View {
     private void tickReloadMerchants() {
         selectedCategory = editor.categoryView.getSelectedCategory();
 
-        if (selectedCategory == null || !(editor.getCurrentProject() instanceof ShopProject)) {
+        if (selectedCategory == null || !(editor.getCurrentProject() instanceof Shop)) {
             head.setDisplay(TaffyDisplay.NONE);
             scrollerView.clearAllScrollViewChildren();
             draggableMerchants = null;
@@ -143,7 +140,7 @@ public class ShopPreviewView extends View {
 
         for (MerchantInfo merchantInfo : merchants) {
             MerchantCard card = createMerchantCard(merchantInfo);
-            card.root.addEventListener(UIEvents.MOUSE_DOWN, event -> showMerchantMenuTab(event, merchantInfo));
+            card.root.addEventListener(UIEvents.MOUSE_DOWN, event -> handleMerchantMouseDown(event, merchantInfo));
             draggableMerchants.addSortableCard(merchantInfo, card.root, card.dragHandle);
         }
 
@@ -169,11 +166,11 @@ public class ShopPreviewView extends View {
                 dragHandle = createDragHandle();
 
                 ItemSlot itemASlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemA(), false, true)
-                        .addEventListener(UIEvents.MOUSE_DOWN, event -> showMerchantMenuTab(event, merchantInfo));
+                        .addEventListener(UIEvents.MOUSE_DOWN, event -> handleMerchantMouseDown(event, merchantInfo));
                 ItemSlot itemBSlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemB(), false, true)
-                        .addEventListener(UIEvents.MOUSE_DOWN, event -> showMerchantMenuTab(event, merchantInfo));
+                        .addEventListener(UIEvents.MOUSE_DOWN, event -> handleMerchantMouseDown(event, merchantInfo));
                 ItemSlot resultItemSlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemResult(), false, true)
-                        .addEventListener(UIEvents.MOUSE_DOWN, event -> showMerchantMenuTab(event, merchantInfo));
+                        .addEventListener(UIEvents.MOUSE_DOWN, event -> handleMerchantMouseDown(event, merchantInfo));
 
                 merchant.addChildren(dragHandle, itemASlot, itemBSlot,
                         new UIElement().style(style -> style.backgroundTexture(Icons.RIGHT_ARROW_NO_BAR_S_LIGHT)).layout(layout -> {
@@ -262,6 +259,16 @@ public class ShopPreviewView extends View {
         selectedCategory.getMerchants().remove(index);
     }
 
+    private void handleMerchantMouseDown(UIEvent event, MerchantInfo merchantInfo) {
+        if (event.button == 0) {
+            editor.inspectMerchant(merchantInfo, selectedCategory.getShopType());
+            event.stopPropagation();
+            return;
+        }
+
+        showMerchantMenuTab(event, merchantInfo);
+    }
+
     private void showMerchantMenuTab(UIEvent event, MerchantInfo merchantInfo) {
         int index = findMerchantIndexByIdentity(merchantInfo);
         if (index < 0) return;
@@ -273,7 +280,7 @@ public class ShopPreviewView extends View {
 
             TreeBuilder.Menu merchantMenu = TreeBuilder.Menu.start()
                     .leaf("viscript_shop.button.update", () -> {
-                        merchantFloatView.showEdit(merchantInfo, selectedCategory.getShopType());
+                        editor.inspectMerchant(merchantInfo, selectedCategory.getShopType());
                     })
                     .leaf("viscript_shop.button.copy", () -> {
                         copyMerchant(merchantInfo, index);

@@ -12,10 +12,9 @@ import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.viscript_lib.gui.components.DraggableUI;
 import com.viscriptshop.gui.ShopEditor;
-import com.viscriptshop.gui.components.CategoryFloatView;
 import com.viscriptshop.gui.data.CategoryInfo;
+import com.viscriptshop.gui.data.Shop;
 import com.viscriptshop.gui.data.ShopInfo;
-import com.viscriptshop.gui.project.ShopProject;
 import com.viscriptshop.util.UIElementUtil;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
@@ -32,13 +31,11 @@ public class CategoryView extends View {
     public final ScrollerView scrollerView = new ScrollerView();
     private CategoryInfo selectedCategory = null;
     private ShopInfo shopInfo;
-    private final CategoryFloatView categoryFloatView;
     private DraggableUI<CategoryInfo> draggableCategories = null;
 
     public CategoryView(ShopEditor editor) {
         super("viscript_shop.editor.view_category");
         this.editor = editor;
-        this.categoryFloatView = new CategoryFloatView(editor, "viscript_shop.data.shop.categoryInfos");
         this.scrollerView.layout(layout -> {
             layout.widthPercent(100);
             layout.heightPercent(100);
@@ -48,8 +45,8 @@ public class CategoryView extends View {
     }
 
     public void loadView() {
-        if (editor.getCurrentProject() instanceof ShopProject shopProject) {
-            this.shopInfo = shopProject.shop.shopInfo;
+        if (editor.getCurrentProject() instanceof Shop shop) {
+            this.shopInfo = shop.getShopInfo();
             scrollerView.viewContainer.layout(layout -> {
                 layout.paddingAll(5);
                 layout.flexDirection(FlexDirection.COLUMN);
@@ -87,18 +84,6 @@ public class CategoryView extends View {
                 layout.marginBottom(0);
             });
             UIElement dragHandle = createDragHandle();
-            UIElement updateButton = new UIElement().style(style -> {
-                style.backgroundTexture(Icons.EDIT_ON.copy().setColor(ColorPattern.LIGHT_BLUE.color));
-                style.tooltips("viscript_shop.button.update");
-            }).layout(layout -> {
-                layout.flex(1);
-                layout.height(15);
-            }).addEventListener(UIEvents.MOUSE_DOWN, event -> {
-                if (event.button == 0) {
-                    categoryFloatView.showEdit(categoryInfo);
-                    event.stopPropagation();
-                }
-            });
             UIElement deleteButton = new UIElement().style(style -> {
                 style.backgroundTexture(Icons.DELETE.copy().setColor(ColorPattern.RED.color));
                 style.tooltips("viscript_shop.button.delete");
@@ -118,21 +103,21 @@ public class CategoryView extends View {
                 layout.flexDirection(FlexDirection.ROW);
                 layout.alignItems(AlignItems.CENTER);
                 layout.marginBottom(5);
-            }).addChildren(dragHandle, categoryUI, updateButton, deleteButton);
+            }).addChildren(dragHandle, categoryUI, deleteButton);
             draggableCategories.addSortableCard(categoryInfo, uiElement, dragHandle);
         }
 
         scrollerView.addScrollViewChild(draggableCategories);
         scrollerView.viewContainer.addChildren(new Button().setText("+").setOnClick(event -> {
-                    CategoryInfo categoryInfo = new CategoryInfo();
-                    shopInfo.getCategoryInfos().add(categoryInfo);
-                    this.categoryFloatView.showEdit(categoryInfo);
-                }).layout(layout -> {
-                    layout.maxWidth(15);
-                    layout.maxHeight(15);
-                }).addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
-                    event.hoverTooltips = new HoverTooltips(List.of(Component.translatable("viscript_shop.editor.add.category")), null, null, null);
-                })
+            CategoryInfo categoryInfo = new CategoryInfo();
+            shopInfo.getCategoryInfos().add(categoryInfo);
+            setSelectedCategory(categoryInfo);
+        }).layout(layout -> {
+            layout.maxWidth(15);
+            layout.maxHeight(15);
+        }).addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
+            event.hoverTooltips = new HoverTooltips(List.of(Component.translatable("viscript_shop.editor.add.category")), null, null, null);
+        })
         );
     }
 
@@ -155,6 +140,7 @@ public class CategoryView extends View {
         shopInfo.getCategoryInfos().remove(index);
         if (selectedCategory == categoryInfo) {
             selectedCategory = null;
+            editor.inspectShop();
         }
     }
 
@@ -171,5 +157,6 @@ public class CategoryView extends View {
         if (newCategory != this.selectedCategory) {
             this.selectedCategory = newCategory;
         }
+        editor.inspectCategory(newCategory);
     }
 }

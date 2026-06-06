@@ -14,19 +14,19 @@ import com.viscriptshop.gui.ShopUI;
 import com.viscriptshop.gui.components.DialogSelect;
 import com.viscriptshop.gui.components.Message;
 import com.viscriptshop.gui.data.AggregatedResources;
+import com.viscriptshop.gui.data.Shop;
 import com.viscriptshop.gui.data.ShopInfo;
-import com.viscriptshop.gui.project.ShopProject;
 import com.viscriptshop.util.ViScriptShopClientUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.item.ItemStack;
 
 import java.util.Map;
 
 public class S2CPayload {
     public static final String MOD_ID = ViscriptShop.MOD_ID + ":";
-    public static final String SHOP_INFO_PROJECT = MOD_ID + "shop_info_project";
+    public static final String OPEN_SHOP_EDITOR = MOD_ID + "open_shop_editor";
+    private static final String LEGACY_SHOP_INFO_PROJECT = MOD_ID + "shop_info_project";
     public static final String OPEN_SHOP_UI = MOD_ID + "open_shop_ui";
     public static final String SEND_MESSAGE = MOD_ID + "send_message";
     public static final String GET_SHOP_INFO_S2C = MOD_ID + "get_shop_info_s2c";
@@ -34,20 +34,24 @@ public class S2CPayload {
     public static final String RELOAD_SHOP_UI = MOD_ID + "reload_shop_ui";
     public static final String UPDATE_OUT_OF_STOCK = MOD_ID + "update_out_of_stock";
 
-    @RPCPacket(SHOP_INFO_PROJECT)
+    @RPCPacket(OPEN_SHOP_EDITOR)
     public static void openShopEditor(RPCSender sender, ShopInfo shopInfo) {
         EditorWindow editorWindow = getCurrentEditorWindow();
         if (editorWindow == null) return;
 
         Editor editor = editorWindow.getCurrentEditor();
         if (editor == null) return;
-        var project = (ShopProject) ShopProject.PROVIDER.projectCreator.get();
-        project.initNewProject();
         try {
-            project.shop.shopInfo = shopInfo;
-            editor.loadProject(project, null);
+            Shop shop = new Shop();
+            shop.shopInfo = shopInfo;
+            editor.loadProject(shop, null);
         } catch (Exception ignored) {
         }
+    }
+
+    @RPCPacket(LEGACY_SHOP_INFO_PROJECT)
+    public static void openShopEditorLegacy(RPCSender sender, ShopInfo shopInfo) {
+        openShopEditor(sender, shopInfo);
     }
 
     @RPCPacket(OPEN_SHOP_UI)
@@ -98,7 +102,7 @@ public class S2CPayload {
             }
 
             // 清除玩家的物品计数
-            cost.getItems().forEach(shopUI::removeItemCount);
+            cost.getItemEntries().forEach(shopUI::removeItemCount);
 
             shopUI.reloadMerchants();
             shopUI.reloadInventoryItem();
@@ -131,10 +135,10 @@ public class S2CPayload {
 
     @RPCPacket(GET_ITEM_COUNT)
     public static void getItemCount(RPCSender sender, CompoundTag tag) {
-        Map<ItemStack, Integer> itemStacks = CodecUtil.deserializeMap(tag, ItemStack.OPTIONAL_CODEC, Codec.INT, Platform.getFrozenRegistry());
+        var itemEntries = CodecUtil.deserializeList(tag, AggregatedResources.ItemEntry.CODEC, Platform.getFrozenRegistry());
         if (Minecraft.getInstance().screen instanceof ModularUIScreen screen
                 && screen.modularUI.ui.rootElement instanceof ShopUI shopUI) {
-            itemStacks.forEach(shopUI::setItemCount);
+            itemEntries.forEach(shopUI::setItemCount);
             shopUI.reloadInventoryItem();
             shopUI.reloadShoppingItem();
             shopUI.reloadSearchComponent();

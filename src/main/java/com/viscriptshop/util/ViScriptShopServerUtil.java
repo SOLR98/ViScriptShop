@@ -28,7 +28,7 @@ public class ViScriptShopServerUtil {
     public static void serverOpenShopEditor(ServerPlayer player, String shop) {
         ShopInfo shopInfo = ShopHelper.getShop(shop);
         PlayerUIMenuType.openUI(player, ShopEditor.SHOP_ID);
-        if (shopInfo != null) RPCPacketDistributor.rpcToPlayer(player, S2CPayload.SHOP_INFO_PROJECT, shopInfo);
+        if (shopInfo != null) RPCPacketDistributor.rpcToPlayer(player, S2CPayload.OPEN_SHOP_EDITOR, shopInfo);
     }
 
     @Info("服务端打开商店")
