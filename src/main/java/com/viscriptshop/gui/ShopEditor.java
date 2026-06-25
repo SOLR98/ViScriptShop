@@ -32,7 +32,7 @@ public class ShopEditor extends FunctionFileEditor {
     public final ShopPreviewView shopPreviewView = new ShopPreviewView(this);
 
     public ShopEditor() {
-        registerFunctionFileType(Shop.PROVIDER);
+        registerProjectType(Shop.PROVIDER);
         this.leftWindow.getLeftTop().addView(categoryView);
         this.centerWindow.getLeftTop().addView(shopPreviewView);
         removeBottomWindow();
