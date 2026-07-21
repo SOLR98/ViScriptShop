@@ -30,6 +30,7 @@ import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.network.c2s.BuyMerchantPayload;
 import com.viscriptshop.network.c2s.GetItemCountC2SPayload;
 import com.viscriptshop.util.ShopHelper;
+import com.viscript_lib.util.CountTextUtil;
 import com.viscript_lib.util.item.SimpleItemStackFilter;
 import com.viscriptshop.util.UIElementUtil;
 import com.viscriptshop.util.ViScriptShopClientUtil;
@@ -654,7 +655,7 @@ public class ShopUI extends UIElement {
 
         AggregatedResources gainSummary = AggregatedResources.getGainSummary(currentShopInfo);
         gainSummary.getItems().forEach((itemStack, count) -> {
-            Label countLabel = (Label) new Label().setText(getCountText(count))
+            Label countLabel = (Label) new Label().setText(CountTextUtil.formatCount(count))
                     .textStyle(textStyle -> {
                         textStyle.textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.BOTTOM);
                         textStyle.fontSize(5);
@@ -674,7 +675,7 @@ public class ShopUI extends UIElement {
                 layout.height(16);
                 layout.marginLeft(2);
             }).style(style -> style.backgroundTexture(COIN));
-            Label money = (Label) new Label().setText(getCountText(gainSummary.getTotalMoney())).textStyle(textStyle -> {
+            Label money = (Label) new Label().setText(CountTextUtil.formatCount(gainSummary.getTotalMoney())).textStyle(textStyle -> {
                 textStyle.textAlignVertical(Vertical.BOTTOM).adaptiveWidth(true);
                 textStyle.fontSize(5);
             }).layout(layout -> {
@@ -694,7 +695,7 @@ public class ShopUI extends UIElement {
             int count = itemEntry.getCount();
             int itemCount = getItemCount(itemEntry);
             String color = itemCount >= count ? "§a" : "§c";
-            Label countLabel = (Label) new Label().setText(color + getCountText(count) + "§f/" + getCountText(itemCount))
+            Label countLabel = (Label) new Label().setText(color + CountTextUtil.formatCount(count) + "§f/" + CountTextUtil.formatCount(itemCount))
                     .textStyle(textStyle -> {
                         textStyle.textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.BOTTOM);
                         textStyle.fontSize(4);
@@ -715,7 +716,7 @@ public class ShopUI extends UIElement {
                 layout.height(16);
                 layout.marginLeft(2);
             }).style(style -> style.backgroundTexture(COIN));
-            Label money = (Label) new Label().setText(color + getCountText(costSummary.getTotalMoney())).textStyle(textStyle -> {
+            Label money = (Label) new Label().setText(color + CountTextUtil.formatCount(costSummary.getTotalMoney())).textStyle(textStyle -> {
                 textStyle.textAlignVertical(Vertical.BOTTOM).adaptiveWidth(true);
                 textStyle.fontSize(5);
             }).layout(layout -> {
@@ -812,7 +813,7 @@ public class ShopUI extends UIElement {
                 merchant.addChildren(uiElement, rightArrowIcon, resultItemSlot);
             }
             case CURRENCY -> {
-                Label money = (Label) new Label().setText("◎" + getCountText(merchantInfo.getMoney())).textStyle(textStyle -> {
+                Label money = (Label) new Label().setText("◎" + CountTextUtil.formatCount(merchantInfo.getMoney())).textStyle(textStyle -> {
                     textStyle.textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER).adaptiveWidth(true);
                     textStyle.fontSize(8);
                 }).layout(layout -> {
@@ -958,7 +959,7 @@ public class ShopUI extends UIElement {
                 .layout(layout -> layout.widthPercent(100));
 
         Label priceLabel = (Label) new Label()
-                .setText(Component.literal("◎" + getCountText(merchantInfo.getMoney())))
+                .setText(Component.literal("◎" + CountTextUtil.formatCount(merchantInfo.getMoney())))
                 .textStyle(textStyle -> textStyle
                         .textColor(0xFFFFAA00)
                         .textAlignHorizontal(Horizontal.CENTER)
@@ -1183,12 +1184,6 @@ public class ShopUI extends UIElement {
                 return;
             }
         }
-    }
-
-    private String getCountText(int count) {
-        if (count < 1000) return String.valueOf(count);
-        if (count < 1000000) return String.format(java.util.Locale.US, "%.1fk", count / 1000.0);
-        return String.format(java.util.Locale.US, "%.1fm", count / 1000000.0);
     }
 
     private UIElement createItemInfoBox() {
