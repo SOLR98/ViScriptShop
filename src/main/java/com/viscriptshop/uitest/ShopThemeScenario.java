@@ -59,7 +59,7 @@ public final class ShopThemeScenario implements UIScenario {
                 .closeScreen();
     }
 
-    private static ShopInfo createShop() {
+    static ShopInfo createShop() {
         ShopInfo shop = new ShopInfo();
         shop.setName("Theme Test Shop");
 
@@ -80,6 +80,13 @@ public final class ShopThemeScenario implements UIScenario {
 
         shop.getCategoryInfos().add(seeds);
         shop.getCategoryInfos().add(supplies);
+        for (int i = 1; i <= 8; i++) {
+            CategoryInfo category = new CategoryInfo();
+            category.setName("Category " + i);
+            category.setShopType(CategoryInfo.ShopType.CURRENCY);
+            category.setIconItem(new ItemStack(Items.CHEST));
+            shop.getCategoryInfos().add(category);
+        }
         return shop;
     }
 

@@ -56,7 +56,6 @@ public class ShopUI extends UIElement {
     public ScrollerView merchantsView = new ShopScrollerView();
     public ScrollerView shoppingCarView = new ShopScrollerView();
     public ScrollerView inventoryView = new ShopScrollerView();
-    private final UIElement centerPanel;
     public SearchComponent<ItemStack> searchComponent;
     private final Toggle currencyLayoutToggle;
 
@@ -189,6 +188,7 @@ public class ShopUI extends UIElement {
         }).addEventListener(UIEvents.TICK, event -> {
             reloadCategoryList();
         });
+        categoryView.verticalScroller.layout(layout -> layout.marginRight(3));
         categoryView.viewPort.getStyle().backgroundTexture(IGuiTexture.EMPTY);
         categoryView.viewContainer.layout(layout -> {
             layout.gapColumn(5);
@@ -228,25 +228,31 @@ public class ShopUI extends UIElement {
         //中
         UIElement center = new UIElement().layout(layout -> {
             layout.widthPercent(55);
-            layout.heightPercent(102);
+            layout.heightPercent(100);
+            layout.gapAll(theme.centerPanelGap());
             layout.flexDirection(FlexDirection.COLUMN);
         });
-        this.centerPanel = center;
         UIElement head = new UIElement().layout(layout -> {
             layout.widthPercent(100);
-            layout.heightPercent(12);
+            layout.heightPercent(10);
             layout.paddingTop(2);
             layout.flexDirection(FlexDirection.ROW);
             layout.justifyContent(AlignContent.SPACE_BETWEEN);
             layout.alignItems(AlignItems.CENTER);
         }).style(style -> style.backgroundTexture(theme.topBar()));
         //搜索图片
-        UIElement searchIcon = new UIElement().layout(layout -> {
+        UIElement searchIcon = new UIElement().setId("shop_search_icon").layout(layout -> {
             layout.marginLeft(5);
-            layout.width(22);
-            layout.heightPercent(86);
+            // 保持方形布局，并在布局盒内缩小贴图，避免搜索框位置随图标尺寸变化。
+            layout.width(18);
+            layout.setAspectRatio(1f);
             layout.flexShrink(0);
-        }).style(style -> style.backgroundTexture(SpriteTexture.of(ViscriptShop.formattedMod("textures/gui/search_icon.png"))));
+        }).style(style -> style.backgroundTexture(
+                GuiTextureGroup.of(
+                        theme.searchIconBackground(),
+                        SpriteTexture.of(ViscriptShop.formattedMod("textures/gui/search_icon.png")).scale(0.8f)
+                )
+        ));
         //物品输入框
         searchComponent = UIElementUtil.createItemStackSearchComponentConfigurator("", this::getSearchItem, search -> {
             this.searchItem = search;
@@ -378,7 +384,7 @@ public class ShopUI extends UIElement {
         UIElement shoppingCar = new UIElement().layout(layout -> {
             layout.widthPercent(100);
             layout.heightPercent(39);
-        }).style(style -> style.backgroundTexture(theme.insetPanel()));
+        }).style(style -> style.backgroundTexture(theme.shoppingCartPanel()));
 
         shoppingCarView.layout(layout -> {
             layout.widthPercent(100);
@@ -405,7 +411,8 @@ public class ShopUI extends UIElement {
             layout.wrap(FlexWrap.WRAP);
         });
         inventoryView.viewPort.getLayout().paddingAll(3);
-        inventoryView.viewPort.getStyle().backgroundTexture(theme.insetPanel());
+        inventoryView.viewPort.setId("shop_consumption_panel");
+        inventoryView.viewPort.getStyle().backgroundTexture(theme.consumptionPanel());
         reloadInventoryItem();
 
         ShopButton clearButton = (ShopButton) ShopButton.buying(theme).setText("viscript_shop.button.clear").setOnClick(event -> {
@@ -598,7 +605,6 @@ public class ShopUI extends UIElement {
     }
 
     private void configureMerchantsContainerLayout() {
-        configureCenterPanelPaddingForLayout();
         if (isCurrencyGridActive()) {
             merchantsView.viewContainer.layout(layout -> {
                 layout.display(TaffyDisplay.GRID);
@@ -619,14 +625,6 @@ public class ShopUI extends UIElement {
             });
             currencyGridColumns = -1;
         }
-    }
-
-    private void configureCenterPanelPaddingForLayout() {
-        if (centerPanel == null) return;
-
-        centerPanel.layout(layout -> {
-            layout.paddingVertical(3);
-        });
     }
 
     private void updateCurrencyGridColumns() {
@@ -848,7 +846,7 @@ public class ShopUI extends UIElement {
         }
         final Button[] buttonHolder = new Button[2];
 
-        buttonHolder[0] = ShopButton.other().setText("-").setOnClick(event -> {
+        buttonHolder[0] = ShopButton.other(theme).setText("-").setOnClick(event -> {
             if ((int) merchantInfo.getBuyCount() > 0) {
                 merchantInfo.setBuyCount((int) merchantInfo.getBuyCount() - 1);
                 reloadShoppingItem();
@@ -857,7 +855,7 @@ public class ShopUI extends UIElement {
             }
         });
 
-        buttonHolder[1] = ShopButton.other().setText("+").setOnClick(event -> {
+        buttonHolder[1] = ShopButton.other(theme).setText("+").setOnClick(event -> {
             int stock = merchantInfo.getStock();
             int maxCount = stock >= 0 ? stock : Integer.MAX_VALUE;
             if ((int) merchantInfo.getBuyCount() < maxCount) {

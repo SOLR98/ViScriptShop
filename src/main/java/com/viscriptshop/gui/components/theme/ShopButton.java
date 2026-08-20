@@ -37,6 +37,10 @@ public class ShopButton extends Button {
         return styled(OTHER_BASE, OTHER_HOVER, OTHER_PRESSED);
     }
 
+    public static ShopButton other(ShopTheme theme) {
+        return styled(theme.secondaryButtonBase(), theme.secondaryButtonHover(), theme.secondaryButtonPressed());
+    }
+
     public ShopButton() {
     }
 }

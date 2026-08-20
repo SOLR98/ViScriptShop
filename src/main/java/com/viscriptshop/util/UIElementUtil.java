@@ -115,7 +115,9 @@ public class UIElementUtil {
         return createItemSlot(item, 16, isRenderBackgroundTexture, showItemTooltips);
     }
 
-    public static UIElement createCategoryUI(CategoryInfo categoryInfo, boolean isSelected, Consumer<CategoryInfo> onSelectCallback, IGuiTexture defaultBg, IGuiTexture selectedBg) {
+    public static UIElement createCategoryUI(CategoryInfo categoryInfo, boolean isSelected,
+                                             Consumer<CategoryInfo> onSelectCallback,
+                                             IGuiTexture defaultBg, IGuiTexture selectedBg) {
         UIElement category = new UIElement().layout(layout -> {
             layout.widthPercent(100);
             layout.height(18);
@@ -128,6 +130,8 @@ public class UIElementUtil {
                 onSelectCallback.accept(categoryInfo);
             }
         });
+        category.addClass("shop-category");
+        category.addClass(isSelected ? "shop-category-selected" : "shop-category-default");
         UIElement icon = new UIElement().layout(layout -> {
             layout.minWidth(16);
             layout.minHeight(16);
@@ -140,9 +144,7 @@ public class UIElementUtil {
                 .textStyle(textStyle -> {
                     textStyle.textAlignHorizontal(Horizontal.LEFT).textAlignVertical(Vertical.CENTER).adaptiveWidth(true);
                     textStyle.fontSize(8);
-                    if (isSelected) {
-                        textStyle.textColor(ColorPattern.WHITE.color);
-                    }
+                    textStyle.textColor(ColorPattern.WHITE.color);
                 }).layout(layout -> {
                     layout.heightPercent(100);
                 });

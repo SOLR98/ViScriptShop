@@ -45,7 +45,6 @@ public class Config {
         ModConfigSpec.Builder CLIENT_CONFIG_BUILDER = new ModConfigSpec.Builder();
         CLIENT_CONFIG_BUILDER.push("client");
         shopUiTheme = CLIENT_CONFIG_BUILDER
-                .comment("商店 UI 主题，修改后重新打开商店生效")
                 .translation("viscript_shop.configuration.shopUiTheme")
                 .defineEnum("shopUiTheme", ShopUiTheme.GLASS_DARK);
         CLIENT_CONFIG_BUILDER.pop();
