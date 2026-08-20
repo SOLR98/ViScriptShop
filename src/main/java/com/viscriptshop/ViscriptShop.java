@@ -47,6 +47,7 @@ public class ViscriptShop {
             return new ModularUI(UI.empty());
         });
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.CONFIG_SPEC, String.format("%s_config.toml", MOD_ID));
+        modContainer.registerConfig(ModConfig.Type.CLIENT, Config.CLIENT_CONFIG_SPEC, String.format("%s_client.toml", MOD_ID));
         if (dist == Dist.CLIENT) {
             modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
         }

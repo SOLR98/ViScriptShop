@@ -2,7 +2,6 @@ package com.viscriptshop.gui;
 
 import com.lowdragmc.lowdraglib2.configurator.ui.NumberConfigurator;
 import com.lowdragmc.lowdraglib2.configurator.ui.StringConfigurator;
-import com.lowdragmc.lowdraglib2.gui.ColorPattern;
 import com.lowdragmc.lowdraglib2.gui.texture.*;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.data.GridTemplate;
@@ -22,6 +21,7 @@ import com.viscriptshop.gui.components.PlayerHeadElement;
 import com.viscriptshop.gui.components.SceneToggleBuilder;
 import com.viscriptshop.gui.components.theme.ShopButton;
 import com.viscriptshop.gui.components.theme.ShopScrollerView;
+import com.viscriptshop.gui.components.theme.ShopTheme;
 import com.viscriptshop.gui.data.AggregatedResources;
 import com.viscriptshop.gui.data.CategoryInfo;
 import com.viscriptshop.gui.data.MerchantFlagGroup;
@@ -61,8 +61,9 @@ public class ShopUI extends UIElement {
     private final Toggle currencyLayoutToggle;
 
     //主题样式
-    private final IGuiTexture LIST_BACKGROUND = SpriteTexture.of(ViscriptShop.formattedMod("textures/gui/trade_bar.png"));
-    private final IGuiTexture GRID_BACKGROUND = SpriteTexture.of(ViscriptShop.formattedMod("textures/gui/verticle_trade_bar.png"));
+    private final ShopTheme theme = ShopTheme.current();
+    private final IGuiTexture LIST_BACKGROUND = theme.merchantList();
+    private final IGuiTexture GRID_BACKGROUND = theme.merchantGrid();
     private final SpriteTexture RIGHT_ARROW = SpriteTexture.of(ViscriptShop.formattedMod("textures/right_arrow.png"));
     private final SpriteTexture LOCK = SpriteTexture.of(ViscriptShop.formattedMod("textures/lock.png"));
     private final SpriteTexture COIN = SpriteTexture.of(ViscriptShop.formattedMod("textures/coin.png"));
@@ -139,7 +140,9 @@ public class ShopUI extends UIElement {
             layout.justifyContent(AlignContent.CENTER);
             layout.alignItems(AlignItems.CENTER);
         }).addEventListener(UIEvents.TICK, event -> NeoForge.EVENT_BUS.post(new ShopClientEvent.Tick(this)));
-        UIElement root = new UIElement();
+        UIElement root = new UIElement()
+                .setId("shop_ui_shell")
+                .addClass(theme.styleClass());
         root.layout((layout) -> {
             layout.widthPercent(90);
             layout.heightPercent(91);
@@ -150,7 +153,7 @@ public class ShopUI extends UIElement {
         });
         this.addChildren(root);
         //左
-        UIElement left = new UIElement().layout(layout -> {
+        UIElement left = new UIElement().setId("shop_ui_categories").layout(layout -> {
             layout.heightPercent(100);
             layout.widthPercent(22);
             layout.gapAll(3);
@@ -160,7 +163,7 @@ public class ShopUI extends UIElement {
             layout.widthPercent(100);
             layout.heightPercent(10);
         }).style(style -> {
-            style.backgroundTexture(SpriteTexture.of(ViscriptShop.formattedMod("textures/gui/shop_ui_1.png")));
+            style.backgroundTexture(theme.categoryHeader());
         }).addChild(new Label().setText("viscript_shop.data.shop.categoryInfos").textStyle(textStyle -> {
             textStyle.textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER);
         }).layout(layout -> {
@@ -172,7 +175,7 @@ public class ShopUI extends UIElement {
             layout.widthPercent(100);
             layout.flex(1);
         }).style(style -> {
-            style.backgroundTexture(SpriteTexture.of(ViscriptShop.formattedMod("textures/gui/shop_ui_2.png")));
+            style.backgroundTexture(theme.categoryPanel());
         });
 
         UIElement leftBottomTop = new UIElement().layout(layout -> {
@@ -236,7 +239,7 @@ public class ShopUI extends UIElement {
             layout.flexDirection(FlexDirection.ROW);
             layout.justifyContent(AlignContent.SPACE_BETWEEN);
             layout.alignItems(AlignItems.CENTER);
-        }).style(style -> style.backgroundTexture(SpriteTexture.of(ViscriptShop.formattedMod("textures/gui/shop_top_bar.png"))));
+        }).style(style -> style.backgroundTexture(theme.topBar()));
         //搜索图片
         UIElement searchIcon = new UIElement().layout(layout -> {
             layout.marginLeft(5);
@@ -254,7 +257,7 @@ public class ShopUI extends UIElement {
             layout.heightPercent(85);
             layout.paddingLeft(4);
         });
-        SpriteTexture SEARCH_BAR = SpriteTexture.of(ViscriptShop.formattedMod("textures/gui/search_bar.png"));
+        IGuiTexture SEARCH_BAR = theme.searchField();
         searchComponent.getStyle().backgroundTexture(SEARCH_BAR);
         searchComponent.searchStyle(style -> style.focusOverlay(IGuiTexture.EMPTY));
         //序号输入框
@@ -316,14 +319,14 @@ public class ShopUI extends UIElement {
             layout.flexDirection(FlexDirection.ROW);
         }).addChildren(new PlayerHeadElement().layout(layout -> layout.marginRight(5))));
 
-        UIElement body = new UIElement().layout(layout -> {
+        UIElement body = new UIElement().setId("shop_ui_merchants").layout(layout -> {
             layout.widthPercent(100);
             layout.justifyContent(AlignContent.CENTER);
             layout.alignItems(AlignItems.CENTER);
             layout.paddingAll(3);
             layout.paddingBottom(5);
             layout.flex(1);
-        }).style(style -> style.backgroundTexture(SpriteTexture.of(ViscriptShop.formattedMod("textures/gui/shop_ui_bottom.png"))));
+        }).style(style -> style.backgroundTexture(theme.merchantPanel()));
 
         merchantsView.layout(layout -> {
             layout.widthPercent(100);
@@ -344,7 +347,7 @@ public class ShopUI extends UIElement {
 
         center.addChildren(head, body);
         //右
-        UIElement right = new UIElement().layout(layout -> {
+        UIElement right = new UIElement().setId("shop_ui_summary").layout(layout -> {
             layout.widthPercent(25);
             layout.heightPercent(100);
             layout.gapAll(3);
@@ -354,7 +357,7 @@ public class ShopUI extends UIElement {
             layout.widthPercent(100);
             layout.heightPercent(10);
         }).style(style -> {
-            style.backgroundTexture(SpriteTexture.of(ViscriptShop.formattedMod("textures/gui/shop_ui_4.png")));
+            style.backgroundTexture(theme.titleHeader());
         }).addChild(new Label().setText(title)
                 .textStyle(textStyle -> {
                     textStyle.textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER);
@@ -370,12 +373,12 @@ public class ShopUI extends UIElement {
             layout.flexDirection(FlexDirection.COLUMN);
             layout.paddingAll(5);
         });
-        rightBottom.getStyle().backgroundTexture(SpriteTexture.of(ViscriptShop.formattedMod("textures/gui/shop_ui_5.png")));
+        rightBottom.getStyle().backgroundTexture(theme.summaryPanel());
 
         UIElement shoppingCar = new UIElement().layout(layout -> {
             layout.widthPercent(100);
             layout.heightPercent(39);
-        }).style(style -> style.backgroundTexture(SpriteTexture.of(ViscriptShop.formattedMod("textures/gui/shopping_cart_background.png"))));
+        }).style(style -> style.backgroundTexture(theme.insetPanel()));
 
         shoppingCarView.layout(layout -> {
             layout.widthPercent(100);
@@ -402,10 +405,10 @@ public class ShopUI extends UIElement {
             layout.wrap(FlexWrap.WRAP);
         });
         inventoryView.viewPort.getLayout().paddingAll(3);
-        inventoryView.viewPort.getStyle().backgroundTexture(SpriteTexture.of(ViscriptShop.formattedMod("textures/gui/consumption_background.png")));
+        inventoryView.viewPort.getStyle().backgroundTexture(theme.insetPanel());
         reloadInventoryItem();
 
-        ShopButton clearButton = (ShopButton) ShopButton.buying().setText("viscript_shop.button.clear").setOnClick(event -> {
+        ShopButton clearButton = (ShopButton) ShopButton.buying(theme).setText("viscript_shop.button.clear").setOnClick(event -> {
             currentShopInfo.getCategoryInfos().forEach(categoryInfo -> {
                 categoryInfo.getMerchants().forEach(merchantInfo -> merchantInfo.setBuyCount(0));
             });
@@ -415,14 +418,14 @@ public class ShopUI extends UIElement {
             layout.widthPercent(45);
         });
 
-        ShopButton tsButton = (ShopButton) ShopButton.buying().setText("viscript_shop.button.ts").setOnClick(event -> {
+        ShopButton tsButton = (ShopButton) ShopButton.buying(theme).setText("viscript_shop.button.ts").setOnClick(event -> {
             ShopHelper.cacheShopInfo = this.currentShopInfo;
             if (minecraft.screen != null) minecraft.screen.onClose();
         }).layout(layout -> {
             layout.widthPercent(45);
         });
 
-        ShopButton buyButton = (ShopButton) ShopButton.buying().setText("viscript_shop.button.buy").setOnClick(event -> {
+        ShopButton buyButton = (ShopButton) ShopButton.buying(theme).setText("viscript_shop.button.buy").setOnClick(event -> {
             AggregatedResources costSummary = AggregatedResources.getCostSummary(this.currentShopInfo);
             AggregatedResources gainSummary = AggregatedResources.getGainSummary(this.currentShopInfo);
             if (costSummary.isEmpty() || gainSummary.isEmpty()) {
@@ -530,8 +533,8 @@ public class ShopUI extends UIElement {
                         }
                         reloadMerchants();
                     },
-                    SDFRectTexture.of(0x50505070).setRadius(3),
-                    SDFRectTexture.of(ColorPattern.T_WHITE.color).setRadius(3)
+                    theme.categoryDefault(),
+                    theme.categorySelected()
             );
             categoryView.viewContainer.addChildren(categoryUI);
         }

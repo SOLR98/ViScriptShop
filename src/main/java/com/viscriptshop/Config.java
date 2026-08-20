@@ -4,6 +4,7 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class Config {
     public static final ModConfigSpec CONFIG_SPEC;
+    public static final ModConfigSpec CLIENT_CONFIG_SPEC;
 
     //是否打开FTB Library的按钮来允许打开商店
     public static ModConfigSpec.BooleanValue showFtbLibraryButton = null;
@@ -23,6 +24,9 @@ public class Config {
     // false 表示所有玩家共享库存，true 表示每个玩家单独消耗库存
     public static ModConfigSpec.BooleanValue isPersonalStock;
 
+    // 商店 UI 的客户端主题
+    public static ModConfigSpec.EnumValue<ShopUiTheme> shopUiTheme;
+
     static {
         ModConfigSpec.Builder CONFIG_BUILDER = new ModConfigSpec.Builder();
         CONFIG_BUILDER.push("config");
@@ -37,5 +41,19 @@ public class Config {
         isPersonalStock = CONFIG_BUILDER.define("isPersonalStock", false);
         CONFIG_BUILDER.pop();
         CONFIG_SPEC = CONFIG_BUILDER.build();
+
+        ModConfigSpec.Builder CLIENT_CONFIG_BUILDER = new ModConfigSpec.Builder();
+        CLIENT_CONFIG_BUILDER.push("client");
+        shopUiTheme = CLIENT_CONFIG_BUILDER
+                .comment("商店 UI 主题，修改后重新打开商店生效")
+                .translation("viscript_shop.configuration.shopUiTheme")
+                .defineEnum("shopUiTheme", ShopUiTheme.GLASS_DARK);
+        CLIENT_CONFIG_BUILDER.pop();
+        CLIENT_CONFIG_SPEC = CLIENT_CONFIG_BUILDER.build();
+    }
+
+    public enum ShopUiTheme {
+        CLASSIC,
+        GLASS_DARK
     }
 }
