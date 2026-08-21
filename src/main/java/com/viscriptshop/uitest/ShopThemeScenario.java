@@ -12,6 +12,7 @@ import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.ShopUI;
 import com.viscriptshop.gui.data.CategoryInfo;
 import com.viscriptshop.gui.data.MerchantInfo;
+import com.viscriptshop.gui.data.MerchantItemDisplay;
 import com.viscriptshop.gui.data.ShopInfo;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -54,6 +55,9 @@ public final class ShopThemeScenario implements UIScenario {
                 .checkVisible("#shop_ui_categories")
                 .checkVisible("#shop_ui_merchants")
                 .checkVisible("#shop_ui_summary")
+                .checkCount(".merchant-item-display-actual", 2)
+                .checkCount(".merchant-item-display-item-render", 1)
+                .checkCount(".merchant-item-display-resource", 1)
                 .screenshot("shop_glass_dark")
                 .screenshotElement("shop_glass_dark_shell", "#shop_ui_shell")
                 .closeScreen();
@@ -68,8 +72,16 @@ public final class ShopThemeScenario implements UIScenario {
         seeds.setShopType(CategoryInfo.ShopType.CURRENCY);
         seeds.setIconItem(new ItemStack(Items.WHEAT_SEEDS));
         seeds.getMerchants().add(merchant(Items.WHEAT_SEEDS, 1));
-        seeds.getMerchants().add(merchant(Items.BEETROOT_SEEDS, 2));
-        seeds.getMerchants().add(merchant(Items.PUMPKIN_SEEDS, 3));
+        MerchantInfo substituteIconMerchant = merchant(Items.BEETROOT_SEEDS, 2);
+        substituteIconMerchant.getItemResultDisplay().setRenderMode(MerchantItemDisplay.RenderMode.ITEM_RENDER);
+        substituteIconMerchant.getItemResultDisplay().setRenderItem(new ItemStack(Items.DIAMOND));
+        seeds.getMerchants().add(substituteIconMerchant);
+
+        MerchantInfo resourceIconMerchant = merchant(Items.PUMPKIN_SEEDS, 3);
+        resourceIconMerchant.getItemResultDisplay().setRenderMode(MerchantItemDisplay.RenderMode.RESOURCE);
+        resourceIconMerchant.getItemResultDisplay().setResourcePath("viscript_shop:textures/coin.png");
+        resourceIconMerchant.getItemResultDisplay().setResourceName("Coin Icon");
+        seeds.getMerchants().add(resourceIconMerchant);
         seeds.getMerchants().add(merchant(Items.MELON_SEEDS, 4));
 
         CategoryInfo supplies = new CategoryInfo();

@@ -799,17 +799,24 @@ public class ShopUI extends UIElement {
             layout.width(12);
             layout.height(12);
         });
-        ItemSlot resultItemSlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemResult(), false, true).setId("itemResult" + index);
+        UIElement resultItemSlot = UIElementUtil.createMerchantItemDisplay(
+                merchantInfo.getItemResultInfo(),
+                true
+        ).setId("itemResult" + index);
         resultItemSlot.getLayout().marginRight(2);
 
         merchant.addChildren(id);
 
         switch (selectedCategory.getShopType()) {
             case ITEM_FOR_ITEM -> {
-                ItemStack itemA = merchantInfo.getItemA();
-                ItemSlot itemASlot = (ItemSlot) UIElementUtil.createItemSlot(itemA, false, true).setId("itemA" + index);
-                ItemStack itemB = merchantInfo.getItemB();
-                ItemSlot itemBSlot = (ItemSlot) UIElementUtil.createItemSlot(itemB, false, true).setId("itemB" + index);
+                UIElement itemASlot = UIElementUtil.createMerchantItemDisplay(
+                        merchantInfo.getItemAInfo(),
+                        true
+                ).setId("itemA" + index);
+                UIElement itemBSlot = UIElementUtil.createMerchantItemDisplay(
+                        merchantInfo.getItemBInfo(),
+                        true
+                ).setId("itemB" + index);
                 uiElement.addChildren(itemASlot, itemBSlot);
                 merchant.addChildren(uiElement, rightArrowIcon, resultItemSlot);
             }
@@ -946,7 +953,10 @@ public class ShopUI extends UIElement {
             layout.alignSelf(AlignItems.FLEX_START);
         });
 
-        ItemSlot resultItemSlot = (ItemSlot) UIElementUtil.createItemSlot(merchantInfo.getItemResult(), false, true)
+        UIElement resultItemSlot = UIElementUtil.createMerchantItemDisplay(
+                        merchantInfo.getItemResultInfo(),
+                        true
+                )
                 .setId("itemResult" + index)
                 .layout(layout -> {
                     layout.width(20);

@@ -36,7 +36,7 @@ public class ViscriptShop {
         ModComPat.init(dist);
         PlayerUIMenuType.register(ShopEditor.SHOP_ID, ignored -> player -> {
             if (player.level().isClientSide) {
-                ModularUI modularUI = new ModularUI(UI.of(new ViScriptEditorWindow(ShopEditor.SHOP_ID, ShopEditor::new)
+                ModularUI modularUI = new ModularUI(UI.of(ViScriptEditorWindow.open(ShopEditor.SHOP_ID, ShopEditor::new)
                         .setMinimizedBoundsPercent(0, 0, 79, 100)))
                         .shouldCloseOnKeyInventory(false);
                 if (!Platform.isDevEnv()) {

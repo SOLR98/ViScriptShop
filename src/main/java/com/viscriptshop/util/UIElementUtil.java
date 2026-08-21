@@ -21,6 +21,8 @@ import com.lowdragmc.lowdraglib2.utils.search.IResultHandler;
 import com.viscript_lib.util.item.SimpleItemStackFilter;
 import com.viscriptshop.ViscriptShop;
 import com.viscriptshop.gui.data.CategoryInfo;
+import com.viscriptshop.gui.data.MerchantItemInfo;
+import com.viscriptshop.gui.data.MerchantItemDisplay;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import net.minecraft.client.Minecraft;
@@ -113,6 +115,79 @@ public class UIElementUtil {
 
     public static ItemSlot createItemSlot(ItemStack item, boolean isRenderBackgroundTexture, boolean showItemTooltips) {
         return createItemSlot(item, 16, isRenderBackgroundTexture, showItemTooltips);
+    }
+
+    /**
+     * 根据商品信息创建客户端图标。
+     *
+     * <p>资源包图片和替代物品模式只影响返回的界面元素。交易、匹配和库存处理仍使用
+     * {@link MerchantItemInfo#getItem()} 返回的实际物品。
+     *
+     * @param itemInfo 商品的实际物品与图标配置
+     * @param showItemTooltips 是否显示物品模式的原版物品提示
+     * @return 尺寸为 16×16 的物品槽或资源图片元素
+     */
+    public static UIElement createMerchantItemDisplay(MerchantItemInfo itemInfo,
+                                                       boolean showItemTooltips) {
+        ItemStack actualItem = itemInfo == null ? ItemStack.EMPTY : itemInfo.getItem();
+        MerchantItemDisplay display = itemInfo == null ? null : itemInfo.getDisplay();
+        MerchantItemDisplay.RenderMode mode = display == null
+                ? MerchantItemDisplay.RenderMode.ITEM
+                : display.resolvedRenderMode();
+        UIElement element = switch (mode) {
+            case ITEM -> createItemSlot(actualItem, false, showItemTooltips)
+                    .addClass("merchant-item-display-actual");
+            case ITEM_RENDER -> createItemSlot(
+                    display == null ? ItemStack.EMPTY : display.resolvedRenderItem(),
+                    false,
+                    showItemTooltips
+            ).addClass("merchant-item-display-item-render");
+            case RESOURCE -> createResourceItemDisplay(display)
+                    .addClass("merchant-item-display-resource");
+        };
+        return element.addClass("merchant-item-display");
+    }
+
+    private static UIElement createResourceItemDisplay(MerchantItemDisplay display) {
+        UIElement element = new UIElement().layout(layout -> {
+            layout.width(16);
+            layout.height(16);
+        });
+        ResourceLocation resourceLocation = parseResourceLocation(display == null ? "" : display.getResourcePath());
+        if (resourceLocation != null) {
+            element.style(style -> style.backgroundTexture(SpriteTexture.of(resourceLocation)));
+        } else {
+            element.style(style -> style.backgroundTexture(IGuiTexture.EMPTY));
+        }
+
+        String tooltip = display == null ? "" : display.getResourceName();
+        if (tooltip == null || tooltip.isBlank()) {
+            tooltip = display == null ? "" : display.getResourcePath();
+        }
+        if (!tooltip.isBlank()) {
+            String tooltipText = tooltip;
+            element.addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
+                event.hoverTooltips = new HoverTooltips(
+                        List.of(Component.literal(tooltipText)),
+                        null,
+                        null,
+                        null
+                );
+            });
+        }
+        return element;
+    }
+
+    @Nullable
+    private static ResourceLocation parseResourceLocation(String path) {
+        if (path == null || path.isBlank()) {
+            return null;
+        }
+        try {
+            return ResourceLocation.parse(path.trim());
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
     }
 
     public static UIElement createCategoryUI(CategoryInfo categoryInfo, boolean isSelected,

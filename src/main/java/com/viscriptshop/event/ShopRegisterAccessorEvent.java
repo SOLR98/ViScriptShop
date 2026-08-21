@@ -8,6 +8,9 @@ import com.viscriptshop.gui.data.CategoryInfo;
 import com.viscriptshop.gui.data.ItemMatchRule;
 import com.viscriptshop.gui.data.MerchantFlagGroup;
 import com.viscriptshop.gui.data.MerchantInfo;
+import com.viscriptshop.gui.data.MerchantCostItemInfo;
+import com.viscriptshop.gui.data.MerchantItemDisplay;
+import com.viscriptshop.gui.data.MerchantItemInfo;
 import com.viscriptshop.gui.data.ShopInfo;
 
 public final class ShopRegisterAccessorEvent {
@@ -18,6 +21,9 @@ public final class ShopRegisterAccessorEvent {
     public static void onRegisterAccessor(RegisterAccessorEvent event) {
         event.register(ItemMatchRule.class, ItemMatchRule::new);
         event.register(MerchantFlagGroup.class, MerchantFlagGroup::new);
+        event.register(MerchantItemDisplay.class, MerchantItemDisplay::new);
+        event.register(MerchantItemInfo.class, MerchantItemInfo::new);
+        event.register(MerchantCostItemInfo.class, MerchantCostItemInfo::new);
         event.register(MerchantInfo.class, MerchantInfo::new);
         event.register(CategoryInfo.class, CategoryInfo::new);
         event.register(AggregatedResources.PurchaseEntry.class, AggregatedResources.PurchaseEntry::new);
