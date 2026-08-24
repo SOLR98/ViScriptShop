@@ -221,7 +221,7 @@ public class ViScriptShopServerUtil {
     @Info("获取玩家钱")
     public static int getMoney(ServerPlayer player) {
         if (ViscriptShop.isMagicCoinsLoaded() && Config.isReplaceMoneyToMagicCoin.get()) {
-            return SGEconomyApi.get().getBalanceAsInt(player);
+            return (int) SGEconomyApi.getBalance(player);
         }
         return player.getData(ShopRegistries.MONEY).getMoney();
     }
@@ -283,7 +283,7 @@ public class ViScriptShopServerUtil {
     @Info("设置玩家钱")
     public static void setMoney(ServerPlayer player, int money) {
         if (ViscriptShop.isMagicCoinsLoaded() && Config.isReplaceMoneyToMagicCoin.get()) {
-            SGEconomyApi.get().setBalanceAsInt(player, money);
+            SGEconomyApi.setBalance(player, money);
         }
         ShopRegistries.Money data = player.getData(ShopRegistries.MONEY);
         data.setMoney(money);

@@ -40,7 +40,7 @@ public class ViScriptShopClientUtil {
     @Info("获取玩家钱")
     public static int getMoney(LocalPlayer player) {
         if (ViscriptShop.isMagicCoinsLoaded() && Config.isReplaceMoneyToMagicCoin.get()) {
-            return SGEconomyApi.get().getBalanceAsInt(player);
+            return (int) SGEconomyApi.getBalance(player);
         }
         return player.getData(ShopRegistries.MONEY).getMoney();
     }

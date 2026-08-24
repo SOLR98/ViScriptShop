@@ -183,8 +183,8 @@ dependencies {
     compileOnly "org.confluence:TerraCurio:${terra_curio_version}"
     compileOnly "org.confluence:TerraEntity:${terra_entity_version}"
     //Magic Coins
-    implementation "curse.maven:magic-coins-597281:7605721"
-    implementation "curse.maven:sg-economy-api-1446971:7604579"
+    implementation "curse.maven:magic-coins-597281:8719268"
+    implementation "curse.maven:sg-economy-api-1446971:8719196"
     //jech
     implementation "curse.maven:just-enough-characters-250702:7320033"
 }
