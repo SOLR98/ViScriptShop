@@ -12,6 +12,8 @@ import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ItemSlot;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Menu;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.TextElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.TextWrap;
 import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.utils.UIElementProvider;
@@ -74,11 +76,32 @@ public class UIElementUtil {
                 },
                 value -> value.isEmpty() ? "" : value.getHoverName().getString(),
                 value -> {
-                    UIElementProvider<ItemStack> itemUIProvider = UIElementProvider.iconText(
-                            ItemStackTexture::new,
-                            ItemStack::getHoverName
-                    );
-                    return itemUIProvider.createUI(value).addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
+                    UIElement icon = new UIElement().layout(layout -> {
+                        layout.width(10);
+                        layout.height(10);
+                        layout.flexShrink(0);
+                    }).style(style -> style.backgroundTexture(new ItemStackTexture(value)));
+                    TextElement label = (TextElement) new TextElement()
+                            .setText(value.getHoverName())
+                            .textStyle(style -> style
+                                    .textWrap(TextWrap.HOVER_ROLL)
+                                    .textAlignVertical(Vertical.CENTER))
+                            .layout(layout -> {
+                                layout.minWidth(0);
+                                layout.height(10);
+                                layout.flex(1);
+                            })
+                            .setOverflowVisible(false);
+                    return new UIElement().addChildren(icon, label)
+                            .addClass("shop-item-search-candidate")
+                            .layout(layout -> {
+                                layout.widthPercent(100);
+                                layout.height(10);
+                                layout.gapAll(2);
+                                layout.flexDirection(FlexDirection.ROW);
+                            })
+                            .setOverflowVisible(false)
+                            .addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
                         if (!value.isEmpty()) {
                             Minecraft mc = Minecraft.getInstance();
                             TooltipFlag flag = mc.options.advancedItemTooltips
@@ -193,9 +216,16 @@ public class UIElementUtil {
     public static UIElement createCategoryUI(CategoryInfo categoryInfo, boolean isSelected,
                                              Consumer<CategoryInfo> onSelectCallback,
                                              IGuiTexture defaultBg, IGuiTexture selectedBg) {
+        return createCategoryUI(categoryInfo, isSelected, onSelectCallback, defaultBg, selectedBg, 18);
+    }
+
+    public static UIElement createCategoryUI(CategoryInfo categoryInfo, boolean isSelected,
+                                             Consumer<CategoryInfo> onSelectCallback,
+                                             IGuiTexture defaultBg, IGuiTexture selectedBg,
+                                             float entryHeight) {
         UIElement category = new UIElement().layout(layout -> {
             layout.widthPercent(100);
-            layout.height(18);
+            layout.height(entryHeight);
             layout.gapAll(2);
             layout.flexDirection(FlexDirection.ROW);
             layout.alignItems(AlignItems.CENTER);

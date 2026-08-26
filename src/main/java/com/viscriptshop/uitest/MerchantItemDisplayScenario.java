@@ -106,7 +106,7 @@ public final class MerchantItemDisplayScenario implements UIScenario {
         merchant.setItemB(new ItemStack(Items.EMERALD));
         merchant.setItemResult(new ItemStack(Items.APPLE));
         merchant.getItemADisplay().setRenderMode(MerchantItemDisplay.RenderMode.RESOURCE);
-        merchant.getItemADisplay().setResourcePath("viscript_shop:textures/coin.png");
+        merchant.getItemADisplay().setResourcePath("viscript_shop:textures/icons/coin.png");
         merchant.getItemADisplay().setResourceName("Legacy Coin");
         merchant.getItemResultDisplay().setRenderMode(MerchantItemDisplay.RenderMode.ITEM_RENDER);
         merchant.getItemResultDisplay().setRenderItem(new ItemStack(Items.GOLD_INGOT));
@@ -128,7 +128,7 @@ public final class MerchantItemDisplayScenario implements UIScenario {
         context.check("resource mode survives v3 migration",
                 migratedMerchant.getItemADisplay().resolvedRenderMode() == MerchantItemDisplay.RenderMode.RESOURCE);
         context.check("resource path survives v3 migration",
-                "viscript_shop:textures/coin.png".equals(migratedMerchant.getItemADisplay().getResourcePath()));
+                "viscript_shop:textures/icons/coin.png".equals(migratedMerchant.getItemADisplay().getResourcePath()));
         context.check("resource name survives v3 migration",
                 "Legacy Coin".equals(migratedMerchant.getItemADisplay().getResourceName()));
         context.check("substitute item mode survives v3 migration",
