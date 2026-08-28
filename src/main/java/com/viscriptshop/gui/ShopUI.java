@@ -285,7 +285,7 @@ public class ShopUI extends UIElement {
             reloadMerchants();
         });
 
-        UIElement playerHead = new UIElement().addChild(
+        UIElement playerHead = new UIElement().setId("shop_player_head").addChild(
                 new PlayerHeadElement().layout(layout -> layout.marginRight(5))
         );
 
