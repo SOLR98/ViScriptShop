@@ -196,18 +196,16 @@ public class MerchantInfo implements IConfigurable, IPersistedSerializable {
 
     /**
      * 设置参与交易的物品 A，但不修改其匹配规则或图标配置。
-     * 物品数量提取到独立的 count 字段存储(不受堆叠上限约束)。
+     * 物品数量由自定义堆叠 {@link MerchantItemInfo#setItem} 提取到独立 count 字段。
      *
      * @param itemA 物品 A 的实际物品堆；传入 {@code null} 时使用空物品堆
      */
     public void setItemA(ItemStack itemA) {
         if (itemA == null || itemA.isEmpty()) {
             getItemAInfo().setItem(ItemStack.EMPTY);
-            getItemAInfo().setCount(0);
             return;
         }
-        getItemAInfo().setItem(itemA.copyWithCount(1));
-        getItemAInfo().setCount(itemA.getCount());
+        getItemAInfo().setItem(itemA);
     }
 
     /**
@@ -222,18 +220,16 @@ public class MerchantInfo implements IConfigurable, IPersistedSerializable {
 
     /**
      * 设置参与交易的物品 B，但不修改其匹配规则或图标配置。
-     * 物品数量提取到独立的 count 字段存储(不受堆叠上限约束)。
+     * 物品数量由自定义堆叠 {@link MerchantItemInfo#setItem} 提取到独立 count 字段。
      *
      * @param itemB 物品 B 的实际物品堆；传入 {@code null} 时使用空物品堆
      */
     public void setItemB(ItemStack itemB) {
         if (itemB == null || itemB.isEmpty()) {
             getItemBInfo().setItem(ItemStack.EMPTY);
-            getItemBInfo().setCount(0);
             return;
         }
-        getItemBInfo().setItem(itemB.copyWithCount(1));
-        getItemBInfo().setCount(itemB.getCount());
+        getItemBInfo().setItem(itemB);
     }
 
     /**
@@ -248,18 +244,16 @@ public class MerchantInfo implements IConfigurable, IPersistedSerializable {
 
     /**
      * 设置返回物品，但不修改其图标配置。
-     * 物品数量提取到独立的 count 字段存储(不受堆叠上限约束)。
+     * 物品数量由自定义堆叠 {@link MerchantItemInfo#setItem} 提取到独立 count 字段。
      *
      * @param itemResult 返回物品堆；传入 {@code null} 时使用空物品堆
      */
     public void setItemResult(ItemStack itemResult) {
         if (itemResult == null || itemResult.isEmpty()) {
             getItemResultInfo().setItem(ItemStack.EMPTY);
-            getItemResultInfo().setCount(0);
             return;
         }
-        getItemResultInfo().setItem(itemResult.copyWithCount(1));
-        getItemResultInfo().setCount(itemResult.getCount());
+        getItemResultInfo().setItem(itemResult);
     }
 
     /** 物品 A 的交易数量(独立于 ItemStack,不受堆叠上限约束) */

@@ -585,7 +585,7 @@ public class ShopUI extends UIElement {
                         layout.heightPercent(100);
                     })
                     .addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
-                        event.hoverTooltips = new HoverTooltips(List.of(Component.nullToEmpty(String.valueOf(count))), null, null, null);
+                        event.hoverTooltips = new HoverTooltips(List.of(Component.nullToEmpty(CustomCountElement.formatThousands(count))), null, null, null);
                     });
             shoppingCarView.addScrollViewChild(createItemInfoBox().addChildren(UIElementUtil.createItemSlot(itemStack, false, true), countLabel));
         });
@@ -601,7 +601,7 @@ public class ShopUI extends UIElement {
             }).layout(layout -> {
                 layout.heightPercent(100);
             }).addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
-                event.hoverTooltips = new HoverTooltips(List.of(Component.nullToEmpty(String.valueOf(gainSummary.getTotalMoney()))), null, null, null);
+                event.hoverTooltips = new HoverTooltips(List.of(Component.nullToEmpty(CustomCountElement.formatThousands(gainSummary.getTotalMoney()))), null, null, null);
             });
             shoppingCarView.addScrollViewChild(createItemInfoBox().addChildren(moneyIcon, money));
         }
@@ -625,7 +625,7 @@ public class ShopUI extends UIElement {
                         layout.heightPercent(100);
                     })
                     .addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
-                        event.hoverTooltips = new HoverTooltips(List.of(Component.nullToEmpty(color + count + "§f/" + itemCount)), null, null, null);
+                        event.hoverTooltips = new HoverTooltips(List.of(Component.nullToEmpty(color + CustomCountElement.formatThousands(count) + "§f/" + CustomCountElement.formatThousands(itemCount))), null, null, null);
                     });
             inventoryView.addScrollViewChild(createItemInfoBox().addChildren(UIElementUtil.createItemSlot(itemStack, false, true), countLabel));
         });
@@ -642,7 +642,7 @@ public class ShopUI extends UIElement {
             }).layout(layout -> {
                 layout.heightPercent(100);
             }).addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
-                event.hoverTooltips = new HoverTooltips(List.of(Component.nullToEmpty(color + costSummary.getTotalMoney())), null, null, null);
+                event.hoverTooltips = new HoverTooltips(List.of(Component.nullToEmpty(color + CustomCountElement.formatThousands(costSummary.getTotalMoney()))), null, null, null);
             });
             inventoryView.addScrollViewChild(createItemInfoBox().addChildren(moneyIcon, money));
         }
@@ -753,14 +753,8 @@ public class ShopUI extends UIElement {
         DiscountResult resultB = TradePriceCalculator.calculate(minecraft.player, currentShopInfo, selectedCategory,
                 merchantInfo, PromotionRule.CostSlot.ITEM_B, merchantInfo.getItemB());
         UIElement slotA = createDiscountedSlot(merchantInfo.getItemAInfo(), resultA, "itemA", index, 14);
-        slotA.getLayout().marginRight(14);
-        // A/B 槽间距动态(flex 吸收剩余空间),范围 14~28px
-        UIElement spacer = new UIElement().layout(layout -> {
-            layout.flex(1);
-            layout.minWidth(14);
-            layout.maxWidth(28);
-            layout.height(1);
-        });
+        // A/B 槽间距固定 16px
+        slotA.getLayout().marginRight(16);
         UIElement slotB = createDiscountedSlot(merchantInfo.getItemBInfo(), resultB, "itemB", index, 14);
         // 箭头与 B 槽间距不小于 16px
         slotB.getLayout().marginRight(16);
@@ -769,7 +763,7 @@ public class ShopUI extends UIElement {
         arrow.getLayout().marginRight(2);
         UIElement resultSlot = createResultSlot(merchantInfo, index);
         resultSlot.getLayout().marginRight(3);
-        leftGroup.addChildren(slotA, spacer, slotB, arrow, resultSlot);
+        leftGroup.addChildren(slotA, slotB, arrow, resultSlot);
         // 买赠槽始终占位(无买赠时为空槽)
         leftGroup.addChild(createBonusSlot(merchantInfo, index));
     }
@@ -786,7 +780,7 @@ public class ShopUI extends UIElement {
                     layout.heightPercent(100);
                 })
                 .addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
-                    event.hoverTooltips = new HoverTooltips(List.of(Component.nullToEmpty(String.valueOf(merchantInfo.getMoney()))), null, null, null);
+                    event.hoverTooltips = new HoverTooltips(List.of(Component.nullToEmpty(CustomCountElement.formatThousands(merchantInfo.getMoney()))), null, null, null);
                 });
         UIElement resultItemSlot = createResultSlot(merchantInfo, index);
         UIElement arrow = createRightArrow();
@@ -863,12 +857,12 @@ public class ShopUI extends UIElement {
         var first = bonusList.getFirst();
         int giftCount = bonusList.stream().mapToInt(DiscountResult.BonusDetail::getCount).sum();
         List<Component> lines = new ArrayList<>();
-        lines.add(Component.translatable("viscript_shop.ui.bonus.tag", String.valueOf(giftCount)));
+        lines.add(Component.translatable("viscript_shop.ui.bonus.tag",
+                CustomCountElement.formatThousands(giftCount)));
         for (DiscountResult.BonusDetail bonus : bonusList) {
             lines.add(Component.translatable("viscript_shop.ui.discount.detail",
-                    Component.translatable(bonus.getSource().isEmpty()
-                            ? "viscript_shop.discount.source.external" : bonus.getSource()),
-                    String.valueOf(bonus.getCount())));
+                    DiscountResult.parseSource(bonus.getSource()),
+                    CustomCountElement.formatThousands(bonus.getCount())));
         }
         HoverTooltips bonusTooltips = new HoverTooltips(lines, null, null, null);
         return UIElementUtil.createMerchantSlotDisplay(first.getItem(), giftCount, false, bonusTooltips, true, 14)
@@ -991,13 +985,13 @@ public class ShopUI extends UIElement {
         lines.addAll(stack.getTooltipLines(Item.TooltipContext.of(minecraft.level), minecraft.player, flag));
         lines.add(Component.empty());
         lines.add(Component.translatable("viscript_shop.ui.discount.compare",
-                String.valueOf(result.getBaseCount()),
-                String.valueOf(result.getFinalCount())));
+                CustomCountElement.formatThousands(result.getBaseCount()),
+                CustomCountElement.formatThousands(result.getFinalCount())));
         lines.add(Component.translatable("viscript_shop.ui.discount.rate",
                 DiscountInfoElement.formatRate(result.getRate())));
         for (DiscountResult.DiscountDetail detail : result.getDetails()) {
             lines.add(Component.translatable("viscript_shop.ui.discount.detail",
-                    Component.translatable(detail.getSource()),
+                    DiscountResult.parseSource(detail.getSource()),
                     DiscountInfoElement.formatRate(detail.getRate())));
         }
         return new HoverTooltips(lines, null, null, null);
@@ -1060,7 +1054,7 @@ public class ShopUI extends UIElement {
                     layout.marginBottom(2);
                 })
                 .addEventListener(UIEvents.HOVER_TOOLTIPS, event -> {
-                    event.hoverTooltips = new HoverTooltips(List.of(Component.nullToEmpty(String.valueOf(merchantInfo.getMoney()))), null, null, null);
+                    event.hoverTooltips = new HoverTooltips(List.of(Component.nullToEmpty(CustomCountElement.formatThousands(merchantInfo.getMoney()))), null, null, null);
                 });
 
         NumberConfigurator countConfigurator = new NumberConfigurator("", merchantInfo::getBuyCount, count -> {

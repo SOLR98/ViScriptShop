@@ -50,10 +50,35 @@ public class TradePriceCalculator {
         return reputationProvider.apply(player, shopInfo);
     }
 
+    /**
+     * 规则聚合结果:多条命中折扣合并后的总折率、方向与计算类型。
+     *
+     * @param rate     聚合后的总折率(带符号:负=打折,正=涨价)
+     * @param direction 首个命中规则的方向(减少/涨价)
+     * @param calcType  首个命中规则的计算类型
+     */
     private record RuleAggregation(double rate, PromotionRule.DiscountDirection direction,
                                    PromotionRule.DiscountCalcType calcType) {
     }
 
+    /**
+     * 计算单个成本槽的折后价(权威入口,双端共用)。
+     *
+     * <p>流程:
+     * <ol>
+     *   <li>取原价数量:ITEM_A/ITEM_B 槽从 {@code merchantInfo} 的独立 count 字段读取
+     *       (不受 ItemStack 堆叠上限约束),其余场景取 {@code baseCost} 栈数量;</li>
+     *   <li>聚合商店内置 DISCOUNT 规则得到基础折率(含动态声望/村庄英雄);</li>
+     *   <li>广播 {@link ShopDiscountEvent} 允许脚本/模组叠加或覆盖折率,并收集外部明细;</li>
+     *   <li>应用统一公式 {@code finalCount = max(1, floor(baseCount * (1 + rate)))},
+     *       最低 1 保证交易仍可支付。</li>
+     * </ol>
+     *
+     * @param player      计算折扣的玩家上下文(声望/权限/效果等条件来源)
+     * @param slot        目标成本槽(ALL/ITEM_A/ITEM_B)
+     * @param baseCost    原价成本栈(数量仅作 fallback)
+     * @return 包含原价、折后价、总折率与全部明细的 {@link DiscountResult}
+     */
     public static DiscountResult calculate(Player player, ShopInfo shopInfo, CategoryInfo categoryInfo,
                                            MerchantInfo merchantInfo, PromotionRule.CostSlot slot, ItemStack baseCost) {
         List<DiscountResult.DiscountDetail> details = new ArrayList<>();
@@ -79,7 +104,14 @@ public class TradePriceCalculator {
                 aggregation.direction(), aggregation.calcType(), details);
     }
 
-    /** 返回应用折扣后的成本栈(数量为折后价),不修改原栈。 */
+    /**
+     * 返回应用折扣后的成本栈(数量为折后价),不修改原栈。
+     *
+     * <p>供结算/展示层直接取用:先 {@link #calculate} 现算折后价,
+     * 再复制原栈并覆写数量,原始栈保持数量 1 不变。
+     *
+     * @return 折后成本栈(数量 = {@code finalCount})
+     */
     public static ItemStack apply(Player player, ShopInfo shopInfo, CategoryInfo categoryInfo,
                                   MerchantInfo merchantInfo, PromotionRule.CostSlot slot, ItemStack baseCost) {
         DiscountResult result = calculate(player, shopInfo, categoryInfo, merchantInfo, slot, baseCost);
@@ -88,7 +120,15 @@ public class TradePriceCalculator {
         return copy;
     }
 
-    /** 计算买赠(内置 BUY_GET 规则 + {@link ShopBonusEvent}),返回最终赠品明细。 */
+    /**
+     * 计算买赠(内置 BUY_GET 规则 + {@link ShopBonusEvent}),返回最终赠品明细。
+     *
+     * <p>内置规则公式:{@code 赠品总数 = floor(购买数量 / 买满阈值) × 每满赠数量};
+     * 未指定赠品时默认赠送商品自身({@code itemResult})。内置命中与事件贡献合并为最终列表。
+     *
+     * @param buyCount 当前购物车购买数量
+     * @return 赠品明细列表(可能为空)
+     */
     public static List<DiscountResult.BonusDetail> calculateBonus(Player player, ShopInfo shopInfo,
                                                                   CategoryInfo categoryInfo,
                                                                   MerchantInfo merchantInfo, int buyCount) {
@@ -112,6 +152,20 @@ public class TradePriceCalculator {
         return event.getBonusDetails();
     }
 
+    /**
+     * 聚合商店内所有命中的 DISCOUNT 规则,合并为单一折率。
+     *
+     * <p>每条命中规则产出一个带符号的有效折率(负=打折,正=涨价),按
+     * {@link PromotionRule.DiscountAggregationMode} 合并:
+     * <ul>
+     *   <li>{@code ADD}:直接求和(默认,多重折扣叠加);</li>
+     *   <li>{@code MAX}:取最大(打折中最轻的生效);</li>
+     *   <li>{@code MIN}:取最小(打折中最狠的生效);</li>
+     *   <li>{@code MULTIPLY}:连乘,{@code 总率 = Π(1 - 各率) - 1}(语义上等效"先折再折")。</li>
+     * </ul>
+     *
+     * <p>未命中任何规则时返回零折率(原价)。
+     */
     private static RuleAggregation aggregateDiscountRules(Player player, ShopInfo shopInfo, CategoryInfo categoryInfo,
                                                           MerchantInfo merchantInfo, PromotionRule.CostSlot slot,
                                                           List<DiscountResult.DiscountDetail> details) {
@@ -201,6 +255,11 @@ public class TradePriceCalculator {
         }, hitDirection, hitCalcType);
     }
 
+    /**
+     * 条件列表全部满足才视为命中(AND 语义);空列表恒命中。
+     *
+     * @return 全部条件满足返回 {@code true}
+     */
     private static boolean conditionsMet(Player player, ShopInfo shopInfo, CategoryInfo categoryInfo,
                                          MerchantInfo merchantInfo, List<PromotionRule.DiscountCondition> conditions) {
         if (conditions == null || conditions.isEmpty()) return true;
@@ -212,6 +271,18 @@ public class TradePriceCalculator {
         return true;
     }
 
+    /**
+     * 判定单个折扣条件(按 {@link PromotionRule.ConditionType} 分发):
+     * <ul>
+     *   <li>{@code HAS_FLAG}:玩家 Money 数据中的旗帜标记是否包含指定值;</li>
+     *   <li>{@code HAS_PERMISSION}:权限等级(0~4)是否达标;</li>
+     *   <li>{@code HAS_EFFECT}:是否拥有指定药水效果;</li>
+     *   <li>{@code REPUTATION}/{@code PLAYER_XP_LEVEL}:数值与阈值按比较符(GE/LE/EQ/BETWEEN)判定;</li>
+     *   <li>{@code SHOP_MATCH}/{@code CATEGORY_MATCH}/{@code MERCHANT_MATCH}:名称/ID 精确匹配;</li>
+     *   <li>{@code ITEM_IN_CART}:购物车内是否存在指定物品(结果/成本槽均可);</li>
+     *   <li>{@code GAME_TIME}:世界昼夜时间比较,支持 "min,max" 区间写法。</li>
+     * </ul>
+     */
     private static boolean conditionMet(Player player, ShopInfo shopInfo, CategoryInfo categoryInfo,
                                         MerchantInfo merchantInfo, PromotionRule.DiscountCondition condition) {
         if (condition == null || condition.getType() == null) return true;
@@ -263,6 +334,12 @@ public class TradePriceCalculator {
         };
     }
 
+    /**
+     * 判定购物车内是否存在指定物品 ID。
+     *
+     * <p>遍历商店全部分类/商品,任一商品处于购物车(购买数量 > 0)且
+     * 结果槽或成本槽 A/B 的物品 ID 与目标一致即视为命中。
+     */
     private static boolean cartContains(ShopInfo shopInfo, String itemId) {
         if (shopInfo == null || itemId == null || itemId.isBlank()) return false;
         for (CategoryInfo category : shopInfo.getCategoryInfos()) {
@@ -278,11 +355,16 @@ public class TradePriceCalculator {
         return false;
     }
 
+    /** 按注册表 ID(命名空间:路径)比较物品是否相同;空栈恒不匹配。 */
     private static boolean sameItem(ItemStack stack, String itemId) {
         if (stack == null || stack.isEmpty()) return false;
         return stack.getItem().builtInRegistryHolder().key().location().toString().equals(itemId);
     }
 
+    /**
+     * 数值条件比较(声望/经验等级等):
+     * {@code BETWEEN} 时从条件 value 解析 "min,max" 区间,其余按比较符判定。
+     */
     private static boolean compareValue(double actual, PromotionRule.DiscountCondition condition) {
         PromotionRule.ComparisonOp op = condition.getOp() == null
                 ? PromotionRule.ComparisonOp.GE
@@ -306,6 +388,7 @@ public class TradePriceCalculator {
         };
     }
 
+    /** 长整型比较(游戏时间等):{@code BETWEEN} 不支持,其余按比较符判定。 */
     private static boolean compareLong(long actual, PromotionRule.DiscountCondition condition, long threshold) {
         PromotionRule.ComparisonOp op = condition.getOp() == null
                 ? PromotionRule.ComparisonOp.GE

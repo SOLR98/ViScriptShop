@@ -2,9 +2,12 @@ package com.viscriptshop.gui.data;
 
 import com.lowdragmc.lowdraglib2.configurator.ConfiguratorParser;
 import com.lowdragmc.lowdraglib2.configurator.IConfigurable;
+import com.lowdragmc.lowdraglib2.configurator.accessors.ItemStackAccessor;
+import com.lowdragmc.lowdraglib2.configurator.annotation.ConfigNumber;
 import com.lowdragmc.lowdraglib2.configurator.annotation.Configurable;
 import com.lowdragmc.lowdraglib2.configurator.ui.Configurator;
 import com.lowdragmc.lowdraglib2.configurator.ui.ConfiguratorGroup;
+import com.lowdragmc.lowdraglib2.configurator.ui.NumberConfigurator;
 import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
 import com.lowdragmc.lowdraglib2.utils.PersistedParser;
 import com.mojang.serialization.Codec;
@@ -17,6 +20,7 @@ import net.minecraft.world.item.ItemStack;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * 保存商品的实际物品及其独立图标配置。
@@ -63,10 +67,73 @@ public class MerchantItemInfo implements IConfigurable, IPersistedSerializable {
     public void buildConfigurator(ConfiguratorGroup father) {
         getItem();
         getDisplay();
-        addFieldConfigurator(father, MerchantItemInfo.class, "item")
-                .addClass("merchant-item-actual");
+        addItemConfigurator(father);
         addFieldConfigurator(father, MerchantItemInfo.class, "display")
                 .addClass("merchant-item-display-settings");
+    }
+
+    /**
+     * 物品配置器(槽 + 物品搜索 + 组件 + 数量输入):槽与数量输入框直接绑定
+     * 自定义数量 {@link #count}(ItemStack 数量恒为 1 不再存储),数量修改经
+     * {@link #setItem(ItemStack)} 同步到 count。
+     */
+    private void addItemConfigurator(ConfiguratorGroup father) {
+        try {
+            Field field = MerchantItemInfo.class.getDeclaredField("item");
+            ConfiguratorGroup group = (ConfiguratorGroup) new ItemStackAccessor().create(
+                    "viscript_shop.data.merchant.item.actual",
+                    this::getItemWithCount,
+                    this::setItem,
+                    true,
+                    field,
+                    this
+            );
+            replaceCountConfigurator(group);
+            group.addClass("merchant-item-actual");
+            father.addConfigurator(group);
+        } catch (NoSuchFieldException exception) {
+            throw new IllegalStateException("Missing merchant item field: item", exception);
+        }
+    }
+
+    /**
+     * 将 ItemStackAccessor 自带的 int 数量输入框替换为绑定 {@link #count} 的
+     * long 输入框(范围 0 ~ {@link Long#MAX_VALUE},与自定义物品堆叠一致)。
+     */
+    private void replaceCountConfigurator(ConfiguratorGroup group) {
+        List<Configurator> configurators = group.getConfigurators();
+        for (int i = 0; i < configurators.size(); i++) {
+            Configurator configurator = configurators.get(i);
+            if (configurator instanceof NumberConfigurator
+                    && "ldlib.gui.editor.configurator.count".equals(configurator.getLabel().getString())) {
+                group.removeConfigurator(configurator);
+                group.addConfiguratorAt(
+                        new NumberConfigurator("viscript_shop.data.merchant.item.count",
+                                this::getCount,
+                                value -> setCount(value.longValue()),
+                                count,
+                                true)
+                                .setType(ConfigNumber.Type.LONG)
+                                .setRange(0L, Long.MAX_VALUE)
+                                .setWheel(1),
+                        i);
+                return;
+            }
+        }
+    }
+
+    /**
+     * 返回携带自定义数量的展示栈(上限 {@link Integer#MAX_VALUE},ItemStack 数量上限),
+     * 使 Inspector 槽的堆叠数字与数量输入框直接反映 {@link #count}。
+     */
+    private ItemStack getItemWithCount() {
+        ItemStack stack = getItem();
+        if (stack.isEmpty() || count <= 0) {
+            return stack;
+        }
+        return count > Integer.MAX_VALUE
+                ? stack.copyWithCount(Integer.MAX_VALUE)
+                : stack.copyWithCount((int) count);
     }
 
     /**
@@ -79,6 +146,20 @@ public class MerchantItemInfo implements IConfigurable, IPersistedSerializable {
             item = ItemStack.EMPTY;
         }
         return item;
+    }
+
+    /**
+     * 设置实际物品:ItemStack 数量不再存储(恒为 1),真实数量全部提取到独立的
+     * {@link #count} 字段(自定义物品堆叠,不受堆叠上限约束)。
+     */
+    public void setItem(ItemStack item) {
+        if (item == null || item.isEmpty()) {
+            this.item = ItemStack.EMPTY;
+            this.count = 0;
+            return;
+        }
+        this.item = item.copyWithCount(1);
+        this.count = item.getCount();
     }
 
     /**

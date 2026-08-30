@@ -33,8 +33,10 @@ public class ShopInfo implements IConfigurable, IPersistedSerializable {
     private LockedMerchantVisibility lockedMerchantVisibility = LockedMerchantVisibility.SHOW_WITH_LOCK;
     @Persisted
     private List<CategoryInfo> categoryInfos = new ArrayList<>();
+    @Configurable(name = "viscript_shop.data.shop.promotionRules")
     @Persisted
     private List<PromotionRule> promotionRules = new ArrayList<>();
+    @Configurable(name = "viscript_shop.data.shop.discountAggregation")
     @Persisted
     private PromotionRule.DiscountAggregationMode discountAggregation = PromotionRule.DiscountAggregationMode.ADD;
 

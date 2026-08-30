@@ -55,7 +55,7 @@ public class ShopDiscountEvent extends Event {
     }
 
     public void addDiscount(double rate) {
-        addDiscount(rate, null);
+        addDiscount(rate, (String) null);
     }
 
     public void addDiscount(double rate, String source) {
@@ -63,6 +63,18 @@ public class ShopDiscountEvent extends Event {
         this.externalDetails.add(new DiscountResult.DiscountDetail(
                 source == null || source.isBlank() ? "viscript_shop.discount.source.external" : source,
                 rate, slot));
+    }
+
+    /** 来源使用文本组件(支持翻译/样式),序列化为 JSON 存储 */
+    public void addDiscount(double rate, net.minecraft.network.chat.Component source) {
+        if (source == null) {
+            addDiscount(rate, (String) null);
+            return;
+        }
+        this.discountRate += rate;
+        this.externalDetails.add(new DiscountResult.DiscountDetail(
+                net.minecraft.network.chat.Component.Serializer.toJson(source,
+                        net.minecraft.core.RegistryAccess.EMPTY), rate, slot));
     }
 
     public void setDiscount(double rate) {

@@ -36,16 +36,36 @@ public class ShopBonusEvent extends Event {
         this.buyCount = buyCount;
     }
 
+    /** 追加赠品,来源归入默认"外部赠品"(无翻译键时直接显示该字符串)。 */
     public void addGift(ItemStack item, int count) {
-        addGift(item, count, null);
+        addGift(item, count, (String) null);
     }
 
+    /**
+     * 追加赠品并指定来源文本(翻译键优先,无翻译时显示键本身)。
+     *
+     * @param item   赠品物品(空栈/负数量忽略)
+     * @param count  赠品数量(须 > 0)
+     * @param source 来源标识(翻译键或纯文本)
+     */
     public void addGift(ItemStack item, int count, String source) {
         if (item == null || item.isEmpty() || count <= 0) return;
         bonusDetails.add(new DiscountResult.BonusDetail(item.copy(), count,
                 source == null || source.isBlank() ? "viscript_shop.discount.source.external" : source));
     }
 
+    /** 追加赠品,来源使用文本组件(支持翻译/样式),序列化为 JSON 存储 */
+    public void addGift(ItemStack item, int count, net.minecraft.network.chat.Component source) {
+        if (source == null) {
+            addGift(item, count, (String) null);
+            return;
+        }
+        if (item == null || item.isEmpty() || count <= 0) return;
+        bonusDetails.add(new DiscountResult.BonusDetail(item.copy(), count,
+                net.minecraft.network.chat.Component.Serializer.toJson(source, net.minecraft.core.RegistryAccess.EMPTY)));
+    }
+
+    /** 整体覆盖赠品列表(清空后追加给定列表)。 */
     public void setGifts(List<DiscountResult.BonusDetail> gifts) {
         bonusDetails.clear();
         if (gifts != null) {
@@ -53,6 +73,7 @@ public class ShopBonusEvent extends Event {
         }
     }
 
+    /** 按物品类型与组件移除匹配的赠品(用于监听者主动削减赠品)。 */
     public void removeGift(ItemStack item) {
         bonusDetails.removeIf(detail -> detail.getItem().is(item.getItem())
                 && net.minecraft.world.item.ItemStack.isSameItemSameComponents(detail.getItem(), item));

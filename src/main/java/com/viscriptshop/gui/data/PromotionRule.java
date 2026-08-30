@@ -1,5 +1,9 @@
 package com.viscriptshop.gui.data;
 
+import com.lowdragmc.lowdraglib2.configurator.IConfigurable;
+import com.lowdragmc.lowdraglib2.configurator.annotation.Configurable;
+import com.lowdragmc.lowdraglib2.configurator.annotation.ConfigSelector;
+import com.lowdragmc.lowdraglib2.configurator.ui.ConfiguratorGroup;
 import com.lowdragmc.lowdraglib2.syncdata.IPersistedSerializable;
 import com.lowdragmc.lowdraglib2.syncdata.annotation.Persisted;
 import com.lowdragmc.lowdraglib2.utils.PersistedParser;
@@ -23,7 +27,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PromotionRule implements IPersistedSerializable {
+public class PromotionRule implements IConfigurable, IPersistedSerializable {
     public static final StreamCodec<ByteBuf, PromotionRule> STREAM_CODEC;
     public static final Codec<PromotionRule> CODEC;
 
@@ -81,33 +85,45 @@ public class PromotionRule implements IPersistedSerializable {
         FLAT_REDUCE
     }
 
+    @Configurable(name = "viscript_shop.data.promotion.id")
     @Persisted
     private String id = "";
+    @Configurable(name = "viscript_shop.data.promotion.type")
     @Persisted
     private PromotionType type = PromotionType.DISCOUNT;
+    @Configurable(name = "viscript_shop.data.promotion.slot")
     @Persisted
     private CostSlot slot = CostSlot.ALL;
+    @Configurable(name = "viscript_shop.data.promotion.conditions")
     @Persisted
     private List<DiscountCondition> conditions = new ArrayList<>();
+    @Configurable(name = "viscript_shop.data.promotion.enabled")
     @Persisted
     private boolean enabled = true;
     // DISCOUNT
+    @Configurable(name = "viscript_shop.data.promotion.discount")
     @Persisted
     private double discount = 0.0;
     /** 折扣方向(默认减少/打折),rate 始终为正幅度 */
+    @Configurable(name = "viscript_shop.data.promotion.direction")
     @Persisted
     private DiscountDirection direction = DiscountDirection.REDUCE;
     /** 折扣计算类型(默认按百分比减少) */
+    @Configurable(name = "viscript_shop.data.promotion.calcType")
     @Persisted
     private DiscountCalcType calcType = DiscountCalcType.PERCENT_REDUCE;
     /** 动态声望折扣:命中 REPUTATION 条件时,折扣率 = -floor(声望 × 0.05) / 基础数量(原版村民折扣语义,按商品各自折算) */
+    @Configurable(name = "viscript_shop.data.promotion.dynamicReputation")
     @Persisted
     private boolean dynamicReputation = false;
     // BUY_GET
+    @Configurable(name = "viscript_shop.data.promotion.buyThreshold")
     @Persisted
     private int buyThreshold = 0;
+    @Configurable(name = "viscript_shop.data.promotion.giftCount")
     @Persisted
     private int giftCount = 0;
+    @Configurable(name = "viscript_shop.data.promotion.giftItem")
     @Persisted
     private ItemStack giftItem = ItemStack.EMPTY;
 
@@ -123,16 +139,20 @@ public class PromotionRule implements IPersistedSerializable {
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class DiscountCondition implements IPersistedSerializable {
+    public static class DiscountCondition implements IConfigurable, IPersistedSerializable {
         public static final StreamCodec<ByteBuf, DiscountCondition> STREAM_CODEC;
         public static final Codec<DiscountCondition> CODEC;
 
+        @Configurable(name = "viscript_shop.data.promotion.condition.type")
         @Persisted
         private ConditionType type = ConditionType.HAS_FLAG;
+        @Configurable(name = "viscript_shop.data.promotion.condition.value")
         @Persisted
         private String value = "";
+        @Configurable(name = "viscript_shop.data.promotion.condition.op")
         @Persisted
         private ComparisonOp op = ComparisonOp.GE;
+        @Configurable(name = "viscript_shop.data.promotion.condition.threshold")
         @Persisted
         private double threshold = 0.0;
 
