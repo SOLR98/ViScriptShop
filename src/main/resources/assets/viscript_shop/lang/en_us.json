@@ -188,5 +188,12 @@
   "viscript_shop.dialog.setTradeType.info": "Are you sure you want to set all merchandise in the current category to the specified trade type?",
 
   "sidebar_button.viscript_shop.shop": "Open Shop",
-  "sidebar_button.viscript_shop.shop.tooltip": "Select a shop name to open"
+  "sidebar_button.viscript_shop.shop.tooltip": "Select a shop name to open",
+  "viscript_shop.ui.discount.compare": "%s -> %s",
+  "viscript_shop.ui.discount.rate": "Rate: %s",
+  "viscript_shop.ui.discount.detail": "  %s: %s",
+  "viscript_shop.discount.source.external": "External",
+  "viscript_shop.discount.source.rule": "Promotion",
+  "viscript_shop.ui.bonus.tag": "Bonus +%s",
+  "viscript_shop.discount.source.hero": "Hero of the Village"
 }

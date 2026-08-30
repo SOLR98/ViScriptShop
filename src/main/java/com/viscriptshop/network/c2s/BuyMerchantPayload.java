@@ -13,8 +13,10 @@ import com.viscriptshop.gui.data.AggregatedResources;
 import com.viscriptshop.gui.data.CategoryInfo;
 import com.viscriptshop.gui.data.MerchantFlagGroup;
 import com.viscriptshop.gui.data.MerchantInfo;
+import com.viscriptshop.gui.data.PromotionRule;
 import com.viscriptshop.gui.data.ShopInfo;
 import com.viscriptshop.network.s2c.S2CPayload;
+import com.viscriptshop.util.TradePriceCalculator;
 import com.viscriptshop.util.ViScriptShopServerUtil;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -34,7 +36,7 @@ public class BuyMerchantPayload {
         if (player == null) return;
         ShopInfo shopInfo = ViScriptShopServerUtil.getShopInfo(shopLocation);
         AggregatedResources request = gain;
-        cost = buildAuthoritativeCost(shopInfo, request);
+        cost = buildAuthoritativeCost(player, shopInfo, request);
         gain = buildAuthoritativeGain(shopInfo, request);
         if (gain.isEmpty()) {
             RPCPacketDistributor.rpcToPlayer(player, S2CPayload.SEND_MESSAGE, Message.Type.ERROR,
@@ -157,6 +159,29 @@ public class BuyMerchantPayload {
         // 给予玩家经验
         if (gain.getTotalXp() > 0) player.giveExperiencePoints(gain.getTotalXp());
 
+        // 买赠结算(内置 BUY_GET 规则 + ShopBonusEvent 事件贡献)
+        for (var purchaseEntry : gain.getPurchaseEntries()) {
+            var categoryInfo = shopInfo.getCategoryInfos().stream()
+                    .filter(c -> c.getId().equals(purchaseEntry.getCategoryId()))
+                    .findFirst()
+                    .orElse(null);
+            if (categoryInfo == null) continue;
+
+            var merchantInfo = categoryInfo.getMerchants().stream()
+                    .filter(m -> m.getId().equals(purchaseEntry.getMerchantId()))
+                    .findFirst()
+                    .orElse(null);
+            if (merchantInfo == null) continue;
+
+            var bonusList = TradePriceCalculator.calculateBonus(player, shopInfo, categoryInfo, merchantInfo,
+                    purchaseEntry.getBuyCount());
+            for (var bonus : bonusList) {
+                ItemStack copy = bonus.getItem().copy();
+                copy.setCount(bonus.getCount());
+                ItemHandlerHelper.giveItemToPlayer(player, copy);
+            }
+        }
+
         // 执行指令
         if (!gain.getCommands().isEmpty()) {
             for (String command : gain.getCommands()) {
@@ -188,7 +213,7 @@ public class BuyMerchantPayload {
         }
     }
 
-    private static AggregatedResources buildAuthoritativeCost(ShopInfo shopInfo, AggregatedResources request) {
+    private static AggregatedResources buildAuthoritativeCost(ServerPlayer player, ShopInfo shopInfo, AggregatedResources request) {
         AggregatedResources cost = new AggregatedResources();
         for (AggregatedResources.PurchaseEntry purchaseEntry : request.getPurchaseEntries()) {
             if (purchaseEntry.getBuyCount() <= 0) continue;
@@ -205,8 +230,12 @@ public class BuyMerchantPayload {
             ));
             switch (categoryInfo.getShopType()) {
                 case ITEM_FOR_ITEM -> {
-                    cost.addItemEntry(merchantInfo.getItemA(), purchaseEntry.getBuyCount(), merchantInfo.getItemAMatchRule());
-                    cost.addItemEntry(merchantInfo.getItemB(), purchaseEntry.getBuyCount(), merchantInfo.getItemBMatchRule());
+                    cost.addItemEntry(TradePriceCalculator.apply(player, shopInfo, categoryInfo, merchantInfo,
+                                    PromotionRule.CostSlot.ITEM_A, merchantInfo.getItemA()),
+                            purchaseEntry.getBuyCount(), merchantInfo.getItemAMatchRule());
+                    cost.addItemEntry(TradePriceCalculator.apply(player, shopInfo, categoryInfo, merchantInfo,
+                                    PromotionRule.CostSlot.ITEM_B, merchantInfo.getItemB()),
+                            purchaseEntry.getBuyCount(), merchantInfo.getItemBMatchRule());
                 }
                 case CURRENCY -> {
                     switch (merchantInfo.getTradeType()) {
@@ -237,10 +266,10 @@ public class BuyMerchantPayload {
             gain.addXp(merchantInfo.getXp(), purchaseEntry.getBuyCount());
             gain.addCommand(merchantInfo.getCommand());
             switch (categoryInfo.getShopType()) {
-                case ITEM_FOR_ITEM -> gain.addItem(merchantInfo.getItemResult(), purchaseEntry.getBuyCount());
+                case ITEM_FOR_ITEM -> gain.addItem(merchantInfo.getItemResult().copyWithCount((int) merchantInfo.getItemResultCount()), purchaseEntry.getBuyCount());
                 case CURRENCY -> {
                     switch (merchantInfo.getTradeType()) {
-                        case BUY -> gain.addItem(merchantInfo.getItemResult(), purchaseEntry.getBuyCount());
+                        case BUY -> gain.addItem(merchantInfo.getItemResult().copyWithCount((int) merchantInfo.getItemResultCount()), purchaseEntry.getBuyCount());
                         case SELL -> gain.addMoney(merchantInfo.getMoney(), purchaseEntry.getBuyCount());
                     }
                 }

@@ -9,6 +9,7 @@ import com.viscriptshop.gui.components.theme.ShopTheme;
 import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
+import dev.vfyjxf.taffy.style.TaffyDisplay;
 import dev.vfyjxf.taffy.style.TaffyPosition;
 import net.minecraft.world.item.ItemStack;
 
@@ -149,8 +150,8 @@ public final class GrayCatShopUiLayout implements ShopUiLayout {
         absolute(elements.currencyLayoutToggle(), 136, 6, 16, 16);
         elements.currencyLayoutToggle().getLayout().marginAll(0);
         elements.currencyLayoutToggle().getLayout().paddingAll(0);
-        absolute(elements.playerHead(), 252, 6, 21, 16);
-        head.addChildren(searchControls, elements.playerHead());
+        elements.playerHead().setDisplay(TaffyDisplay.NONE);
+        head.addChild(searchControls);
 
         absolute(body, 0, 28, 273, 237);
         body.layout(layout -> {

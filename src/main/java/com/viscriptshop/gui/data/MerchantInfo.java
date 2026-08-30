@@ -185,57 +185,96 @@ public class MerchantInfo implements IConfigurable, IPersistedSerializable {
     }
 
     /**
-     * 获取参与交易的物品 A。
+     * 获取参与交易的物品 A(数量恒为 1,实际数量见 {@link #getItemACount()})。
      *
      * @return 物品 A 的实际物品堆
      */
     public ItemStack getItemA() {
-        return getItemAInfo().getItem();
+        ItemStack item = getItemAInfo().getItem();
+        return item == null || item.isEmpty() || item.getCount() == 1 ? item : item.copyWithCount(1);
     }
 
     /**
      * 设置参与交易的物品 A，但不修改其匹配规则或图标配置。
+     * 物品数量提取到独立的 count 字段存储(不受堆叠上限约束)。
      *
      * @param itemA 物品 A 的实际物品堆；传入 {@code null} 时使用空物品堆
      */
     public void setItemA(ItemStack itemA) {
-        getItemAInfo().setItem(itemA == null ? ItemStack.EMPTY : itemA);
+        if (itemA == null || itemA.isEmpty()) {
+            getItemAInfo().setItem(ItemStack.EMPTY);
+            getItemAInfo().setCount(0);
+            return;
+        }
+        getItemAInfo().setItem(itemA.copyWithCount(1));
+        getItemAInfo().setCount(itemA.getCount());
     }
 
     /**
-     * 获取参与交易的物品 B。
+     * 获取参与交易的物品 B(数量恒为 1,实际数量见 {@link #getItemBCount()})。
      *
      * @return 物品 B 的实际物品堆
      */
     public ItemStack getItemB() {
-        return getItemBInfo().getItem();
+        ItemStack item = getItemBInfo().getItem();
+        return item == null || item.isEmpty() || item.getCount() == 1 ? item : item.copyWithCount(1);
     }
 
     /**
      * 设置参与交易的物品 B，但不修改其匹配规则或图标配置。
+     * 物品数量提取到独立的 count 字段存储(不受堆叠上限约束)。
      *
      * @param itemB 物品 B 的实际物品堆；传入 {@code null} 时使用空物品堆
      */
     public void setItemB(ItemStack itemB) {
-        getItemBInfo().setItem(itemB == null ? ItemStack.EMPTY : itemB);
+        if (itemB == null || itemB.isEmpty()) {
+            getItemBInfo().setItem(ItemStack.EMPTY);
+            getItemBInfo().setCount(0);
+            return;
+        }
+        getItemBInfo().setItem(itemB.copyWithCount(1));
+        getItemBInfo().setCount(itemB.getCount());
     }
 
     /**
-     * 获取返回物品的实际物品堆。
+     * 获取返回物品的实际物品堆(数量恒为 1,实际数量见 {@link #getItemResultCount()})。
      *
      * @return 返回物品的实际物品堆
      */
     public ItemStack getItemResult() {
-        return getItemResultInfo().getItem();
+        ItemStack item = getItemResultInfo().getItem();
+        return item == null || item.isEmpty() || item.getCount() == 1 ? item : item.copyWithCount(1);
     }
 
     /**
      * 设置返回物品，但不修改其图标配置。
+     * 物品数量提取到独立的 count 字段存储(不受堆叠上限约束)。
      *
      * @param itemResult 返回物品堆；传入 {@code null} 时使用空物品堆
      */
     public void setItemResult(ItemStack itemResult) {
-        getItemResultInfo().setItem(itemResult == null ? ItemStack.EMPTY : itemResult);
+        if (itemResult == null || itemResult.isEmpty()) {
+            getItemResultInfo().setItem(ItemStack.EMPTY);
+            getItemResultInfo().setCount(0);
+            return;
+        }
+        getItemResultInfo().setItem(itemResult.copyWithCount(1));
+        getItemResultInfo().setCount(itemResult.getCount());
+    }
+
+    /** 物品 A 的交易数量(独立于 ItemStack,不受堆叠上限约束) */
+    public long getItemACount() {
+        return getItemAInfo().getCount();
+    }
+
+    /** 物品 B 的交易数量(独立于 ItemStack,不受堆叠上限约束) */
+    public long getItemBCount() {
+        return getItemBInfo().getCount();
+    }
+
+    /** 返回物品的交易数量(独立于 ItemStack,不受堆叠上限约束) */
+    public long getItemResultCount() {
+        return getItemResultInfo().getCount();
     }
 
     /**

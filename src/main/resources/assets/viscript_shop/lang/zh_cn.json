@@ -188,5 +188,12 @@
   "viscript_shop.dialog.setTradeType.info": "确定要将当前分类下的所有商品设置为指定的交易类型吗？",
 
   "sidebar_button.viscript_shop.shop": "打开商店",
-  "sidebar_button.viscript_shop.shop.tooltip": "选择商店名打开"
+  "sidebar_button.viscript_shop.shop.tooltip": "选择商店名打开",
+  "viscript_shop.ui.discount.compare": "%s → %s",
+  "viscript_shop.ui.discount.rate": "折扣率: %s",
+  "viscript_shop.ui.discount.detail": "  %s: %s",
+  "viscript_shop.discount.source.external": "外部折扣",
+  "viscript_shop.discount.source.rule": "促销规则",
+  "viscript_shop.ui.bonus.tag": "赠送 +%s",
+  "viscript_shop.discount.source.hero": "村庄英雄"
 }

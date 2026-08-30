@@ -22,7 +22,12 @@ import com.lowdragmc.lowdraglib2.gui.util.TreeNode;
 import com.lowdragmc.lowdraglib2.utils.search.IResultHandler;
 import com.viscript_lib.util.item.SimpleItemStackFilter;
 import com.viscriptshop.ViscriptShop;
+import com.viscriptshop.gui.components.CustomCountElement;
+import com.viscriptshop.gui.components.DiscountBadgeElement;
+import com.viscriptshop.gui.components.GiftTagElement;
+import com.viscriptshop.gui.components.MerchantSlotElement;
 import com.viscriptshop.gui.data.CategoryInfo;
+import com.viscriptshop.gui.data.DiscountResult;
 import com.viscriptshop.gui.data.MerchantItemInfo;
 import com.viscriptshop.gui.data.MerchantItemDisplay;
 import dev.vfyjxf.taffy.style.AlignItems;
@@ -171,6 +176,92 @@ public class UIElementUtil {
         return element.addClass("merchant-item-display");
     }
 
+    /**
+     * 统一的商品槽渲染工厂(自绘槽,始终使用自定义数量渲染)。
+     *
+     * <p>槽内物品图标数量恒为 1,真实数量由 {@link MerchantSlotElement} 以 long 渲染
+     * (默认大数缩写、0.5 倍大小,上限 Long.MAX_VALUE,不受堆叠上限约束);
+     * 有折扣时槽内原价画删除线,槽右侧紧靠显示折率 + 折后价格;可选"赠"字标记与自定义悬浮提示。
+     * 返回的槽未设置布局,由调用方链式 {@code layout(...)} 定位。
+     *
+     * @param itemInfo 商品的实际物品与图标配置
+     * @param displayCount 展示数量(long)
+     * @param showItemTooltips 是否显示原版物品提示(自定义 tooltip 传 null 时生效)
+     * @param customTooltips 自定义悬浮提示(非空则覆盖原版)
+     * @param discount 折扣结果(有折扣时槽内划线 + 右侧折率/折后价格)
+     * @param giftTag 是否叠加"赠"字标记
+     * @param size 槽尺寸
+     */
+    public static UIElement createMerchantSlotDisplay(MerchantItemInfo itemInfo,
+                                                      long displayCount,
+                                                      boolean showItemTooltips,
+                                                      @Nullable HoverTooltips customTooltips,
+                                                      @Nullable DiscountResult discount,
+                                                      boolean giftTag,
+                                                      float size) {
+        ItemStack actualItem = itemInfo == null ? ItemStack.EMPTY : itemInfo.getItem();
+        MerchantItemDisplay display = itemInfo == null ? null : itemInfo.getDisplay();
+        MerchantItemDisplay.RenderMode mode = display == null
+                ? MerchantItemDisplay.RenderMode.ITEM
+                : display.resolvedRenderMode();
+        if (mode == MerchantItemDisplay.RenderMode.RESOURCE) {
+            UIElement resourceSlot = createResourceItemDisplay(display)
+                    .addClass("merchant-item-display").addClass("merchant-item-display-resource");
+            if (customTooltips != null) {
+                resourceSlot.addEventListener(UIEvents.HOVER_TOOLTIPS, event -> event.hoverTooltips = customTooltips);
+            }
+            return resourceSlot;
+        }
+        ItemStack renderItem = mode == MerchantItemDisplay.RenderMode.ITEM_RENDER
+                ? (display == null ? ItemStack.EMPTY : display.resolvedRenderItem())
+                : actualItem;
+        return createMerchantSlotElement(renderItem, displayCount, showItemTooltips, customTooltips,
+                discount, giftTag, size)
+                .addClass("merchant-item-display")
+                .addClass(mode == MerchantItemDisplay.RenderMode.ITEM_RENDER
+                        ? "merchant-item-display-item-render" : "merchant-item-display-actual");
+    }
+
+    /**
+     * 统一的商品槽渲染工厂(ItemStack 重载,用于买赠槽等无 MerchantItemInfo 的场景)。
+     */
+    public static UIElement createMerchantSlotDisplay(ItemStack item,
+                                                      long displayCount,
+                                                      boolean showItemTooltips,
+                                                      @Nullable HoverTooltips customTooltips,
+                                                      boolean giftTag,
+                                                      float size) {
+        return createMerchantSlotElement(item, displayCount, showItemTooltips, customTooltips,
+                null, giftTag, size);
+    }
+
+    private static MerchantSlotElement createMerchantSlotElement(ItemStack item, long displayCount,
+                                                                 boolean showItemTooltips,
+                                                                 @Nullable HoverTooltips customTooltips,
+                                                                 @Nullable DiscountResult discount,
+                                                                 boolean giftTag,
+                                                                 float size) {
+        ItemStack displayStack = item.copy();
+        displayStack.setCount(1);
+        MerchantSlotElement slot = new MerchantSlotElement()
+                .item(displayStack)
+                .displayCount(displayCount)
+                .strikethrough(discount != null && discount.hasDiscount())
+                .giftTag(giftTag)
+                .customTooltips(customTooltips != null ? customTooltips : null);
+        if (discount != null && discount.hasDiscount()) {
+            slot.discount(discount.getFinalCount(), discount.getRate());
+        }
+        if (customTooltips == null && !showItemTooltips) {
+            slot.customTooltips(new HoverTooltips(List.of(), null, null, null));
+        }
+        return slot;
+    }
+
+    /**
+     * 根据商品信息创建客户端图标,可用 {@code overrideStack} 覆盖展示物品(如折后价栈)。
+     * 覆盖物品只影响展示,交易/匹配/库存仍使用 {@link MerchantItemInfo#getItem()}。
+     */
     private static UIElement createResourceItemDisplay(MerchantItemDisplay display) {
         UIElement element = new UIElement().layout(layout -> {
             layout.width(16);

@@ -34,12 +34,29 @@ public class MerchantItemInfo implements IConfigurable, IPersistedSerializable {
     @Configurable(name = "viscript_shop.data.merchant.item.actual")
     private ItemStack item = ItemStack.EMPTY;
 
+    /** 物品数量(独立存储,不受 ItemStack 堆叠上限约束,上限 Long.MAX_VALUE) */
+    @Configurable(name = "viscript_shop.data.merchant.item.count")
+    private long count = 1;
+
     @Configurable(showName = false, subConfigurable = true, subFlattenConfigurable = true)
     private MerchantItemDisplay display = new MerchantItemDisplay();
 
     static {
         CODEC = PersistedParser.createCodec(MerchantItemInfo::new);
         STREAM_CODEC = PersistedParser.createStreamCodec(MerchantItemInfo::new);
+    }
+
+    @Override
+    public void beforeSerialize() {
+        // 数量不序列化进 ItemStack(堆叠上限会引发序列化崩溃),统一归一为 1
+        if (item != null && !item.isEmpty() && item.getCount() != 1) {
+            item = item.copyWithCount(1);
+        }
+    }
+
+    public MerchantItemInfo(ItemStack item, MerchantItemDisplay display) {
+        this.item = item;
+        this.display = display;
     }
 
     @Override

@@ -43,6 +43,8 @@ public class AggregatedResources implements IPersistedSerializable {
     private int totalXp = 0;
     @Persisted
     private List<PurchaseEntry> purchaseEntries = new ArrayList<>();
+    @Persisted
+    private List<DiscountResult.BonusDetail> bonusItems = new ArrayList<>();
 
     static {
         CODEC = PersistedParser.createCodec(AggregatedResources::new);
@@ -227,12 +229,27 @@ public class AggregatedResources implements IPersistedSerializable {
 
     /**
      * 计算购物车中所有商品的成本（玩家需要支付的）。
+     * 成本物品按 {@link com.viscriptshop.util.TradePriceCalculator} 现算折后价(原价存于商店数据)。
      *
      * @param shopInfo 商店信息，包括各个分类里所有的购物车列表
      * @return 购物车中所有商品的成本
      */
     public static AggregatedResources getCostSummary(ShopInfo shopInfo) {
+        return getCostSummary(shopInfo, null);
+    }
+
+    /**
+     * 计算购物车中所有商品的成本（玩家需要支付的）。
+     *
+     * @param shopInfo 商店信息，包括各个分类里所有的购物车列表
+     * @param player 折扣计算的玩家上下文；为 null 时使用当前客户端玩家
+     * @return 购物车中所有商品的成本
+     */
+    public static AggregatedResources getCostSummary(ShopInfo shopInfo, net.minecraft.world.entity.player.Player player) {
         AggregatedResources cost = new AggregatedResources();
+        net.minecraft.world.entity.player.Player context = player != null
+                ? player
+                : net.minecraft.client.Minecraft.getInstance().player;
         for (CategoryInfo categoryInfo : shopInfo.getCategoryInfos()) {
             for (MerchantInfo merchant : categoryInfo.getMerchants()) {
                 int count = (int) merchant.getBuyCount();
@@ -243,9 +260,20 @@ public class AggregatedResources implements IPersistedSerializable {
 
                 switch (categoryInfo.getShopType()) {
                     case ITEM_FOR_ITEM -> {
-                        // 以物换物商店：成本是 itemA 和 itemB
-                        cost.addItemEntry(merchant.getItemA(), count, merchant.getItemAMatchRule());
-                        cost.addItemEntry(merchant.getItemB(), count, merchant.getItemBMatchRule());
+                        // 以物换物商店：成本是 itemA 和 itemB（分别应用折扣）
+                        if (context != null) {
+                            cost.addItemEntry(
+                                    com.viscriptshop.util.TradePriceCalculator.apply(context, shopInfo, categoryInfo,
+                                            merchant, PromotionRule.CostSlot.ITEM_A, merchant.getItemA()),
+                                    count, merchant.getItemAMatchRule());
+                            cost.addItemEntry(
+                                    com.viscriptshop.util.TradePriceCalculator.apply(context, shopInfo, categoryInfo,
+                                            merchant, PromotionRule.CostSlot.ITEM_B, merchant.getItemB()),
+                                    count, merchant.getItemBMatchRule());
+                        } else {
+                            cost.addItemEntry(merchant.getItemA().copyWithCount((int) merchant.getItemACount()), count, merchant.getItemAMatchRule());
+                            cost.addItemEntry(merchant.getItemB().copyWithCount((int) merchant.getItemBCount()), count, merchant.getItemBMatchRule());
+                        }
                     }
                     case CURRENCY -> {
                         switch (merchant.getTradeType()) {
@@ -282,15 +310,15 @@ public class AggregatedResources implements IPersistedSerializable {
                 gain.addCommand(merchant.getCommand());
                 switch (categoryInfo.getShopType()) {
                     case ITEM_FOR_ITEM -> {
-                        // 以物换物商店：收益是 itemResult
-                        gain.addItem(merchant.getItemResult(), count);
+                        // 以物换物商店：收益是 itemResult(数量取自独立 count 字段)
+                        gain.addItem(merchant.getItemResult().copyWithCount((int) merchant.getItemResultCount()), count);
                     }
                     case CURRENCY -> {
                         // 通用货币商店：根据 TradeType 决定收益
                         switch (merchant.getTradeType()) {
                             case BUY -> {
                                 // 购买物品：收益是 itemResult
-                                gain.addItem(merchant.getItemResult(), count);
+                                gain.addItem(merchant.getItemResult().copyWithCount((int) merchant.getItemResultCount()), count);
                             }
                             case SELL -> {
                                 // 出售物品：收益是货币

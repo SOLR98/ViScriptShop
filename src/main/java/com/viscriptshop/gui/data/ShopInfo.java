@@ -33,6 +33,10 @@ public class ShopInfo implements IConfigurable, IPersistedSerializable {
     private LockedMerchantVisibility lockedMerchantVisibility = LockedMerchantVisibility.SHOW_WITH_LOCK;
     @Persisted
     private List<CategoryInfo> categoryInfos = new ArrayList<>();
+    @Persisted
+    private List<PromotionRule> promotionRules = new ArrayList<>();
+    @Persisted
+    private PromotionRule.DiscountAggregationMode discountAggregation = PromotionRule.DiscountAggregationMode.ADD;
 
     static {
         CODEC = PersistedParser.createCodec(ShopInfo::new);
