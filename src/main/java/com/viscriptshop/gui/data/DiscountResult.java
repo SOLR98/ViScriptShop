@@ -63,4 +63,30 @@ public class DiscountResult {
             STREAM_CODEC = PersistedParser.createStreamCodec(BonusDetail::new);
         }
     }
+
+    /**
+     * 解析来源文本为显示组件:
+     * 以 "{" 开头视为 {@link Component.Serializer} 序列化(文本组件写法,原样解析);
+     * 否则按翻译键优先(无翻译时显示键本身,即直接字符串写法)。
+     */
+    public static net.minecraft.network.chat.Component parseSource(String source) {
+        if (source == null || source.isBlank()) {
+            return net.minecraft.network.chat.Component.translatable("viscript_shop.discount.source.external");
+        }
+        if (source.startsWith("{")) {
+            try {
+                net.minecraft.network.chat.Component parsed =
+                        net.minecraft.network.chat.Component.Serializer.fromJson(source,
+                                net.minecraft.core.RegistryAccess.EMPTY);
+                if (parsed != null) return parsed;
+            } catch (Exception ignored) {
+            }
+        }
+        return net.minecraft.network.chat.Component.translatable(source);
+    }
+
+    /** 序列化来源为存储字符串:Component → JSON;String 原样 */
+    public static String serializeSource(String source) {
+        return source == null ? "" : source;
+    }
 }

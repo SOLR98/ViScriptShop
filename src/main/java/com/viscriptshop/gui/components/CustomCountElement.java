@@ -17,7 +17,8 @@ import java.util.function.LongSupplier;
  * 纯展示,不参与命中测试。
  */
 public class CustomCountElement extends UIElement {
-    private static final String[] UNITS = {"k", "M", "B", "T"};
+    /** SI 国际单位制前缀:千(k)、兆(M)、吉(G)、太(T)、拍(P)、艾(E) */
+    private static final String[] UNITS = {"k", "M", "G", "T", "P", "E"};
     private final LongSupplier countSupplier;
     private int color = 0xFFFFFFFF;
     private boolean shadow = false;
@@ -70,8 +71,9 @@ public class CustomCountElement extends UIElement {
     }
 
     /**
-     * 数量格式化:默认将大数缩写为带单位的数值(10000 -> 10k, 12500 -> 12.5k,
-     * 123456 -> 123k, 1000000 -> 1M),上限 {@link Long#MAX_VALUE}。
+     * 数量格式化:按 SI 国际单位制前缀缩写大数
+     * (10000 -> 10k, 12500 -> 12.5k, 123456 -> 123k, 1000000 -> 1M,
+     * 10^9 -> 1G, 10^12 -> 1T, 10^15 -> 1P, 10^18 -> 1E),上限 {@link Long#MAX_VALUE}。
      */
     public static String formatCount(long count) {
         if (count < 1000) return String.valueOf(count);
@@ -91,6 +93,16 @@ public class CustomCountElement extends UIElement {
             }
         }
         return num + UNITS[unitIndex];
+    }
+
+    /**
+     * 完整数值格式化:添加千分位分隔符(悬浮框等需要完整数值的场景)。
+     *
+     * @param count 数值(long)
+     * @return 千分位格式的字符串,如 1234567 -> "1,234,567"
+     */
+    public static String formatThousands(long count) {
+        return String.format(java.util.Locale.ROOT, "%,d", count);
     }
 
     @Override
