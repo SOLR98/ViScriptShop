@@ -58,6 +58,17 @@ public class MerchantItemInfo implements IConfigurable, IPersistedSerializable {
         }
     }
 
+    @Override
+    public void afterDeserialize() {
+        // 兼容旧版本数据:旧版数量直接存于 ItemStack 内(无独立 count 字段),
+        // 加载时提取到 count(自定义物品堆叠),避免数量静默丢失。
+        // 新版自身保存的数据 item 数量恒为 1,不会误触发。
+        if (item != null && !item.isEmpty() && item.getCount() > 1) {
+            this.count = item.getCount();
+            item.setCount(1);
+        }
+    }
+
     public MerchantItemInfo(ItemStack item, MerchantItemDisplay display) {
         this.item = item;
         this.display = display;
